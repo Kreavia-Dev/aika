@@ -40,7 +40,7 @@ app/                  situs klien: pages, layouts, components, site.ts
   middleware/auth.ts  mengarahkan pengunjung yang belum masuk ke halaman masuk
 features/             vertical slices, one feature per business capability
   auth/               masuk, sesi, penjaga halaman
-  contact/            form kontak: tabel, contract, endpoint. Tanpa UI, dan itu sengaja
+  contact/            form kontak, dan inbox staf di /contact/messages
   health/             status, dan rujukan untuk fitur paling minimal
 shared/               business-neutral infrastructure
   config/env.ts       the ONLY place process.env is read, validated by Zod

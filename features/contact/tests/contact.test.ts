@@ -1,8 +1,11 @@
+import { randomUUID } from 'node:crypto'
 import { describe, expect, it } from 'vitest'
 import { getDb } from '../../../shared/database/client'
 import { api } from '../../../shared/http/app'
 import { failureEnvelopeSchema } from '../../../shared/http/envelope'
-import { contactResponseSchema } from '../contract'
+import { createUser } from '../../auth'
+import { contactMessagesResponseSchema, contactResponseSchema } from '../contract'
+import { insertContactMessage } from '../server/repository'
 
 /**
  * Drives the real Hono app in process, the same way the other features do.
@@ -22,12 +25,11 @@ async function post(payload: unknown): Promise<Response> {
 }
 
 /**
- * The feature has no read endpoint yet, on purpose: this rung adds the endpoint
- * that stores a submission, and the next one adds the inbox. So persistence is
- * asserted against the table directly, and the comment says why.
+ * The stored rows are asserted directly against the table, because this feature
+ * has no read endpoint for anything except the staff inbox.
  *
- * The counts are taken as differences rather than absolutes, because tests
- * within a file share one database.
+ * Counts are taken as differences rather than absolutes, because tests within a
+ * file share one database.
  */
 function storedCount(): number {
   const row = getDb().prepare('SELECT COUNT(*) AS total FROM contact_messages').get() as { total: number }
@@ -42,6 +44,28 @@ function newestMessage(): { name: string, email: string, message: string, user_a
       LIMIT 1
     `)
     .get() as { name: string, email: string, message: string, user_agent: string | null } | undefined
+}
+
+const INBOX_PASSWORD = 'a password long enough to be hashed without complaint'
+
+/** Creates a user under a unique address and returns a session cookie. */
+async function signIn(): Promise<string> {
+  const email = `inbox-${randomUUID()}@example.com`
+  await createUser({ email, password: INBOX_PASSWORD })
+
+  const response = await api.request('/api/auth/login', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ email, password: INBOX_PASSWORD }),
+  })
+
+  return (response.headers.get('set-cookie') ?? '').split(';')[0] ?? ''
+}
+
+async function inbox(cookie?: string): Promise<Response> {
+  return api.request('/api/contact/messages', {
+    headers: cookie ? { cookie } : {},
+  })
 }
 
 describe('POST /api/contact', () => {
@@ -168,5 +192,80 @@ describe('POST /api/contact validation', () => {
     await post({ ...VALID, email: 'nope' })
 
     expect(storedCount()).toBe(before)
+  })
+})
+
+describe('GET /api/contact/messages', () => {
+  it('refuses the inbox without a session', async () => {
+    // This route is the only thing between a visitor and every message a client
+    // has ever received, so the refusal is asserted rather than assumed.
+    const response = await inbox()
+
+    expect(response.status).toBe(401)
+  })
+
+  it('shows what came through the form, to somebody who is signed in', async () => {
+    const cookie = await signIn()
+
+    await post({ ...VALID, name: 'Inbox Probe', email: 'inbox-probe@example.com' })
+
+    const response = await inbox(cookie)
+    expect(response.status).toBe(200)
+
+    const body = contactMessagesResponseSchema.parse(await response.json())
+    expect(body.data.messages.some(message => message.name === 'Inbox Probe')).toBe(true)
+  })
+
+  it('never shows a message that filled the honeypot', async () => {
+    const cookie = await signIn()
+
+    await post({
+      ...VALID,
+      name: 'Spam Probe',
+      message: 'Buy cheap followers now, visit our site for the very best deals.',
+      website: 'https://spam.example.com',
+    })
+
+    const response = await inbox(cookie)
+    const body = contactMessagesResponseSchema.parse(await response.json())
+
+    expect(body.data.messages.some(message => message.name === 'Spam Probe')).toBe(false)
+  })
+
+  it('lists newest first', async () => {
+    const cookie = await signIn()
+
+    const response = await inbox(cookie)
+    const body = contactMessagesResponseSchema.parse(await response.json())
+
+    const timestamps = body.data.messages.map(message => Date.parse(message.createdAt))
+    expect([...timestamps].sort((a, b) => b - a)).toEqual(timestamps)
+  })
+
+  it('caps the list so the response cannot grow without bound', async () => {
+    const cookie = await signIn()
+
+    /*
+     * Dated in the far future so these rows are unambiguously the newest, which
+     * makes the assertion independent of whatever earlier tests left behind.
+     */
+    for (let index = 0; index < 105; index++) {
+      insertContactMessage({
+        id: `cap-${index}`,
+        name: `Sender ${index}`,
+        email: `cap-${index}@example.com`,
+        message: 'Inserted directly, so this row has no honeypot to satisfy.',
+        userAgent: null,
+        createdAt: new Date(Date.UTC(2030, 0, 1, 0, 0, index)).toISOString(),
+      })
+    }
+
+    const response = await inbox(cookie)
+    const body = contactMessagesResponseSchema.parse(await response.json())
+
+    expect(body.data.messages.length).toBe(100)
+    expect(body.data.messages.some(message => message.id === 'cap-104')).toBe(true)
+    // The fifth oldest of the inserted rows is past the cap and must be gone.
+    expect(body.data.messages.some(message => message.id === 'cap-4')).toBe(false)
   })
 })

@@ -16,7 +16,11 @@ It is deliberately not three other things:
 
 ## Where Aika stands
 
-Two features (`auth`, `health`). The foundation is solid and verified: boundaries enforced, migrations snapshot first, backups taken online, one process, 47 tests, and both feature owned routing and the sign in flow proven against a production build.
+Three features (`auth`, `contact`, `health`). The foundation is verified rather than assumed: boundaries enforced by a script, migrations that snapshot before they touch anything, backups taken online, one process, a suite that has to stay green before anything merges, and feature owned routing, the sign in flow, and the contact form all proven against a production build.
+
+A clone now produces a small working site: a header, a footer, three pages, a form that stores a message, and a staff inbox behind a session. That site is also the example, so it doubles as the tutorial for anybody new to Aika.
+
+**No client project has started yet, and work comes in bursts.** Worth stating plainly, because it decides what is worth building. When the project is picked up after a gap, what matters is that it still makes sense on return: hence the tests, the rule about deleting shipped items from this file, and the site itself doubling as the example.
 
 **Nothing a client would pay for exists yet.** That is expected at this stage, but it should not be described as anything else.
 

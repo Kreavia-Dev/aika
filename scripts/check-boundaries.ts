@@ -17,6 +17,8 @@ import { fileURLToPath } from 'node:url'
  *   R4  Features never open SQLite directly.
  *   R5  The feature dependency graph is acyclic.
  *   R6  Browser code (`features/*\/web/**`) never imports server-only modules.
+ *   R7  `app/layouts/` is wired: `app/app.vue` wraps `NuxtPage` in `NuxtLayout`.
+ *   R8  Top level directories match the map printed in `docs/aika/README.md`.
  *
  * Why this exists: Aika is distributed by `git pull upstream` into client
  * projects. That only stays mergeable while the framework/client boundary is
@@ -214,6 +216,110 @@ for (const cycle of cycles) {
     file: 'features',
     message: `R5: dependency cycle: ${cycle.join(' -> ')}`,
   })
+}
+
+// ── R7 ───────────────────────────────────────────────────────────────────────
+/**
+ * `app/layouts/` only does anything if `app/app.vue` asks for it.
+ *
+ * Without the `NuxtLayout` wrapper, Nuxt renders every page and silently ignores
+ * every layout. No warning, no error: `definePageMeta({ layout: ... })` simply
+ * does nothing, and the page looks fine, just wrong. Aika shipped that way until
+ * the site layout was built, which is why this is a rule rather than a note in a
+ * document.
+ *
+ * HTML comments and `<script>` blocks are removed before looking, so a file that
+ * only mentions NuxtLayout in prose still fails.
+ */
+const layoutsDir = join(appDir, 'layouts')
+
+if (existsSync(layoutsDir) && readdirSync(layoutsDir).some(entry => entry.endsWith('.vue'))) {
+  const appVuePath = join(appDir, 'app.vue')
+  const appVueSource = existsSync(appVuePath) ? readFileSync(appVuePath, 'utf8') : ''
+
+  const appVueTemplate = appVueSource
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/<script[\s\S]*?<\/script>/g, '')
+
+  if (!/<NuxtLayout[\s>]/.test(appVueTemplate) || !/<\/NuxtLayout>/.test(appVueTemplate)) {
+    violations.push({
+      file: 'app/app.vue',
+      message: 'R7: app/layouts/ has pages but app.vue does not wrap NuxtPage in NuxtLayout, so every layout is silently ignored',
+    })
+  }
+}
+
+// ── R8 ───────────────────────────────────────────────────────────────────────
+/**
+ * The top level is a short list, and `docs/aika/README.md` prints it as the map
+ * anybody new reads first. A directory that appears without the map changing
+ * makes the map wrong, and a wrong map is worse than no map.
+ *
+ * The README is the source of truth on purpose. A second hardcoded list here
+ * would be one more thing to forget, and the failure would look identical.
+ *
+ * Only directories are checked: files change constantly and are not part of the
+ * shape of the repository. Dot directories are skipped because they are tooling
+ * (`.git`, `.nuxt`, `.output`), as is `node_modules`.
+ */
+function documentedTopLevelDirectories(): string[] | null {
+  const readmePath = join(root, 'docs', 'aika', 'README.md')
+  if (!existsSync(readmePath)) return null
+
+  const lines = readFileSync(readmePath, 'utf8').split('\n')
+  const headingIndex = lines.findIndex(line => line.trim() === '## Layout')
+  if (headingIndex === -1) return null
+
+  const fenceIndex = lines.findIndex((line, index) => index > headingIndex && line.startsWith('```'))
+  if (fenceIndex === -1) return null
+
+  const names: string[] = []
+
+  for (let index = fenceIndex + 1; index < lines.length; index++) {
+    const line = lines[index]
+    if (line === undefined || line.startsWith('```')) break
+
+    const match = /^([A-Za-z0-9_.-]+)\//.exec(line)
+    if (match?.[1] !== undefined) names.push(match[1])
+  }
+
+  return names
+}
+
+const IGNORED_TOP_LEVEL = new Set(['node_modules'])
+const documentedTopLevel = documentedTopLevelDirectories()
+
+if (documentedTopLevel === null) {
+  violations.push({
+    file: 'docs/aika/README.md',
+    message: 'R8: no `## Layout` map could be read, so the shape of the repository is undocumented',
+  })
+}
+else {
+  const actualTopLevel = readdirSync(root)
+    .filter(entry => !entry.startsWith('.') && !IGNORED_TOP_LEVEL.has(entry))
+    .filter(entry => statSync(join(root, entry)).isDirectory())
+    .sort()
+
+  const documentedSet = new Set(documentedTopLevel)
+
+  for (const entry of actualTopLevel) {
+    if (!documentedSet.has(entry)) {
+      violations.push({
+        file: `${entry}/`,
+        message: 'R8: this top level directory is not in the map in docs/aika/README.md. Add it there with a one line description, or put the code somewhere that already exists',
+      })
+    }
+  }
+
+  for (const entry of documentedSet) {
+    if (!actualTopLevel.includes(entry)) {
+      violations.push({
+        file: 'docs/aika/README.md',
+        message: `R8: the map lists \`${entry}/\` but no such directory exists`,
+      })
+    }
+  }
 }
 
 // ── Report ───────────────────────────────────────────────────────────────────

@@ -3,25 +3,20 @@ import { z } from 'zod'
 /**
  * The `contact` feature's public contract.
  *
- * This feature is a pure backend slice, and the split it makes is the split most
- * features should make:
+ * This feature is mostly a backend slice, and the split it makes is the split
+ * most features should make:
  *
- *   The WHOLE feature is plumbing: the shape of a submission, the rules, the
- *   table, and the endpoint. Every client wants the same plumbing.
+ *   The PLUMBING is here: the shape of a submission, the rules, the table, and
+ *   the endpoints. Every client wants the same plumbing.
  *
- *   ALL of the UI is the client's: `app/pages/contact.vue` and
+ *   The PUBLIC UI is the client's: `app/pages/contact.vue` and
  *   `app/components/ContactForm.vue`. Every client words a contact page
  *   differently, and plenty of them change the fields.
  *
- * The dividing line is not "frontend versus backend". It is "what every client
- * shares versus what only this client has". Shared UI would be wrong even if it
- * were perfectly reusable, because an upstream change to a file the client has
- * also edited is a merge conflict, and the client edits the wording of their own
- * contact page every time.
- *
- * The counterexample is `features/health` and `features/auth`, which DO own pages.
- * Those are tooling screens rather than branded ones: a status panel and a sign
- * in form look the same for every client, and no client wants to rewrite them.
+ * But the feature does own one screen, the staff inbox at `/contact/messages`,
+ * and that is not a contradiction. The test is "will every client want the same
+ * thing here", not "is it UI". A contact form is branding. An inbox is tooling,
+ * and no client wants to rewrite one. `docs/aika/ARCHITECTURE.md` has the table.
  */
 export const contactInputSchema = z.object({
   name: z.string().trim().min(1).max(120),
@@ -49,5 +44,30 @@ export const contactResponseSchema = z.object({
   data: z.object({ received: z.literal(true) }),
 })
 
+/**
+ * A message as staff see it.
+ *
+ * `userAgent` is exposed on purpose. It is the cheapest signal for telling a
+ * person from a script, and the inbox is the place where that judgement gets
+ * made. It is never shown to a visitor, and it is the only field here that is
+ * not part of what the sender typed.
+ */
+export const contactMessageSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string(),
+  message: z.string(),
+  userAgent: z.string().nullable(),
+  createdAt: z.string(),
+})
+
+export const contactMessagesResponseSchema = z.object({
+  success: z.literal(true),
+  message: z.string(),
+  data: z.object({ messages: z.array(contactMessageSchema) }),
+})
+
 export type ContactInput = z.infer<typeof contactInputSchema>
 export type ContactResponse = z.infer<typeof contactResponseSchema>
+export type ContactMessage = z.infer<typeof contactMessageSchema>
+export type ContactMessagesResponse = z.infer<typeof contactMessagesResponseSchema>

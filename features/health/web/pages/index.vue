@@ -102,5 +102,26 @@ const { data, error, refresh, status } = await useFetch<HealthResponse>('/api/he
       <code class="font-mono text-xs">/api/health</code> stays public so uptime
       monitoring keeps working.
     </p>
+
+    <!--
+      Two staff screens now exist, and neither is linked from the public footer
+      beyond "Staff". A real staff area, with its own navigation and a landing
+      page, is a Phase 2 question, because that is where the admin UI lives.
+    -->
+    <nav class="mt-10 border-t border-border pt-6 text-sm">
+      <h2 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        Staff pages
+      </h2>
+      <ul class="mt-3 space-y-2">
+        <li>
+          <NuxtLink to="/contact/messages" class="underline underline-offset-2 hover:text-accent-foreground">
+            Contact messages
+          </NuxtLink>
+          <span class="ml-2 text-muted-foreground">
+            Everything the contact form has received
+          </span>
+        </li>
+      </ul>
+    </nav>
   </div>
 </template>

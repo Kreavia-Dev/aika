@@ -1,16 +1,19 @@
 import { Hono } from 'hono'
+import { authGuard } from '../../auth'
 import { ValidationError } from '../../../shared/errors'
-import { contactInputSchema, contactResponseSchema } from '../contract'
-import { submitContactMessage } from './service'
+import {
+  contactInputSchema,
+  contactMessagesResponseSchema,
+  contactResponseSchema,
+} from '../contract'
+import { listMessages, submitContactMessage } from './service'
+
+export const contactRoutes = new Hono()
 
 /**
- * The contact endpoints.
- *
  * Public on purpose. A contact form that requires a sign in is a contact form
  * nobody fills in.
  */
-export const contactRoutes = new Hono()
-
 contactRoutes.post('/contact', async (c) => {
   const body = await c.req.json().catch(() => null)
   const parsed = contactInputSchema.safeParse(body)
@@ -29,5 +32,24 @@ contactRoutes.post('/contact', async (c) => {
     success: true,
     message: 'Thanks. We will be in touch.',
     data: { received: true },
+  }))
+})
+
+/**
+ * The staff inbox, behind the guard.
+ *
+ * This is the cross-feature dependency the architecture allows: `contact` reads
+ * `authGuard` through `features/auth/index.ts`, its public door. Rule R2 refuses
+ * reaching into `features/auth/server/...`, and R5 refuses it the other way
+ * round, so the graph stays a tree rather than a knot.
+ *
+ * A guarded route is the only thing standing between a visitor and every message
+ * a client has received, so the guard goes first and is deliberately obvious.
+ */
+contactRoutes.get('/contact/messages', authGuard, (c) => {
+  return c.json(contactMessagesResponseSchema.parse({
+    success: true,
+    message: 'Recent messages.',
+    data: { messages: listMessages() },
   }))
 })

@@ -1,9 +1,17 @@
 import { randomUUID } from 'node:crypto'
-import type { ContactInput } from '../contract'
-import { insertContactMessage } from './repository'
+import type { ContactInput, ContactMessage } from '../contract'
+import { findRecentMessages, insertContactMessage } from './repository'
 
 /** How much of an attacker controlled header is worth keeping. */
 const MAX_USER_AGENT = 300
+
+/**
+ * How many messages the inbox shows.
+ *
+ * A constant rather than a query parameter, because the inbox has no pagination
+ * and an unbounded read is how a page starts timing out a year from now.
+ */
+const MAX_MESSAGES = 100
 
 export type SubmissionContext = {
   userAgent: string | null
@@ -32,4 +40,23 @@ export function submitContactMessage(input: ContactInput, context: SubmissionCon
     userAgent: context.userAgent?.slice(0, MAX_USER_AGENT) ?? null,
     createdAt: new Date().toISOString(),
   })
+}
+
+/**
+ * The inbox.
+ *
+ * This is where a storage row becomes a contract shape. The repository hands over
+ * `created_at` and `user_agent`, and nothing outside this feature ever sees
+ * snake_case. Keeping the mapping in one place is what lets the table change
+ * without the API changing, and the other way round.
+ */
+export function listMessages(): ContactMessage[] {
+  return findRecentMessages(MAX_MESSAGES).map(row => ({
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    message: row.message,
+    userAgent: row.user_agent,
+    createdAt: row.created_at,
+  }))
 }

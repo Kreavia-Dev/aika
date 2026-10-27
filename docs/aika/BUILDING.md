@@ -276,6 +276,8 @@ files.
 | A feature without `contract.ts` or `index.ts` | `arch:check` rule R1 |
 | A circular dependency between two features | `arch:check` rule R5 |
 | Opening SQLite directly inside a feature | `arch:check` rule R4 |
+| A layout that silently does nothing because `app.vue` does not wrap `NuxtPage` in `NuxtLayout` | `arch:check` rule R7 |
+| A top level directory that is missing from the map in `docs/aika/README.md` | `arch:check` rule R8 |
 | An em dash or an en dash anywhere | `prose:check` |
 | Indonesian in framework code | `prose:check` |
 | Classes that never appear in the CSS | Nothing. See the note below |

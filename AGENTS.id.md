@@ -18,7 +18,7 @@ Cara perpindahan kodenya: clone repo ini per project klien, lalu tarik perbaikan
 npm run check              # THE gate. Must be green before you claim done.
 npm run typecheck          # Nuxt/Vue side
 npm run typecheck:scripts  # scripts/, shared/, features/
-npm run arch:check         # feature boundary rules R1-R6
+npm run arch:check         # feature boundary rules R1-R8
 npm run prose:check        # refuses em and en dashes anywhere
 npm run dev                # dev server on :5555
 npm run db:migrate         # apply migrations (snapshots first)
@@ -132,8 +132,10 @@ Pemilik autentikasi adalah `features/auth/`, dan itu rujukan untuk fitur yang me
 ## Di mana sebuah layar tinggal
 
 - **Layar yang akan ditulis ulang setiap klien tinggal di `app/`, bukan di sebuah fitur.** Layar yang dipakai bersama semua klien, seperti panel status atau form login, boleh tinggal di fitur.
-- **Fitur tanpa UI itu wajar.** `features/contact/` itu tabel, contract, dan endpoint. Jangan menambahkan halaman ke situ hanya supaya punya halaman.
+- **Fitur tanpa UI itu wajar, dan fitur yang punya satu jenis layar juga wajar.** `features/contact/` memiliki inbox staf, karena inbox itu peralatan, dan tidak menyediakan UI publik, karena form kontak itu branding. Patokannya bukan "ini UI atau bukan", melainkan siapa yang akan menulis ulang.
 - **Kode browser mengimpor fitur lewat `~~/features/<nama>/web`, jangan lewat `~~/features/<nama>`.** Pintu server menjangkau `better-sqlite3`, dan aturan R6 menolak impor yang akan menyeretnya ke bundle browser.
+- **`app/layouts/` hanya bekerja karena `app/app.vue` membungkus `NuxtPage` dengan `NuxtLayout`.** Tanpa pembungkus itu Nuxt mengabaikan semua layout tanpa suara, dan aturan R7 menolak kombinasinya.
+- **Direktori top-level baru wajib ditambahkan ke peta di `docs/aika/README.id.md`.** Aturan R8 menolak yang tidak, karena peta yang salah lebih buruk daripada tidak ada peta.
 
 ## Testing
 

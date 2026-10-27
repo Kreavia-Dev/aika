@@ -16,7 +16,7 @@ It is distributed by cloning the repo per client project and pulling improvement
 npm run check              # THE canonical gate. Must be green before you say you are done.
 npm run typecheck          # Nuxt/Vue side
 npm run typecheck:scripts  # scripts/, shared/, features/
-npm run arch:check         # feature boundary rules R1-R6
+npm run arch:check         # feature boundary rules R1-R8
 npm run prose:check        # refuses em and en dashes anywhere
 npm run dev                # dev server on :5555
 npm run db:migrate         # apply migrations (snapshots first)
@@ -130,8 +130,10 @@ You are writing TypeScript for a team that is still learning it. Optimise for re
 ## Where a screen lives
 
 - **A screen every client would rewrite goes in `app/`, not in a feature.** A screen every client shares, such as a status panel or a sign in form, can live in a feature.
-- **A feature with no UI is normal.** `features/contact/` is a table, a contract, and an endpoint. Do not add a page to it just so it has one.
+- **A feature with no UI is normal, and a feature owning one kind of screen is normal too.** `features/contact/` owns the staff inbox, because an inbox is tooling, and provides no public UI, because a contact form is branding. The test is not "is it UI", it is who would rewrite it.
 - **Browser code imports a feature through `~~/features/<name>/web`, never through `~~/features/<name>`.** The server door reaches `better-sqlite3`, and rule R6 refuses the import that would drag it into the browser bundle.
+- **`app/layouts/` only works because `app/app.vue` wraps `NuxtPage` in `NuxtLayout`.** Without that wrapper Nuxt ignores every layout in silence, and rule R7 refuses the combination.
+- **A new top level directory must be added to the map in `docs/aika/README.md`.** Rule R8 refuses one that is not, because a map that is wrong is worse than no map.
 
 ## Testing
 

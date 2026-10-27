@@ -16,7 +16,11 @@ Sengaja bukan tiga hal ini:
 
 ## Posisi Aika sekarang
 
-Dua fitur (`auth`, `health`). Fondasinya sudah kokoh dan terbukti: batas ditegakkan, migrasi menulis snapshot lebih dulu, backup diambil saat aplikasi jalan, satu proses, 47 test, dan routing milik fitur maupun alur login sudah terbukti di build produksi.
+Tiga fitur (`auth`, `contact`, `health`). Fondasinya terbukti, bukan diasumsikan: batas ditegakkan skrip, migrasi menulis snapshot sebelum menyentuh apa pun, backup diambil saat aplikasi jalan, satu proses, suite test yang wajib hijau sebelum apa pun di-merge, dan routing milik fitur, alur login, serta form kontak semuanya sudah terbukti di build produksi.
+
+Clone sekarang menghasilkan situs kecil yang jalan: header, footer, tiga halaman, form yang menyimpan pesan, dan inbox staf di belakang sesi. Situs itu sekaligus contohnya, jadi ia merangkap tutorial untuk siapa pun yang baru mengenal Aika.
+
+**Belum ada project klien yang dimulai, dan pengerjaannya datang secara bergelombang.** Ini perlu diucapkan terus terang, karena inilah yang menentukan apa yang layak dibangun. Ketika project ini diambil lagi setelah jeda, yang penting adalah ia masih masuk akal saat dibuka: karena itu ada test, aturan menghapus item yang sudah selesai dari file ini, dan situsnya sendiri yang merangkap contoh.
 
 **Belum ada satu pun hal yang mau dibayar klien.** Itu wajar di tahap ini, tapi jangan disebut sebagai apa pun selain itu.
 

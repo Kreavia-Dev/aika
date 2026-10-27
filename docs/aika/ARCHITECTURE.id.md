@@ -63,7 +63,7 @@ Untuk browser, tipe tidak memakan biaya apa pun. `import type` hilang saat build
 6. **Kode `web/` tidak mengimpor modul khusus server.** Bukan builtin `node:*`, bukan `better-sqlite3`, bukan `shared/database`, bukan `server/` miliknya sendiri.
 7. **Dependensi antar fitur tidak boleh melingkar.**
 
-Ketujuh aturan ini dijaga `scripts/check-boundaries.ts` (`npm run arch:check`), lewat aturan R1-R6. Alat itu memeriksa teks, bukan compiler, jadi specifier yang dirakit dari template string bisa lolos. Tapi kesalahan yang benar-benar sering terjadi, semua tertangkap.
+Kedelapan aturan ini dijaga `scripts/check-boundaries.ts` (`npm run arch:check`), lewat aturan R1-R8. Alat itu memeriksa teks, bukan compiler, jadi specifier yang dirakit dari template string bisa lolos. Tapi kesalahan yang benar-benar sering terjadi, semua tertangkap.
 
 ### Kenapa per fitur, bukan per layer
 
@@ -189,6 +189,7 @@ semua klien mau hal yang sama di sini"**.
 | Halaman dan form kontak | `app/` | Tiap klien memakai kata yang berbeda, dan banyak yang mengganti field-nya |
 | Panel status di `/health` | `features/health/` | Panel status tampak sama untuk semua klien, dan tidak ada klien yang mau menulis ulang |
 | Form login di `/auth/login` | `features/auth/` | Alasan yang sama. Itu peralatan, bukan branding |
+| Inbox staf di `/contact/messages` | `features/contact/` | Inbox itu peralatan, dan tidak ada klien yang mau menulis ulang |
 
 Dua konsekuensi yang perlu diucapkan terang-terangan, karena keduanya gampang
 salah:

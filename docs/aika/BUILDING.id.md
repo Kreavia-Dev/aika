@@ -286,6 +286,8 @@ itu.
 | Fitur tanpa `contract.ts` atau `index.ts` | `arch:check` aturan R1 |
 | Dependensi melingkar antar dua fitur | `arch:check` aturan R5 |
 | Membuka SQLite langsung di dalam fitur | `arch:check` aturan R4 |
+| Layout yang diam-diam tidak bekerja karena `app.vue` tidak membungkus `NuxtPage` dengan `NuxtLayout` | `arch:check` aturan R7 |
+| Direktori top-level yang tidak ada di peta di `docs/aika/README.id.md` | `arch:check` aturan R8 |
 | Em dash atau en dash di mana pun | `prose:check` |
 | Bahasa Indonesia di kode framework | `prose:check` |
 | Class yang tidak pernah muncul di CSS | Tidak ada. Lihat catatan di bawah |

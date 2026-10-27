@@ -61,7 +61,7 @@ Types cost the browser nothing: `import type` is erased at build time, so re-exp
 6. **`web/` code never imports server-only modules.** Not `node:*` builtins, not `better-sqlite3`, not `shared/database`, not its own `server/`.
 7. **The feature dependency graph is acyclic.**
 
-All seven are enforced by `scripts/check-boundaries.ts` (`npm run arch:check`), rules R1-R6. It is a heuristic text-based lint, not a compiler. A specifier built from a template string can fool it. It catches the mistakes people actually make.
+All eight are enforced by `scripts/check-boundaries.ts` (`npm run arch:check`), rules R1-R8. It is a heuristic text-based lint, not a compiler. A specifier built from a template string can fool it. It catches the mistakes people actually make.
 
 ### Why features, not layers
 
@@ -187,6 +187,7 @@ want the same thing here"**.
 | The contact page and form | `app/` | Every client words it differently, and many change the fields |
 | The status panel at `/health` | `features/health/` | A status panel looks the same for every client, and no client wants to rewrite it |
 | The sign in form at `/auth/login` | `features/auth/` | The same reasoning. It is tooling, not branding |
+| The staff inbox at `/contact/messages` | `features/contact/` | An inbox is tooling, and no client wants to rewrite one |
 
 Two consequences worth stating plainly, because both are easy to get wrong:
 

@@ -36,7 +36,7 @@ app/                  the client's site: pages, layouts, components, site.ts
   middleware/auth.ts  sends a signed out visitor to the sign in page
 features/             vertical slices, one business capability each
   auth/               sign in, sessions, the page guard
-  contact/            the contact form: table, contract, endpoint. No UI, on purpose
+  contact/            the contact form, and the staff inbox at /contact/messages
   health/             status, and the reference for a minimal feature
 shared/               business-neutral infrastructure
   config/env.ts       the ONLY place process.env is read, validated by Zod
