@@ -66,7 +66,7 @@ If step 2 shows changes to a file on the "legitimately differs per client" list,
 
 **What changed.** A new `media` feature adds an authenticated upload endpoint at `POST /api/media`, a library screen at `/media`, and a public route that serves what was uploaded at `/media/<filename>`. Nothing existing changes behaviour.
 
-**Two things are required of you:**
+**Three things are required of you:**
 
 1. Set `MEDIA_ROOT` in the deployment's environment. It is where uploaded files are written, and it must be an absolute path outside the application directory.
 
@@ -81,6 +81,10 @@ If step 2 shows changes to a file on the "legitimately differs per client" list,
    ```bash
    npm run db:migrate
    ```
+
+3. Build the artefact on the operating system and architecture that will run it. This feature adds `sharp`, a native image library, so a build produced on Windows cannot run on Linux and the other way round.
+
+   This is the same rule `better-sqlite3` already imposed, and it is worth stating plainly: a build is not portable across platforms, and the failure is a module that refuses to load rather than anything readable.
 
 **Also worth knowing:** the serving route is public. Anyone holding a file's URL can fetch it, which is the normal shape for images on a public site, since the URL is the thing that gets pasted into content. Uploading and listing are not public.
 

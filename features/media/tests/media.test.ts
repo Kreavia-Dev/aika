@@ -1,44 +1,43 @@
 import { randomUUID } from 'node:crypto'
+import sharp from 'sharp'
 import { describe, expect, it } from 'vitest'
 import { api } from '../../../shared/http/app'
 import { failureEnvelopeSchema } from '../../../shared/http/envelope'
 import { createUser } from '../../auth'
-import { MAX_UPLOAD_BYTES, mediaListResponseSchema, mediaUploadResponseSchema } from '../contract'
+import {
+  MAX_IMAGE_DIMENSION,
+  MAX_UPLOAD_BYTES,
+  mediaDeleteResponseSchema,
+  mediaListResponseSchema,
+  mediaUploadResponseSchema,
+} from '../contract'
 import { readMediaFile } from '../server/service'
 
 /**
  * Drives the real Hono app in process, the same way the other features do.
  *
  * WHAT THIS FILE CANNOT REACH. The bytes are served by a Nitro route
- * (`server/routes/media/[filename].get.ts`), and this suite talks to Hono
- * directly, so the serving route is not exercised here. What is exercised is
- * `readMediaFile`, which is everything that route decides with. The route itself
- * is thin enough that the built server check in CI is the right place for it.
+ * (`server/routes/media/[filename].ts`), and this suite talks to Hono directly,
+ * so the serving route is not exercised here. What is exercised is
+ * `readMediaFile`, which is everything that route decides with, plus the
+ * behaviour of every route Hono owns.
+ *
+ * Real images are generated with sharp rather than faked, because the feature
+ * now reads the bytes. A three byte buffer that claims to be a PNG is exactly
+ * what the validation exists to refuse.
  */
 
 const PASSWORD = 'a password long enough to be hashed without complaint'
 
-/**
- * The smallest thing that behaves like an image for these tests.
- *
- * The feature does not inspect image contents, it trusts the content type the
- * upload declared. That is a known limitation, recorded by the test at the
- * bottom of this file, and it is why a three byte buffer is enough here.
- */
-const TINY_PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47])
-
 async function signIn(): Promise<string> {
   const email = `media-${randomUUID()}@example.com`
-  const user = await createUser({ email, password: PASSWORD })
+  await createUser({ email, password: PASSWORD })
 
   const response = await api.request('/api/auth/login', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ email, password: PASSWORD }),
   })
-
-  // The feature needs a real account id, so the cookie alone is not enough.
-  void user
 
   return (response.headers.get('set-cookie') ?? '').split(';')[0] ?? ''
 }
@@ -54,69 +53,172 @@ async function upload(cookie: string | undefined, file: File): Promise<Response>
   })
 }
 
-function pngFile(name = 'photo.png', bytes = TINY_PNG): File {
-  return new File([bytes], name, { type: 'image/png' })
+async function list(cookie: string): Promise<Response> {
+  return api.request('/api/media', { headers: { cookie } })
+}
+
+async function remove(cookie: string | undefined, id: string): Promise<Response> {
+  return api.request(`/api/media/${id}`, {
+    method: 'DELETE',
+    headers: cookie ? { cookie } : {},
+  })
+}
+
+function fileFrom(bytes: Uint8Array, name: string, type: string): File {
+  return new File([bytes], name, { type })
+}
+
+/** A real JPEG, wider than the limit, so it has to be shrunk. */
+async function wideJpeg(width = 3000, height = 2000): Promise<Buffer> {
+  return sharp({
+    create: { width, height, channels: 3, background: { r: 12, g: 34, b: 56 } },
+  }).jpeg().toBuffer()
+}
+
+/** A real PNG, already inside the limit, so it must be stored untouched. */
+async function smallPng(): Promise<Buffer> {
+  return sharp({
+    create: { width: 40, height: 30, channels: 3, background: { r: 1, g: 2, b: 3 } },
+  }).png().toBuffer()
+}
+
+async function uploadPng(cookie: string): Promise<{ id: string, filename: string }> {
+  const created = mediaUploadResponseSchema.parse(
+    await (await upload(cookie, fileFrom(await smallPng(), 'picture.png', 'image/png'))).json(),
+  )
+
+  return { id: created.data.file.id, filename: created.data.file.filename }
 }
 
 describe('media', () => {
   it('refuses an upload from a signed out visitor', async () => {
     // This refusal is the only thing between the public internet and a client's
     // storage directory.
-    const response = await upload(undefined, pngFile())
+    const response = await upload(undefined, fileFrom(await smallPng(), 'x.png', 'image/png'))
 
     expect(response.status).toBe(401)
   })
 
   it('refuses to list files for a signed out visitor', async () => {
-    const response = await api.request('/api/media')
+    expect((await api.request('/api/media')).status).toBe(401)
+  })
+
+  it('refuses to delete for a signed out visitor', async () => {
+    const response = await remove(undefined, '00000000-0000-0000-0000-000000000000')
 
     expect(response.status).toBe(401)
   })
 
   it('stores an upload and returns it in the contract shape', async () => {
     const cookie = await signIn()
-    const response = await upload(cookie, pngFile('holiday.png'))
+    const response = await upload(cookie, fileFrom(await smallPng(), 'holiday.png', 'image/png'))
 
     expect(response.status).toBe(201)
 
     const body = mediaUploadResponseSchema.parse(await response.json())
     expect(body.data.file.originalName).toBe('holiday.png')
     expect(body.data.file.contentType).toBe('image/png')
-    expect(body.data.file.byteSize).toBe(TINY_PNG.byteLength)
     expect(body.data.file.url).toBe(`/media/${body.data.file.filename}`)
   })
 
   it('makes the stored bytes reachable through the service the route uses', async () => {
     const cookie = await signIn()
     const created = mediaUploadResponseSchema.parse(
-      await (await upload(cookie, pngFile())).json(),
+      await (await upload(cookie, fileFrom(await smallPng(), 'x.png', 'image/png'))).json(),
     )
 
     const served = readMediaFile(created.data.file.filename)
 
     expect(served).not.toBeNull()
     expect(served?.contentType).toBe('image/png')
-    expect(Array.from(served?.bytes ?? [])).toEqual(Array.from(TINY_PNG))
   })
 
-  it('lists what was uploaded', async () => {
+  it('stores an image that already fits byte for byte', async () => {
+    // Not re-encoded. Re-encoding a JPEG that was already the right size would
+    // lose a little quality on every upload for no benefit.
     const cookie = await signIn()
+    const source = await smallPng()
     const created = mediaUploadResponseSchema.parse(
-      await (await upload(cookie, pngFile())).json(),
+      await (await upload(cookie, fileFrom(source, 'small.png', 'image/png'))).json(),
     )
 
-    const response = await api.request('/api/media', { headers: { cookie } })
-    const body = mediaListResponseSchema.parse(await response.json())
+    expect(created.data.file.byteSize).toBe(source.byteLength)
 
-    expect(body.data.files.some(file => file.id === created.data.file.id)).toBe(true)
+    const served = readMediaFile(created.data.file.filename)
+    expect(Buffer.from(served?.bytes ?? []).equals(source)).toBe(true)
+  })
+
+  it('shrinks an image that is over the limit, and records the size as stored', async () => {
+    const cookie = await signIn()
+    const source = await wideJpeg(3000, 2000)
+    const response = await upload(cookie, fileFrom(source, 'huge.jpg', 'image/jpeg'))
+
+    expect(response.status).toBe(201)
+
+    const created = mediaUploadResponseSchema.parse(await response.json())
+
+    // The recorded size is the size on disk, not the size that arrived. A library
+    // screen that reported the original would be lying about what it serves.
+    expect(created.data.file.byteSize).toBeLessThan(source.byteLength)
+
+    const served = readMediaFile(created.data.file.filename)
+    const metadata = await sharp(Buffer.from(served?.bytes ?? [])).metadata()
+
+    expect(metadata.width).toBe(MAX_IMAGE_DIMENSION)
+    expect(metadata.height).toBeLessThanOrEqual(MAX_IMAGE_DIMENSION)
+    expect(metadata.height).toBe(1280)
+  })
+
+  it('refuses bytes that are not an image, whatever the upload claimed', async () => {
+    /*
+     * This test used to assert the opposite, as a recorded limitation: a file
+     * that claimed to be a PNG was accepted, and the mitigation was that the
+     * serving route sets a content type and nosniff. The resize step now reads
+     * the bytes, so the claim is no longer trusted and the limitation is closed.
+     */
+    const cookie = await signIn()
+    const lying = fileFrom(Buffer.from('<html>not an image</html>'), 'evil.png', 'image/png')
+
+    const response = await upload(cookie, lying)
+
+    expect(response.status).toBe(422)
+
+    const body = failureEnvelopeSchema.parse(await response.json())
+    expect(body.code).toBe('VALIDATION_ERROR')
+  })
+
+  it('rejects a type that is not on the accepted list', async () => {
+    const cookie = await signIn()
+    const response = await upload(cookie, fileFrom(await smallPng(), 'notes.txt', 'text/plain'))
+
+    expect(response.status).toBe(422)
+  })
+
+  it('rejects an SVG, which is a document rather than an image', async () => {
+    // Kept as a test rather than a comment so that adding image/svg+xml to the
+    // accepted list fails here, loudly, with this reason attached.
+    const cookie = await signIn()
+    const svg = fileFrom(
+      Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"><script/></svg>'),
+      'x.svg',
+      'image/svg+xml',
+    )
+
+    expect((await upload(cookie, svg)).status).toBe(422)
+  })
+
+  it('rejects a file with no bytes', async () => {
+    const cookie = await signIn()
+    const response = await upload(cookie, fileFrom(new Uint8Array(), 'empty.png', 'image/png'))
+
+    expect(response.status).toBe(422)
   })
 
   it('ignores the filename the browser supplied when building the path on disk', async () => {
     // The stored name is generated from a UUID, so this is what makes traversal
-    // impossible rather than merely filtered. The uploaded name is kept for a
-    // human to read and never used to build a path.
+    // impossible rather than merely filtered.
     const cookie = await signIn()
-    const response = await upload(cookie, pngFile('../../../etc/passwd.png'))
+    const response = await upload(cookie, fileFrom(await smallPng(), '../../../etc/passwd.png', 'image/png'))
     const body = mediaUploadResponseSchema.parse(await response.json())
 
     expect(body.data.file.filename).toMatch(
@@ -126,34 +228,38 @@ describe('media', () => {
     expect(body.data.file.originalName).toBe('../../../etc/passwd.png')
   })
 
-  it('rejects a type that is not on the accepted list', async () => {
+  it('lists what was uploaded', async () => {
     const cookie = await signIn()
-    const response = await upload(cookie, new File([TINY_PNG], 'notes.txt', { type: 'text/plain' }))
+    const { id } = await uploadPng(cookie)
 
-    expect(response.status).toBe(422)
+    const body = mediaListResponseSchema.parse(await (await list(cookie)).json())
 
-    const body = failureEnvelopeSchema.parse(await response.json())
-    expect(body.code).toBe('VALIDATION_ERROR')
+    expect(body.data.files.some(file => file.id === id)).toBe(true)
   })
 
-  it('rejects an SVG, which is a document rather than an image', async () => {
-    // Kept as a test rather than a comment so that adding image/svg+xml to the
-    // accepted list fails here, loudly, with this reason attached.
+  it('deletes the record and the bytes together', async () => {
     const cookie = await signIn()
-    const svg = new File(['<svg xmlns="http://www.w3.org/2000/svg"><script/></svg>'], 'x.svg', {
-      type: 'image/svg+xml',
-    })
+    const { id, filename } = await uploadPng(cookie)
 
-    const response = await upload(cookie, svg)
+    expect(readMediaFile(filename)).not.toBeNull()
 
-    expect(response.status).toBe(422)
+    const response = await remove(cookie, id)
+
+    expect(response.status).toBe(200)
+    expect(mediaDeleteResponseSchema.parse(await response.json()).data.id).toBe(id)
+
+    // The URL stops resolving, and the file is not merely orphaned on disk.
+    expect(readMediaFile(filename)).toBeNull()
+
+    const after = mediaListResponseSchema.parse(await (await list(cookie)).json())
+    expect(after.data.files.some(file => file.id === id)).toBe(false)
   })
 
-  it('rejects a file with no bytes', async () => {
+  it('answers 404 when asked to delete something that is not there', async () => {
     const cookie = await signIn()
-    const response = await upload(cookie, pngFile('empty.png', new Uint8Array()))
+    const response = await remove(cookie, '00000000-0000-0000-0000-000000000000')
 
-    expect(response.status).toBe(422)
+    expect(response.status).toBe(404)
   })
 
   it('refuses an over sized upload from the declared length, before reading the body', async () => {
@@ -190,22 +296,5 @@ describe('media', () => {
   it('does not attempt to serve a name that was never uploaded', () => {
     expect(readMediaFile('../../database/aika.db')).toBeNull()
     expect(readMediaFile('00000000-0000-0000-0000-000000000000.png')).toBeNull()
-  })
-
-  it('records a known limitation: the declared content type is trusted', async () => {
-    /*
-     * A file that claims to be a PNG but is not one is accepted today. The
-     * mitigation in place is that the serving route sets both an explicit
-     * content type and `nosniff`, so a browser will not re-interpret the bytes.
-     * Magic byte validation is the real fix, and this test exists so that adding
-     * it fails here and forces the comment to be updated rather than quietly
-     * leaving a stale note behind.
-     */
-    const cookie = await signIn()
-    const lying = new File(['<html>not a png</html>'], 'evil.png', { type: 'image/png' })
-
-    const response = await upload(cookie, lying)
-
-    expect(response.status).toBe(201)
   })
 })

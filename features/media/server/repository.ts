@@ -44,6 +44,21 @@ export function findMediaByFilename(filename: string): MediaFileRow | undefined 
     .get(filename) as MediaFileRow | undefined
 }
 
+export function findMediaById(id: string): MediaFileRow | undefined {
+  return getDb()
+    .prepare('SELECT * FROM media_files WHERE id = ?')
+    .get(id) as MediaFileRow | undefined
+}
+
+/**
+ * Remove the row. The bytes on disk are the caller's problem, on purpose.
+ *
+ * This file owns SQL and nothing else, and deleting a file is not SQL.
+ */
+export function deleteMediaFile(id: string): void {
+  getDb().prepare('DELETE FROM media_files WHERE id = ?').run(id)
+}
+
 /**
  * The newest files first, capped.
  *

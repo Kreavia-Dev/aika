@@ -23,6 +23,17 @@ import { z } from 'zod'
 export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024
 
 /**
+ * The longest edge an image is stored at, in pixels. Anything larger is shrunk
+ * to fit before it is written.
+ *
+ * Shared with the browser so the library screen can tell the truth about what
+ * happens to an upload. 1920 because that is the width of a typical desktop
+ * viewport at a common pixel density, and a client site does not benefit from
+ * anything wider being served to a phone.
+ */
+export const MAX_IMAGE_DIMENSION = 1920
+
+/**
  * The image types Aika accepts.
  *
  * WHY SVG IS NOT ON THIS LIST, AND SHOULD NOT BE ADDED CASUALLY. An SVG is not
@@ -58,6 +69,7 @@ export const mediaFileSchema = z.object({
   /** What the uploader called it, kept only so a human can recognise it. */
   originalName: z.string(),
   contentType: z.string(),
+  /** The size as stored, after any resizing, not the size that was uploaded. */
   byteSize: z.number().int().nonnegative(),
   uploadedBy: z.string().nullable(),
   createdAt: z.string(),
@@ -80,3 +92,11 @@ export const mediaListResponseSchema = z.object({
 })
 
 export type MediaListResponse = z.infer<typeof mediaListResponseSchema>
+
+export const mediaDeleteResponseSchema = z.object({
+  success: z.literal(true),
+  message: z.string(),
+  data: z.object({ id: z.string() }),
+})
+
+export type MediaDeleteResponse = z.infer<typeof mediaDeleteResponseSchema>

@@ -14,8 +14,8 @@
  * to give the page the bare parent path rather than to move the files to
  * uglier URLs, because the file URLs are what end up inside a client's content.
  */
-import { MAX_UPLOAD_BYTES, ALLOWED_IMAGE_TYPES } from '../../contract'
-import type { MediaListResponse, MediaUploadResponse } from '../../contract'
+import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_DIMENSION, MAX_UPLOAD_BYTES } from '../../contract'
+import type { MediaDeleteResponse, MediaListResponse, MediaUploadResponse } from '../../contract'
 
 definePageMeta({ middleware: 'auth' })
 
@@ -30,6 +30,9 @@ const { data, refresh } = await useFetch<MediaListResponse>('/api/media')
 const chosen = ref<File | null>(null)
 const busy = ref(false)
 const problem = ref<string | null>(null)
+/** The row that is asking "are you sure", if any. */
+const confirming = ref<string | null>(null)
+
 const accepted = ALLOWED_IMAGE_TYPES.map(entry => entry.contentType).join(',')
 const limitMb = Math.floor(MAX_UPLOAD_BYTES / 1024 / 1024)
 
@@ -72,6 +75,30 @@ async function upload(): Promise<void> {
   }
 }
 
+/**
+ * Two steps rather than a modal, and no `window.confirm`.
+ *
+ * Deleting is permanent, it removes the file as well as the record, and a URL
+ * that a client may already have pasted into a page stops working. That deserves
+ * a pause. It does not deserve a browser dialog, which cannot be styled, cannot
+ * be read by the same code as the rest of the page, and is blocked outright in
+ * some contexts.
+ */
+async function remove(id: string): Promise<void> {
+  busy.value = true
+  problem.value = null
+
+  try {
+    await $fetch<MediaDeleteResponse>(`/api/media/${id}`, { method: 'DELETE' })
+    confirming.value = null
+    await refresh()
+  } catch (error) {
+    problem.value = error instanceof Error ? error.message : 'The file was not deleted.'
+  } finally {
+    busy.value = false
+  }
+}
+
 function readableSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`
@@ -84,7 +111,8 @@ function readableSize(bytes: number): string {
     <h1 class="text-3xl font-semibold tracking-tight">Media</h1>
     <p class="mt-3 text-muted-foreground">
       Files uploaded here can be linked from anywhere on the site. Images only,
-      up to {{ limitMb }} MB each.
+      up to {{ limitMb }} MB each. Anything wider or taller than
+      {{ MAX_IMAGE_DIMENSION }} pixels is shrunk to fit before it is stored.
     </p>
 
     <form class="mt-10 rounded-md border border-border bg-card p-6" @submit.prevent="upload">
@@ -135,7 +163,36 @@ function readableSize(bytes: number): string {
             {{ file.contentType }} · {{ readableSize(file.byteSize) }}
           </span>
         </span>
-        <code class="text-xs text-muted-foreground">{{ file.url }}</code>
+
+        <template v-if="confirming === file.id">
+          <span class="text-xs text-muted-foreground">Delete this file?</span>
+          <button
+            type="button"
+            class="rounded-md bg-destructive px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50"
+            :disabled="busy"
+            @click="remove(file.id)"
+          >
+            Yes, delete
+          </button>
+          <button
+            type="button"
+            class="rounded-md border border-border px-3 py-1.5 text-xs font-medium"
+            @click="confirming = null"
+          >
+            Keep
+          </button>
+        </template>
+
+        <template v-else>
+          <code class="text-xs text-muted-foreground">{{ file.url }}</code>
+          <button
+            type="button"
+            class="rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:border-destructive hover:text-destructive"
+            @click="confirming = file.id"
+          >
+            Delete
+          </button>
+        </template>
       </li>
     </ul>
   </div>

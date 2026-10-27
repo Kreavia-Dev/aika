@@ -68,7 +68,7 @@ Kalau langkah 2 menunjukkan ada perubahan di file yang masuk daftar "wajar berbe
 
 **Apa yang berubah.** Fitur `media` yang baru menambahkan endpoint unggah yang butuh login di `POST /api/media`, halaman pustaka di `/media`, dan rute publik yang menyajikan hasil unggahan di `/media/<nama-berkas>`. Tidak ada perilaku lama yang berubah.
 
-**Dua hal yang harus kamu lakukan:**
+**Tiga hal yang harus kamu lakukan:**
 
 1. Setel `MEDIA_ROOT` di environment deployment. Itu tempat berkas unggahan ditulis, dan harus path absolut di luar direktori aplikasi.
 
@@ -83,6 +83,10 @@ Kalau langkah 2 menunjukkan ada perubahan di file yang masuk daftar "wajar berbe
    ```bash
    npm run db:migrate
    ```
+
+3. Bangun artefaknya di sistem operasi dan arsitektur yang akan menjalankannya. Fitur ini menambahkan `sharp`, pustaka gambar native, jadi build yang dibuat di Windows tidak bisa jalan di Linux, dan sebaliknya.
+
+   Ini aturan yang sama yang sudah dipaksakan `better-sqlite3`, dan perlu ditulis terang: build tidak portabel antar platform, dan kegagalannya berupa modul yang menolak dimuat, bukan sesuatu yang bisa dibaca.
 
 **Perlu juga diketahui:** rute penyajiannya publik. Siapa pun yang memegang URL sebuah berkas bisa mengambilnya, dan itu bentuk yang wajar untuk gambar di situs publik, karena URL-nya memang yang ditempel ke konten. Yang tidak publik adalah mengunggah dan mendaftar.
 

@@ -41,7 +41,6 @@ sebagai contoh nyata. Dokumentasi Aika dipindah ke `docs/aika/` supaya
 ## Fase 1: kebutuhan minimum satu situs klien
 
 - [ ] **Tegakkan `role`.** `users.role` ada tapi tidak ada yang membacanya, jadi setiap user yang login sekarang efektif sebagai administrator.
-- [ ] **Media, lanjutan.** Unggah, kontrak storage, dan penyajiannya sudah selesai dan tercatat di changelog. Yang tersisa: resize, supaya foto ponsel lima megabyte tidak disajikan utuh, hapus, supaya kesalahan tidak permanen, dan dukungan HEAD di rute penyajian.
 
 ## Fase 2: bagian yang mirip WordPress
 

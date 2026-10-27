@@ -2,8 +2,8 @@ import { Hono } from 'hono'
 import { ValidationError } from '../../../shared/errors'
 import { MAX_UPLOAD_BYTES } from '../contract'
 import { authGuard, requireUser } from '../../auth'
-import { mediaListResponseSchema, mediaUploadResponseSchema } from '../contract'
-import { listMedia, storeUpload } from './service'
+import { mediaDeleteResponseSchema, mediaListResponseSchema, mediaUploadResponseSchema } from '../contract'
+import { listMedia, removeMedia, storeUpload } from './service'
 
 /**
  * The media feature's HTTP surface.
@@ -50,7 +50,7 @@ mediaRoutes.post('/media', authGuard, async (c) => {
     throw new ValidationError('Choose a file to upload.', ['file: no file was attached'])
   }
 
-  const stored = storeUpload({
+  const stored = await storeUpload({
     bytes: new Uint8Array(await file.arrayBuffer()),
     contentType: file.type || null,
     originalName: file.name || null,
@@ -69,5 +69,26 @@ mediaRoutes.get('/media', authGuard, (c) => {
     success: true,
     message: 'OK',
     data: { files: listMedia() },
+  }))
+})
+
+/**
+ * By id, not by filename. The id is the record, the filename is the address, and
+ * a delete that took the address would make the URL the thing that authorises
+ * the removal.
+ */
+mediaRoutes.delete('/media/:id', authGuard, (c) => {
+  /*
+   * The router requires the segment, so this cannot be empty in practice. The
+   * fallback exists because the type allows it, and an empty id finds nothing,
+   * which is the same answer as any other id that is not in the table.
+   */
+  const id = c.req.param('id') ?? ''
+  const removed = removeMedia(id)
+
+  return c.json(mediaDeleteResponseSchema.parse({
+    success: true,
+    message: 'Deleted.',
+    data: { id: removed.id },
   }))
 })

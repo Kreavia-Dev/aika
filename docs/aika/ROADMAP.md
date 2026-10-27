@@ -41,7 +41,6 @@ example. Aika's own documentation moved into `docs/aika/` so that a client's
 ## Phase 1: the minimum a client site needs
 
 - [ ] **Enforce `role`.** `users.role` exists and nothing reads it, so every signed-in user is currently an administrator.
-- [ ] **Media, continued.** Upload, the storage contract, and serving are shipped and recorded in the changelog. What is left: resizing, so a five megabyte phone photo is not served at full size, deleting, so a mistake is not permanent, and HEAD support on the serving route.
 
 ## Phase 2: the WordPress-like part
 

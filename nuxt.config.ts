@@ -31,7 +31,7 @@ export default defineNuxtConfig({
     preset: 'node-server',
     externals: {
       // Native module: must not be bundled.
-      external: ['better-sqlite3'],
+      external: ['better-sqlite3', 'sharp'],
     },
   },
 

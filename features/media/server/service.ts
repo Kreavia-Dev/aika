@@ -1,8 +1,16 @@
 import { randomUUID } from 'node:crypto'
 import { env } from '../../../shared/config/env'
-import { ValidationError } from '../../../shared/errors'
+import { NotFoundError, ValidationError } from '../../../shared/errors'
 import { MAX_UPLOAD_BYTES, extensionFor, type MediaFile } from '../contract'
-import { insertMediaFile, findMediaByFilename, findRecentMedia, type MediaFileRow } from './repository'
+import {
+  deleteMediaFile,
+  findMediaByFilename,
+  findMediaById,
+  findRecentMedia,
+  insertMediaFile,
+  type MediaFileRow,
+} from './repository'
+import { fitWithinLimits } from './resize'
 import { createLocalMediaStorage, type MediaStorage } from './storage'
 
 /**
@@ -62,14 +70,14 @@ export type UploadInput = {
 }
 
 /**
- * Validate, store the bytes, then record the row.
+ * Validate, fit, store the bytes, then record the row.
  *
  * THE ORDER MATTERS AND IS DELIBERATE. The file is written before the row, so a
  * crash between the two leaves a file nobody knows about, which is invisible and
  * harmless. The other order leaves a row pointing at nothing, which renders as a
- * broken image on a client's page.
+ * broken image on a client's page. Deleting reverses this, for the same reason.
  */
-export function storeUpload(input: UploadInput): MediaFile {
+export async function storeUpload(input: UploadInput): Promise<MediaFile> {
   const contentType = input.contentType ?? ''
   const extension = extensionFor(contentType)
 
@@ -81,7 +89,7 @@ export function storeUpload(input: UploadInput): MediaFile {
   }
 
   if (input.bytes.byteLength === 0) {
-    throw new ValidationError('That file is empty.', ['contentType: the upload had no bytes'])
+    throw new ValidationError('That file is empty.', ['file: the upload had no bytes'])
   }
 
   if (input.bytes.byteLength > MAX_UPLOAD_BYTES) {
@@ -91,6 +99,13 @@ export function storeUpload(input: UploadInput): MediaFile {
     )
   }
 
+  /*
+   * Fitting also proves the bytes are an image. That check cannot happen any
+   * earlier, because before this point all we have is the browser's word for the
+   * content type, and a content type is a claim rather than a fact.
+   */
+  const fitted = await fitWithinLimits(input.bytes, contentType)
+
   const id = randomUUID()
   /*
    * The name on disk is generated, never taken from the upload. That is what
@@ -99,21 +114,29 @@ export function storeUpload(input: UploadInput): MediaFile {
    */
   const filename = `${id}.${extension}`
 
-  storage.put(filename, input.bytes)
+  storage.put(filename, fitted.bytes)
 
   const record = {
     id,
     filename,
     originalName: (input.originalName ?? 'unnamed').slice(0, MAX_ORIGINAL_NAME),
     contentType,
-    byteSize: input.bytes.byteLength,
+    // The size as stored, so the library screen is not lying after a resize.
+    byteSize: fitted.bytes.byteLength,
     uploadedBy: input.uploadedBy,
     createdAt: new Date().toISOString(),
   }
 
   insertMediaFile(record)
 
-  return toContract({ ...record, original_name: record.originalName, content_type: contentType, byte_size: record.byteSize, uploaded_by: record.uploadedBy, created_at: record.createdAt })
+  return toContract({
+    ...record,
+    original_name: record.originalName,
+    content_type: record.contentType,
+    byte_size: record.byteSize,
+    uploaded_by: record.uploadedBy,
+    created_at: record.createdAt,
+  })
 }
 
 export function listMedia(): MediaFile[] {
@@ -140,4 +163,30 @@ export function readMediaFile(filename: string): ServedFile | null {
   if (!bytes) return null
 
   return { bytes, contentType: row.content_type }
+}
+
+/**
+ * Forget a file, and then remove its bytes.
+ *
+ * THE ORDER IS THE REVERSE OF storeUpload, ON PURPOSE. The row goes first, so a
+ * failure between the two steps leaves a file on disk that nothing points at.
+ * That file is invisible, costs a little disk, and can be swept up later. The
+ * other order leaves a row pointing at nothing, which is a broken image on a
+ * page a client is showing somebody.
+ *
+ * The row is also what makes the file addressable, so removing it first means
+ * the URL stops working at the moment the decision was made, rather than after
+ * the slower of the two steps.
+ */
+export function removeMedia(id: string): MediaFile {
+  const row = findMediaById(id)
+
+  if (!row) {
+    throw new NotFoundError('That file is not in the library.')
+  }
+
+  deleteMediaFile(id)
+  storage.remove(row.filename)
+
+  return toContract(row)
 }
