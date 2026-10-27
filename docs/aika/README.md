@@ -40,6 +40,7 @@ features/             vertical slices, one business capability each
   auth/               sign in, sessions, the page guard
   contact/            the contact form, and the staff inbox at /contact/messages
   health/             status, and the reference for a minimal feature
+  media/              uploads, the storage contract, and the files they serve
 shared/               business-neutral infrastructure
   config/env.ts       the ONLY place process.env is read, validated by Zod
   database/client.ts  the ONLY place SQLite is opened, owns the WAL pragmas
@@ -50,9 +51,10 @@ shared/               business-neutral infrastructure
   nuxt/feature-pages.ts   turns features/*/web/pages/ into route records
   seo/site-files.ts   builds robots.txt and sitemap.xml, as pure functions
 server/api/[...path].ts   the single Nitro → Hono adapter
-server/routes/            robots.txt and sitemap.xml, which must sit at the domain root
+server/routes/            robots.txt, sitemap.xml, and the uploaded files at /media
 modules/features.ts   wires feature pages into Nuxt
 tests/                unit tests, and the database setup the suite runs on
+storage/              uploaded files, gitignored, empty in a fresh clone
 database/migrations/  forward-only SQL
 docs/aika/            Aika's own documentation
 .github/workflows/    the CI gate, which runs the suite and then the built server

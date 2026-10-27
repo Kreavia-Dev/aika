@@ -1,0 +1,6 @@
+# This file exists so `storage/` is present in a fresh clone.
+#
+# Rule R8 in scripts/check-boundaries.ts fails when the layout map in
+# docs/aika/README.md lists a directory that does not exist, and it skips only
+# dot prefixed entries and node_modules. Uploaded files are runtime state and are
+# ignored by .gitignore, so without this file a fresh clone would fail the gate.

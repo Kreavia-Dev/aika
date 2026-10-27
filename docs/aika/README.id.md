@@ -44,6 +44,7 @@ features/             vertical slices, one feature per business capability
   auth/               masuk, sesi, penjaga halaman
   contact/            form kontak, dan inbox staf di /contact/messages
   health/             status, dan rujukan untuk fitur paling minimal
+  media/              unggahan, kontrak storage, dan berkas yang disajikan
 shared/               business-neutral infrastructure
   config/env.ts       the ONLY place process.env is read, validated by Zod
   database/client.ts  the ONLY place SQLite is opened, and the WAL pragmas
@@ -54,9 +55,10 @@ shared/               business-neutral infrastructure
   nuxt/feature-pages.ts   mengubah features/*/web/pages/ jadi route record
   seo/site-files.ts   membuat robots.txt dan sitemap.xml, sebagai fungsi murni
 server/api/[...path].ts   the single Nitro to Hono adapter, lalu ke Hono
-server/routes/            robots.txt dan sitemap.xml, yang harus ada di root domain
+server/routes/            robots.txt, sitemap.xml, dan berkas unggahan di /media
 modules/features.ts   menyambungkan halaman fitur ke Nuxt
 tests/                test unit, dan setup database untuk seluruh suite
+storage/              berkas unggahan, diabaikan git, kosong di clone baru
 database/migrations/  SQL forward-only
 docs/aika/            dokumentasi Aika sendiri
 .github/workflows/    gerbang CI, menjalankan suite lalu server hasil build

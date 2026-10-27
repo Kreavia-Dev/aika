@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { authRoutes } from '../../features/auth'
 import { contactRoutes } from '../../features/contact'
 import { healthRoutes } from '../../features/health'
+import { mediaRoutes } from '../../features/media'
 import { AppError, ValidationError } from '../errors'
 import type { FailureEnvelope } from './envelope'
 
@@ -68,3 +69,4 @@ api.notFound((c) => {
 api.route('/', authRoutes)
 api.route('/', contactRoutes)
 api.route('/', healthRoutes)
+api.route('/', mediaRoutes)

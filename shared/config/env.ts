@@ -22,6 +22,17 @@ const envSchema = z.object({
 
   DATABASE_PATH: z.string().min(1).default('./database/aika.db'),
 
+  /*
+   * Where uploaded files are written.
+   *
+   * Relative in development, so a fresh clone needs no setup and the files land
+   * in a gitignored directory. Absolute in production, beside the database and
+   * outside the deployed application directory, so that a deploy which replaces
+   * the build cannot remove a client's images. That is the same reasoning as
+   * DATABASE_PATH above, and the two should point at the same volume.
+   */
+  MEDIA_ROOT: z.string().min(1).default('./storage/media'),
+
   LOG_LEVEL: z
     .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace'])
     .default('info'),

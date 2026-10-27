@@ -16,7 +16,11 @@ database/*.db-wal
 database/*.db-shm
 database/backups/
 
-storage/
+# Uploaded files are runtime state, like the database. The directory itself is
+# tracked so that the layout map in docs/aika/README.md stays honest; its
+# contents are not.
+storage/*
+!storage/.gitkeep
 logs/
 *.log
 

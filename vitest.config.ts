@@ -34,6 +34,13 @@ export default defineConfig({
       DATABASE_PATH: './database/test.db',
       APP_VERSION: '0.1.0-test',
       LOG_LEVEL: 'error',
+      /*
+       * Away from the development directory on purpose. The media suite writes
+       * real files, and the test run must not leave anything behind in the
+       * directory a developer's own uploads live in. The setup file refuses to
+       * empty anything else, so this value and that check have to agree.
+       */
+      MEDIA_ROOT: './storage/test-media',
     },
   },
 })

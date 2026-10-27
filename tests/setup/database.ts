@@ -1,3 +1,6 @@
+import { rmSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { env } from '../../shared/config/env'
 import { getDb } from '../../shared/database/client'
 import { applyMigrations } from '../../shared/database/migrate'
 
@@ -36,3 +39,27 @@ const ownedTables = db
 for (const table of ownedTables) {
   db.exec(`DELETE FROM "${table.name}"`)
 }
+
+/**
+ * Empty the directory uploaded files are written to.
+ *
+ * WHY THIS IS NEEDED AT ALL. Everything above deletes rows, and rows are not
+ * files. A media test writes a real file, so without this the next run starts
+ * with the previous run's leftovers in the storage directory, and a test that
+ * counts files would pass or fail depending on how many times it had been run.
+ *
+ * WHY IT REFUSES TO RUN ANYWHERE ELSE. This deletes a directory recursively. The
+ * only thing standing between a mistyped MEDIA_ROOT and a developer's uploaded
+ * files is the comparison below, so it fails loudly rather than emptying
+ * whatever it was pointed at.
+ */
+const mediaRoot = resolve(env.MEDIA_ROOT)
+const suiteMediaRoot = resolve('./storage/test-media')
+
+if (mediaRoot !== suiteMediaRoot) {
+  throw new Error(
+    `Refusing to empty "${mediaRoot}". The test suite may only clear its own media directory, "${suiteMediaRoot}". Check MEDIA_ROOT in vitest.config.ts.`,
+  )
+}
+
+rmSync(mediaRoot, { recursive: true, force: true })
