@@ -82,6 +82,6 @@ Move an item up only with a reason tied to a client. If a client needs something
 
 ## Why this file exists at all, rather than a features document
 
-A separate feature catalogue, mapping which client has which feature, is not worth maintaining yet. With one feature and no clients it would rot immediately.
+A separate feature catalogue, mapping which client has which feature, is not worth maintaining yet. No clients have enough feature overlap for it to be worth maintaining, so it would rot immediately.
 
 Add one when the third client project starts. Until then this roadmap plus [FEATURES in the changelog](./CHANGELOG.md) is enough to see where things stand.
