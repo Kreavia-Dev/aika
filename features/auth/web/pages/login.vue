@@ -8,6 +8,13 @@
  */
 useHead({ title: 'Sign in' })
 
+/*
+ * No site chrome on the sign in page. It is reached from the footer, and a
+ * navigation bar above a login form invites people to wander off instead of
+ * signing in.
+ */
+definePageMeta({ layout: false })
+
 const email = ref('')
 const password = ref('')
 const errorMessage = ref<string | null>(null)

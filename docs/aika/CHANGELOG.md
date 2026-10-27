@@ -37,9 +37,14 @@ Versioning rule: a change that forces a client project to edit code or configura
 - **`npm run user:create`**, which creates the first user. There is no sign up screen, on purpose: a client site has a handful of staff accounts, not open registration.
 - **`shared/database/migrate.ts`**: the migration logic, extracted out of the script so the test setup applies exactly the code the deploy applies.
 
+- **A working site shell.** `app/layouts/default.vue`, `app/components/SiteHeader.vue` and `SiteFooter.vue`, and three real pages: Home, About, and Contact. Until now `npm run dev` produced a status panel and nothing that resembled a website, which made it genuinely hard to see how Aika is meant to be used.
+- **`app/site.ts`**, the one file to edit when starting a client project: site name, tagline, navigation, contact details, and document language. `nuxt.config.ts` reads the name and the language from it as well, so a rebrand is one file rather than a hunt.
+
 ### Changed
 
-- **The `/health` page now requires a session.** The endpoint at `/api/health` stays public, because uptime monitoring cannot sign in. This split is deliberate: one surface is for machines, the other is for people.
+- **`app/app.vue` now wraps `<NuxtPage>` in `<NuxtLayout>`.** It did not before, so `app/layouts/` was never applied and `definePageMeta({ layout: ... })` was silently ignored with no warning anywhere. Found while building the site shell, and it would have cost somebody an afternoon.
+- **The home page no longer proves the loop.** `/health` carries that job now, and it is the page to open when confirming a deployment is wired correctly. A client home page should not be a status panel.
+- The sign in page opts out of the site chrome with `definePageMeta({ layout: false })`. A navigation bar above a login form invites people to wander off instead of signing in. The endpoint at `/api/health` stays public, because uptime monitoring cannot sign in. This split is deliberate: one surface is for machines, the other is for people.
 - `scripts/migrate.ts` is now a thin CLI wrapper around `shared/database/migrate.ts`, keeping the snapshot-first deploy ceremony in one place.
 - **Session TTL is 30 days**, absolute rather than sliding.
 - **Test count is now 47**, up from 23. The root `README.md` now belongs to the client project, so a client can describe their own site without ever conflicting with an upstream change. This was a real defect: `README.md` was not on the list of files a client may edit, which left a client repository whose front page described Aika instead of the client. `AGENTS.md` stays at the root because agent tooling looks for it there, and `LICENSE` stays by legal convention. Every relative link was rewritten and checked.

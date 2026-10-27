@@ -28,18 +28,28 @@ Evidence, as of the initial commit: `npm run check` green, `npm run build` green
 ## Layout
 
 ```
-app/                  Nuxt shell (pages, layouts), client-owned
+app/                  the client's site: pages, layouts, components, site.ts
+  site.ts             site name, tagline, nav, contact. Edit this first
+  app.vue             the root, and it must wrap NuxtPage in NuxtLayout
+  layouts/default.vue the site chrome shared by every page
+  components/         SiteHeader, SiteFooter
+  middleware/auth.ts  sends a signed out visitor to the sign in page
 features/             vertical slices, one business capability each
-  health/             reference feature: contract.ts, index.ts, web/index.ts, server/
+  auth/               sign in, sessions, the page guard
+  health/             status, and the reference for a minimal feature
 shared/               business-neutral infrastructure
   config/env.ts       the ONLY place process.env is read, validated by Zod
   database/client.ts  the ONLY place SQLite is opened, owns the WAL pragmas
+  database/migrate.ts the migration runner, used by the CLI and the tests
   errors/             domain errors with a stable code and HTTP status
   http/app.ts         Hono composition root
+  nuxt/feature-pages.ts   turns features/*/web/pages/ into route records
 server/api/[...path].ts   the single Nitro → Hono adapter
-modules/features.ts   turns features/*/web/pages/ into Nuxt routes
+modules/features.ts   wires feature pages into Nuxt
+tests/                unit tests, and the database setup the suite runs on
 database/migrations/  forward-only SQL
-scripts/              migrate, backup, architecture check
+docs/aika/            Aika's own documentation
+scripts/              migrate, backup, create-user, architecture and prose checks
 ```
 
 ## Requirements

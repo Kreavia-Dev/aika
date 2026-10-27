@@ -1,4 +1,5 @@
 import tailwindcss from '@tailwindcss/vite'
+import { site } from './app/site'
 
 export default defineNuxtConfig({
   compatibilityDate: '2026-10-28',
@@ -40,8 +41,12 @@ export default defineNuxtConfig({
 
   app: {
     head: {
-      title: 'Aika',
-      htmlAttrs: { lang: 'en' },
+      // Read from `app/site.ts`, so the client's name lives in one place. The
+      // function form of `titleTemplate` is not accepted here, only a string, so
+      // every page sets its own title.
+      title: site.name,
+      titleTemplate: `%s · ${site.name}`,
+      htmlAttrs: { lang: site.lang },
       meta: [{ name: 'viewport', content: 'width=device-width, initial-scale=1' }],
     },
   },

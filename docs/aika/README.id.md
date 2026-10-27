@@ -32,18 +32,28 @@ Buktinya, per commit pertama: `npm run check` hijau, `npm run build` hijau, `GET
 ## Isi repo
 
 ```
-app/                  Nuxt shell (pages, layouts), client-owned
+app/                  situs klien: pages, layouts, components, site.ts
+  site.ts             nama situs, tagline, navigasi, kontak. Edit ini duluan
+  app.vue             akarnya, dan wajib membungkus NuxtPage dengan NuxtLayout
+  layouts/default.vue kerangka situs yang dipakai semua halaman
+  components/         SiteHeader, SiteFooter
+  middleware/auth.ts  mengarahkan pengunjung yang belum masuk ke halaman masuk
 features/             vertical slices, one feature per business capability
-  health/             reference feature: contract.ts, index.ts, web/index.ts, server/
+  auth/               masuk, sesi, penjaga halaman
+  health/             status, dan rujukan untuk fitur paling minimal
 shared/               business-neutral infrastructure
   config/env.ts       the ONLY place process.env is read, validated by Zod
   database/client.ts  the ONLY place SQLite is opened, and the WAL pragmas
+  database/migrate.ts penjalan migrasi, dipakai CLI dan test
   errors/             domain errors with a stable code and HTTP status
   http/app.ts         the Hono composition root
-server/api/[...path].ts   the single Nitro to Hono adapter → Hono
-modules/features.ts   turns features/*/web/pages/ into Nuxt routes
+  nuxt/feature-pages.ts   mengubah features/*/web/pages/ jadi route record
+server/api/[...path].ts   the single Nitro to Hono adapter, lalu ke Hono
+modules/features.ts   menyambungkan halaman fitur ke Nuxt
+tests/                test unit, dan setup database untuk seluruh suite
 database/migrations/  SQL forward-only
-scripts/              migrate, backup, architecture and prose checks
+docs/aika/            dokumentasi Aika sendiri
+scripts/              migrate, backup, create-user, pemeriksa arsitektur dan gaya
 ```
 
 ## Yang dibutuhkan

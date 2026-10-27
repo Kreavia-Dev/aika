@@ -39,9 +39,14 @@ Aturan versinya: perubahan yang memaksa project klien mengedit kode atau konfigu
 - **`npm run user:create`**, untuk membuat user pertama. Tidak ada halaman pendaftaran, dan itu disengaja: situs klien punya beberapa akun staf, bukan pendaftaran terbuka.
 - **`shared/database/migrate.ts`**: logika migrasinya, dipindah keluar dari skrip supaya setup test menjalankan kode yang persis sama dengan yang dijalankan saat deploy.
 
+- **Kerangka situs yang jalan.** `app/layouts/default.vue`, `app/components/SiteHeader.vue` dan `SiteFooter.vue`, plus tiga halaman sungguhan: Home, About, dan Contact. Sebelumnya `npm run dev` cuma menghasilkan panel status dan tidak ada apa pun yang menyerupai situs, sehingga cara pakai Aika memang sulit dilihat.
+- **`app/site.ts`**, satu-satunya file yang diedit saat memulai project klien: nama situs, tagline, navigasi, detail kontak, dan bahasa dokumen. `nuxt.config.ts` juga membaca nama dan bahasanya dari situ, jadi rebranding cukup satu file.
+
 ### Diubah
 
-- **Halaman `/health` sekarang butuh sesi.** Endpoint `/api/health` tetap publik, karena pemantauan uptime tidak bisa login. Pembagian ini disengaja: satu permukaan untuk mesin, satu untuk manusia.
+- **`app/app.vue` sekarang membungkus `<NuxtPage>` dengan `<NuxtLayout>`.** Sebelumnya tidak, sehingga `app/layouts/` tidak pernah dipakai dan `definePageMeta({ layout: ... })` diabaikan tanpa peringatan di mana pun. Ketemu saat membangun kerangka situs, dan ini akan menghabiskan setengah hari seseorang.
+- **Halaman depan tidak lagi membuktikan rantai Nuxt ke SQLite.** Sekarang tugas itu milik `/health`, dan itu halaman yang dibuka kalau mau memastikan deployment tersambung benar. Halaman depan klien seharusnya bukan panel status.
+- Halaman masuk keluar dari kerangka situs lewat `definePageMeta({ layout: false })`. Navbar di atas form login mengundang orang berkeliling alih-alih masuk. Endpoint `/api/health` tetap publik, karena pemantauan uptime tidak bisa login. Pembagian ini disengaja: satu permukaan untuk mesin, satu untuk manusia.
 - `scripts/migrate.ts` sekarang cuma pembungkus CLI tipis di atas `shared/database/migrate.ts`, supaya urutan snapshot-dulu tetap di satu tempat.
 - **Masa hidup sesi 30 hari**, mutlak bukan bergeser.
 - **Jumlah test sekarang 47**, dari sebelumnya 23.

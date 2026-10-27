@@ -2,10 +2,14 @@
 /**
  * The health feature's browser page. Served at /health.
  *
- * Besides being genuinely useful for a quick look at a deployment, this page
- * is the proof that feature owned routing works: a feature puts a file in its
- * own `web/pages/`, and the route appears, with no change to the application's
+ * Besides being genuinely useful for a quick look at a deployment, this page is
+ * the proof that feature owned routing works: a feature puts a file in its own
+ * `web/pages/`, and the route appears, with no change to the application's
  * routing anywhere.
+ *
+ * It is also the page that proves the whole loop end to end, Nuxt to Nitro to
+ * Hono to SQLite. If it renders "Database: up", the foundation is wired
+ * correctly. The public home page deliberately does not do this.
  *
  * The type comes from `../index`, the feature's browser-safe boundary.
  * Importing from `../` instead would pull `better-sqlite3` into the client
@@ -26,7 +30,7 @@ const { data, error, refresh, status } = await useFetch<HealthResponse>('/api/he
 </script>
 
 <template>
-  <main class="mx-auto max-w-2xl px-6 py-16">
+  <div class="mx-auto max-w-2xl px-6 py-16">
     <h1 class="text-2xl font-semibold tracking-tight">
       System status
     </h1>
@@ -98,5 +102,5 @@ const { data, error, refresh, status } = await useFetch<HealthResponse>('/api/he
       <code class="font-mono text-xs">/api/health</code> stays public so uptime
       monitoring keeps working.
     </p>
-  </main>
+  </div>
 </template>
