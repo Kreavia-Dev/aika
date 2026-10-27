@@ -11,6 +11,7 @@ This document is the **architecture authority**. If code disagrees with this doc
 | Language | TypeScript, `strict: true` |
 | Runtime | Node.js >= 22 (team runs 24) |
 | Frontend | Nuxt 4.6 (SSR) + Vue 3.5 |
+| Styling | Tailwind CSS v4, through the `@tailwindcss/vite` plugin |
 | HTTP | Hono 4, mounted inside Nitro |
 | Database | SQLite via `better-sqlite3`, raw SQL |
 | Validation | Zod 4, schemas owned by features |
@@ -82,7 +83,9 @@ The trap to avoid: a `shared/` folder that grows into a second layer. `shared/` 
 - **`shared/database/`**: the only place SQLite is opened, owning the pragmas.
 - **`shared/errors/`**: domain errors with a stable `code` and HTTP `status`.
 - **`shared/http/app.ts`**: the **server composition root**: the Hono app and every feature mount.
-- **`modules/features.ts`**: the Nuxt module that registers `features/*/web/pages/` as routes.
+- **`shared/http/envelope.ts`**: the failure envelope schema. It lives here because `app.ts` is the single producer of error responses, so the shape is genuinely shared.
+- **`shared/nuxt/feature-pages.ts`**: turns feature pages into route records. A pure function, kept out of the Nuxt module so it can be tested without booting Nuxt.
+- **`modules/features.ts`**: the Nuxt module that applies those routes.
 
 `shared/http/` is a deliberate exception to "`shared/` is business-neutral": composition has to live somewhere, and one small file is a better place than scattering mounts across features.
 
@@ -172,6 +175,24 @@ WAL gives concurrent readers plus **one writer**. The practical ceiling: when wr
 That is why `ecosystem.config.cjs` uses `exec_mode: 'fork'` with `instances: 1`. Cluster mode means N processes = N connections = N writers contending on one file lock. Because SQLite serialises writes at the file level, extra writers add no throughput at all, only `SQLITE_BUSY` variance.
 
 The database file, its WAL sidecars, and backups **must** live on storage local to the application host. Never on a shared network filesystem.
+
+## Testing
+
+Tests run in the `node` environment, with no Nuxt build and no HTTP server. That is possible because `shared/http/app.ts` imports nothing from Nitro: a Hono app can be driven directly with a Web `Request`.
+
+| Kind | Location | Covers |
+|---|---|---|
+| Unit | `tests/unit/` | Pure logic with no framework, such as the feature page route computation. |
+| Feature behaviour | `features/<name>/tests/` | That feature's endpoints, driven through the real Hono app. |
+
+Rules:
+
+1. **Parse the response, do not assert field by field.** `response.json()` is typed `unknown`, on purpose. Passing it through the feature's own Zod schema is both the validation and the narrowing, and it checks the published contract instead of a hand written copy of it.
+2. **Drive the real Hono app.** It is cheap, and mocking it would only test the mock.
+3. **Test the seam, not the implementation.** `shared/nuxt/feature-pages.ts` was extracted out of the Nuxt module for exactly this reason.
+4. **A test that cannot fail is not a test.** Every test asserts something that could plausibly be wrong.
+
+Deliberately not covered yet: a test that boots the built server and requests real pages. Today that check is run by hand (`npm run build`, start the server, request `/health`). It belongs in CI once a pipeline exists.
 
 ## Distribution model: why there is no monorepo
 

@@ -21,6 +21,8 @@ npm run prose:check        # refuses em and en dashes anywhere
 npm run dev                # dev server on :5555
 npm run db:migrate         # apply migrations (snapshots first)
 npm run db:backup          # online SQLite backup
+npm run test               # run the suite once
+npm run test:watch         # watch mode while you work
 ```
 
 Run `npm run check` before reporting completion. Never report success on the basis of "it should work".
@@ -114,6 +116,22 @@ You are writing TypeScript for a team that is still learning it. Optimise for re
 - **Do not read `process.env` anywhere except `shared/config/env.ts`.** Add a field to the Zod schema there instead.
 - **`allowScripts` in `package.json` pins install-script approval to exact versions.** When you upgrade `better-sqlite3`, npm will warn and you must run `npm install-scripts approve better-sqlite3`. Never set `dangerously-allow-all-scripts`.
 
+## Testing
+
+```bash
+npm run test        # run once
+npm run test:watch  # watch mode while you work
+```
+
+Tests run in the `node` environment, with no Nuxt build and no HTTP server. `npm run check` runs the suite, so a failing test blocks the gate.
+
+- **Unit tests** go in `tests/unit/`. Anything needing no framework belongs there.
+- **Feature tests** go in `features/<name>/tests/`. One file per feature is enough until it is not.
+- **Drive the real Hono app.** `import { api } from '../../../shared/http/app'`, then `await api.request('/api/...')`. Do not mock it.
+- **Parse the body, do not assert fields one at a time.** `response.json()` is typed `unknown`. Pass it through the feature's Zod schema from `contract.ts`. That validates and narrows in one step, and it checks the contract rather than a copy of it.
+- **For error responses**, parse with `failureEnvelopeSchema` from `shared/http/envelope.ts`.
+- **Every `/api` response uses the envelope.** A new response shape that does not use it is a bug, not a variation.
+
 ## SQLite and migrations
 
 - Migrations are plain SQL in `database/migrations/`, applied in filename order, **forward-only**.
@@ -133,7 +151,17 @@ Before adding a dependency, check `ARCHITECTURE.md` → "What Aika does not buil
 - **English is the default.** `README.md`, `ARCHITECTURE.md`, `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/UPGRADING.md`.
 - **Indonesian is secondary.** Same filename plus `.id.md`.
 - **Both files are updated in the same change.** A change that updates only one language is incomplete.
-- Code, identifiers, comments, commit messages, and this file: **English**.
+- **Code is English without exception**: identifiers, comments, test names, commit messages, and this file. Mixed-language code reads badly for people and worse for tools, and framework code is merged into every client project.
+- **The one exception is client-facing copy.** `app/**` and `features/<name>/web/**` are the browser surface, so a client site written for Indonesian readers legitimately contains Indonesian there. `npm run prose:check` enforces exactly this split.
+
+## Styling
+
+Tailwind CSS v4, wired through the `@tailwindcss/vite` plugin rather than a Nuxt module.
+
+- **Use utility classes.** Do not add a `<style>` block to a component. If something genuinely cannot be expressed as utilities, say why in the pull request.
+- **Use the semantic tokens, never a raw hex value.** `bg-card`, `text-muted-foreground`, `border-border`, `text-destructive`, `text-success`. A hard coded colour is a rebranding bug waiting to happen.
+- **Change colours in `app/assets/css/palette.css`**, never in a component. That file is the single source of truth, and every token has a dark value.
+- **A directory is only scanned if `app/assets/css/main.css` declares it** under `@source`. If you add a top-level directory holding components, add its `@source` line. Otherwise its classes are never generated, and nothing reports an error.
 
 ## Writing style
 

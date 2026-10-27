@@ -23,16 +23,25 @@ Aturan versinya: perubahan yang memaksa project klien mengedit kode atau konfigu
 
 ### Ditambahkan
 
-- **Test runner masih belum ada.** Belum ada `vitest` (atau sejenisnya) yang dipasang. `npm run check` baru mencakup tipe, batas, dan gaya bahasa, dan nol perilaku. Dicatat di sini alih-alih didiamkan. Ini pekerjaan berikutnya.
+- **`shared/http/envelope.ts`**: envelope kegagalan sebagai schema Zod, jadi aturan envelope di AGENTS.md bisa diperiksa, bukan sekadar harapan. Envelope sukses tetap per fitur, karena `data`-nya milik fitur yang mengembalikannya.
+- **Tailwind CSS v4**, lewat `@tailwindcss/vite`, bukan modul Nuxt. `app/assets/css/palette.css` menyimpan token untuk kedua tema, dan `main.css` memetakannya ke theme Tailwind, jadi komponen memakai `bg-card` dan `text-muted-foreground`, bukan nilai hex.
+- **Deklarasi `@source` untuk `app/` dan `features/`.** Tailwind v4 mendeteksi source secara otomatis, tapi `features/` itu saudara `app/`, bukan anaknya, jadi mengandalkan heuristiknya adalah mode kegagalan yang senyap. Terverifikasi: class yang hanya dipakai `features/health/web/pages/index.vue` benar-benar muncul di CSS hasil build.
+- **Test suite.** `vitest` 5, jalan di environment `node` tanpa build Nuxt dan tanpa server HTTP. 23 test di 2 file, kurang dari satu detik. `npm run check` sekarang menjalankannya.
+- **`shared/nuxt/feature-pages.ts`**, plus 12 test unit untuknya. Perhitungan route-nya dipindah keluar dari modul Nuxt supaya bisa dites tanpa menyalakan Nuxt. Test-nya membuat pohon fitur sementara, lalu memeriksa path route yang dihasilkan.
+- **`features/health/web/pages/index.vue`**, disajikan di `/health`. Halaman ini sekaligus halaman status yang berguna dan bukti bahwa halaman fitur bekerja.
 - **`ROADMAP.md` dan `ROADMAP.id.md`.** Satu-satunya tempat yang menjawab apa yang mau dibangun berikutnya dan kenapa. Disiplinnya: yang sudah selesai keluar sepenuhnya dari roadmap dan pindah ke file ini, jadi keduanya tidak pernah tumpang tindih.
 - **`npm run prose:check`**, ikut jalan di `npm run check`. Dia menolak em dash dan en dash di mana pun dalam repo, di kedua bahasa dan di komentar kode. Pakai koma, titik dua, titik, atau tanda kurung. Tanda hubung biasa tetap boleh di dalam kata dan rentang seperti `R1-R6`.
 
 ### Diubah
 
+- **Mekanisme halaman fitur sudah terbukti.** `modules/features.ts` termuat tanpa error sejak commit pertama tapi belum pernah dijalankan, karena belum ada fitur yang punya direktori `web/pages/`. Itu klaim arsitektur terakhir yang belum terbukti di proyek ini. Sekarang sudah dicakup test unit dan dikonfirmasi di build produksi: `GET /health` merender halaman fiturnya, dan `useHead` memasang judulnya.
+- `npm run check` sekarang juga menjalankan test suite.
 - **Aturan penulisan baru untuk semua dokumen dan komentar: tidak ada em dash dan en dash.** Karakter ini tidak terlihat saat review, jadi tidak ada yang sadar kalau ada yang menambahkannya. Karena itu aturannya ditegakkan skrip, bukan sekadar ditulis lalu dipercaya.
 - **Dokumentasi Indonesia ditulis ulang supaya enak dibaca.** Versi sebelumnya diterjemahkan kata per kata, yang menghasilkan kalimat berat pasif dengan struktur kalimat Inggris. Menerjemahkan dokumen tidak sama dengan menulis dokumen.
 - Dokumentasi sekarang dwibahasa. File Inggris jadi acuan, terjemahan Indonesia berdampingan sebagai `<nama>.id.md`. Keduanya diperbarui dalam perubahan yang sama.
 - `npm run check` sekarang juga menjalankan `prose:check`.
+- **Seluruh kode memakai Bahasa Inggris.** Identifier, komentar, nama test, dan blok kode di dalam dokumentasi Indonesia. Satu-satunya pengecualian adalah teks untuk pengguna di `app/` dan `features/<name>/web/`, dan `prose:check` sekarang menegakkan pembagian itu.
+- **Aturan styling: hanya utility Tailwind dan token semantik.** Tidak ada blok `<style>` di komponen, dan tidak ada nilai hex mentah. Direktori top-level baru yang berisi komponen wajib dideklarasikan di `@source`, kalau tidak class-nya tidak akan pernah di-generate.
 
 ## [0.1.0] - 2026-10-28
 

@@ -1,0 +1,62 @@
+@import "tailwindcss";
+@import "./palette.css";
+
+/*
+ * Source declarations.
+ *
+ * Tailwind v4 detects source files automatically, but `features/` is a sibling
+ * of `app/` rather than a child of it. Relying on the heuristic would be a
+ * silent failure mode: a client feature whose classes are never scanned renders
+ * unstyled, with no error anywhere. Nara declares its own source roots for the
+ * same reason, and this is the part of its setup most worth copying.
+ */
+@source "../../../app";
+@source "../../../features";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Maps the palette onto Tailwind's theme, so utilities resolve against the
+ * semantic aliases rather than raw hex values. Change a colour in
+ * `palette.css`, not in a component.
+ */
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: var(--aika-mono);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-faint: var(--faint);
+  --color-border: var(--border);
+  --color-line-strong: var(--line-strong);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+}

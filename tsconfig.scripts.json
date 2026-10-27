@@ -15,5 +15,11 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["scripts/**/*.ts", "shared/**/*.ts", "features/**/*.ts"]
+  "include": [
+    "scripts/**/*.ts",
+    "shared/**/*.ts",
+    "features/**/*.ts",
+    "tests/**/*.ts",
+    "features/**/tests/**/*.ts"
+  ]
 }

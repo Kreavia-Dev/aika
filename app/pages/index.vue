@@ -1,18 +1,19 @@
 <script setup lang="ts">
 /**
- * Aika reference page.
+ * The application's landing page.
  *
  * It exists to prove the whole loop end to end:
  *   Nuxt page -> Nitro -> Hono -> SQLite
- * If this renders "database: up", the foundation is wired correctly.
+ * If this renders "Database: up", the foundation is wired correctly.
  *
- * Note where the type comes from: `~~/features/health/web`, the feature's
- * browser-safe boundary. NOT `~~/features/health`, which would pull
- * better-sqlite3 into the client bundle.
+ * This page belongs to the application, not to a feature, and a client project
+ * replaces it. Pages owned by a feature live in `features/<name>/web/pages/`
+ * and are mounted under the feature's own name, for example `/health`.
  *
- * The explicit `useFetch<HealthResponse>` is what gives this page a typed
- * response instead of `{}`. Without it the client knows nothing about the
- * API shape, and a server-side contract change fails silently in production.
+ * The type comes from the health feature's browser-safe boundary,
+ * `~~/features/health/web`. Importing from `~~/features/health` would pull the
+ * `better-sqlite3` native module into the client bundle, and rule R6 in
+ * `npm run arch:check` refuses that.
  */
 import type { HealthResponse } from '~~/features/health/web'
 
@@ -20,134 +21,82 @@ const { data, error, refresh, status } = await useFetch<HealthResponse>('/api/he
 </script>
 
 <template>
-  <main class="shell">
-    <h1>Aika</h1>
-    <p class="lede">
-      Application kit internal. Build by feature, not by layer.
+  <main class="mx-auto max-w-2xl px-6 py-16">
+    <h1 class="text-3xl font-semibold tracking-tight">
+      Aika
+    </h1>
+    <p class="mt-1 text-muted-foreground">
+      Internal application kit. Build by feature, not by layer.
     </p>
 
-    <section class="card">
-      <h2>Health</h2>
+    <section class="mt-10 rounded-lg border border-border bg-card p-6">
+      <h2 class="mb-4 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+        Health
+      </h2>
 
-      <p v-if="error" class="bad">
-        Gagal menghubungi API: {{ error.message }}
+      <p v-if="error" class="font-semibold text-destructive">
+        Could not reach the API: {{ error.message }}
       </p>
 
-      <dl v-else-if="data">
-        <div>
-          <dt>Status</dt>
-          <dd>{{ data.data.status }}</dd>
+      <dl v-else-if="data" class="mb-5">
+        <div class="flex justify-between border-b border-border py-2">
+          <dt class="text-muted-foreground">
+            Status
+          </dt>
+          <dd class="tabular-nums">
+            {{ data.data.status }}
+          </dd>
         </div>
-        <div>
-          <dt>Database</dt>
-          <dd :class="data.data.database === 'up' ? 'good' : 'bad'">
+        <div class="flex justify-between border-b border-border py-2">
+          <dt class="text-muted-foreground">
+            Database
+          </dt>
+          <dd
+            class="font-semibold tabular-nums"
+            :class="data.data.database === 'up' ? 'text-success' : 'text-destructive'"
+          >
             {{ data.data.database }}
           </dd>
         </div>
-        <div>
-          <dt>Versi</dt>
-          <dd>{{ data.data.version }}</dd>
+        <div class="flex justify-between border-b border-border py-2">
+          <dt class="text-muted-foreground">
+            Version
+          </dt>
+          <dd class="tabular-nums">
+            {{ data.data.version }}
+          </dd>
         </div>
-        <div>
-          <dt>Uptime</dt>
-          <dd>{{ data.data.uptimeSeconds }}s</dd>
+        <div class="flex justify-between py-2">
+          <dt class="text-muted-foreground">
+            Uptime
+          </dt>
+          <dd class="tabular-nums">
+            {{ data.data.uptimeSeconds }}s
+          </dd>
         </div>
       </dl>
 
-      <p v-else class="muted">
-        Memuat…
+      <p v-else class="text-faint">
+        Loading...
       </p>
 
-      <button type="button" @click="refresh()">
-        Cek ulang
-      </button>
-      <small class="muted">permintaan terakhir: {{ status }}</small>
+      <div class="mt-5 flex items-center gap-3">
+        <button
+          type="button"
+          class="rounded-md border border-line-strong bg-card px-3.5 py-1.5 text-sm transition-colors hover:bg-muted"
+          @click="refresh()"
+        >
+          Check again
+        </button>
+        <small class="text-faint">last request: {{ status }}</small>
+      </div>
     </section>
+
+    <p class="mt-8 text-sm text-muted-foreground">
+      This page belongs to the application. A page owned by a feature is at
+      <NuxtLink to="/health" class="text-accent-foreground underline underline-offset-2">
+        /health
+      </NuxtLink>.
+    </p>
   </main>
 </template>
-
-<style scoped>
-.shell {
-  max-width: 40rem;
-  margin: 4rem auto;
-  padding: 0 1.5rem;
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  color: #16181d;
-}
-
-h1 {
-  font-size: 1.75rem;
-  letter-spacing: -0.02em;
-  margin: 0 0 0.25rem;
-}
-
-.lede {
-  color: #5b6270;
-  margin: 0 0 2rem;
-}
-
-.card {
-  border: 1px solid #e3e6ea;
-  border-radius: 10px;
-  padding: 1.25rem 1.5rem;
-}
-
-h2 {
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #5b6270;
-  margin: 0 0 1rem;
-}
-
-dl {
-  margin: 0 0 1.25rem;
-}
-
-dl > div {
-  display: flex;
-  justify-content: space-between;
-  padding: 0.4rem 0;
-  border-bottom: 1px solid #f0f2f4;
-}
-
-dt {
-  color: #5b6270;
-}
-
-dd {
-  margin: 0;
-  font-variant-numeric: tabular-nums;
-}
-
-.good {
-  color: #1a7f4b;
-  font-weight: 600;
-}
-
-.bad {
-  color: #c0392b;
-  font-weight: 600;
-}
-
-.muted {
-  color: #8b92a0;
-}
-
-button {
-  font: inherit;
-  padding: 0.45rem 0.9rem;
-  border: 1px solid #d2d7de;
-  border-radius: 7px;
-  background: #fff;
-  cursor: pointer;
-}
-
-button:hover {
-  background: #f6f7f9;
-}
-
-small {
-  margin-left: 0.75rem;
-}
-</style>

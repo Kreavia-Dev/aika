@@ -13,6 +13,7 @@ Dokumen ini yang jadi acuan arsitektur. Kalau ada kode yang berbeda dengan isi d
 | Bahasa | TypeScript, `strict: true` |
 | Runtime | Node.js >= 22 (tim pakai 24) |
 | Frontend | Nuxt 4.6 (SSR) + Vue 3.5 |
+| Styling | Tailwind CSS v4, lewat plugin `@tailwindcss/vite` |
 | HTTP | Hono 4, di-mount di dalam Nitro |
 | Database | SQLite lewat `better-sqlite3`, SQL mentah |
 | Validasi | Zod 4, schema dimiliki tiap fitur |
@@ -27,12 +28,12 @@ Unit utamanya adalah **fitur**: satu kemampuan bisnis yang disimpan utuh di satu
 
 ```text
 features/billing/
-├── contract.ts       # schema Zod dan tipe turunannya, milik fitur ini
-├── index.ts          # BATAS SERVER: satu pintu untuk kode server
+├── contract.ts       # Zod schema and inferred types, owned by this feature
+├── index.ts          # SERVER boundary: one door for server code
 ├── server/           # route, service, repository, config
-├── web/              # permukaan browser (opsional)
-│   ├── index.ts      # BATAS BROWSER: satu pintu untuk kode browser
-│   ├── pages/        #   -> otomatis jadi route lewat modules/features.ts
+├── web/              # browser surface (optional)
+│   ├── index.ts      # BROWSER boundary: one door for browser code
+│   ├── pages/        #   -> auto-routed by modules/features.ts
 │   └── components/
 └── tests/
 ```
@@ -84,7 +85,9 @@ Dan satu jebakan yang harus dihindari: `shared/` yang lama-lama berubah jadi lay
 - **`shared/database/`**: satu-satunya tempat SQLite dibuka, dan pemilik pragma-nya.
 - **`shared/errors/`**: error domain dengan `code` dan `status` HTTP yang tetap.
 - **`shared/http/app.ts`**: composition root server: Hono app dan semua mount fitur.
-- **`modules/features.ts`**: modul Nuxt yang mendaftarkan `features/*/web/pages/` sebagai route.
+- **`shared/http/envelope.ts`**: schema envelope kegagalan. Tempatnya di sini karena `app.ts` satu-satunya yang memproduksi respons error, jadi bentuknya memang dipakai bersama.
+- **`shared/nuxt/feature-pages.ts`**: mengubah halaman fitur jadi route record. Fungsi murni, sengaja dipisah dari modul Nuxt supaya bisa dites tanpa menjalankan Nuxt.
+- **`modules/features.ts`**: modul Nuxt yang menerapkan route itu.
 
 `shared/http/` sengaja jadi pengecualian dari prinsip "`shared/` netral domain": komposisi harus tinggal di suatu tempat, dan satu file kecil jelas lebih baik daripada menebar mount ke dalam fitur.
 
@@ -95,10 +98,10 @@ Dan satu jebakan yang harus dihindari: `shared/` yang lama-lama berubah jadi lay
 Semua respons `/api` memakai bentuk yang sama:
 
 ```jsonc
-// berhasil
+// success
 { "success": true,  "message": "OK", "data": { } }
 
-// gagal
+// failure
 { "success": false, "message": "…", "code": "VALIDATION_ERROR", "errors": [] }
 ```
 
@@ -174,6 +177,24 @@ Dengan WAL, banyak pembaca bisa jalan bersamaan, tapi penulisnya tetap satu. Bat
 Itu sebabnya `ecosystem.config.cjs` memakai `exec_mode: 'fork'` dengan `instances: 1`. Cluster mode berarti N proses = N koneksi = N penulis yang berebut satu file lock. Karena SQLite menyerialisasi penulisan di level file, penulis tambahan tidak menambah throughput sama sekali, yang bertambah cuma variasi `SQLITE_BUSY`.
 
 File database, sidecar WAL-nya, dan semua backup **harus** ada di storage lokal host aplikasi. Jangan pernah di network filesystem bersama.
+
+## Testing
+
+Test berjalan di environment `node`, tanpa build Nuxt dan tanpa server HTTP. Itu bisa karena `shared/http/app.ts` tidak mengimpor apa pun dari Nitro: Hono app bisa langsung didorong dengan `Request` standar Web.
+
+| Jenis | Lokasi | Cakupan |
+|---|---|---|
+| Unit | `tests/unit/` | Logika murni tanpa framework, misalnya perhitungan route halaman fitur. |
+| Perilaku fitur | `features/<nama>/tests/` | Endpoint fitur itu, dijalankan lewat Hono app yang sebenarnya. |
+
+Aturannya:
+
+1. **Parse responsnya, jangan periksa field satu per satu.** `response.json()` bertipe `unknown`, dan itu disengaja. Melewatkannya ke schema Zod milik fiturnya sekaligus jadi validasi dan penyempitan tipe, dan yang diperiksa adalah kontrak yang diterbitkan, bukan salinannya.
+2. **Jalankan Hono app yang sebenarnya.** Biayanya murah, dan mem-mock-nya cuma menguji mock-nya.
+3. **Uji sambungannya, bukan implementasinya.** `shared/nuxt/feature-pages.ts` dipisahkan dari modul Nuxt justru untuk ini.
+4. **Test yang tidak mungkin gagal bukan test.** Semua test di sini memeriksa nilai yang masuk akal untuk salah.
+
+Yang sengaja belum dicakup: test yang menyalakan server hasil build lalu meminta halaman asli. Sekarang pemeriksaan itu dijalankan manual (`npm run build`, nyalakan server, minta `/health`). Tempatnya di CI begitu pipelinenya ada.
 
 ## Cara kode ini berpindah: kenapa tanpa monorepo
 

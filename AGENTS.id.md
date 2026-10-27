@@ -15,14 +15,16 @@ Cara perpindahan kodenya: clone repo ini per project klien, lalu tarik perbaikan
 ## Perintah
 
 ```bash
-npm run check              # GERBANG utama. Wajib hijau sebelum mengaku selesai.
-npm run typecheck          # sisi Nuxt/Vue
+npm run check              # THE gate. Must be green before you claim done.
+npm run typecheck          # Nuxt/Vue side
 npm run typecheck:scripts  # scripts/, shared/, features/
-npm run arch:check         # aturan batas fitur R1-R6
-npm run prose:check        # menolak em dash dan en dash di mana pun
-npm run dev                # server dev di :5555
-npm run db:migrate         # jalankan migrasi (snapshot dulu)
-npm run db:backup          # backup SQLite online
+npm run arch:check         # feature boundary rules R1-R6
+npm run prose:check        # refuses em and en dashes anywhere
+npm run dev                # dev server on :5555
+npm run db:migrate         # apply migrations (snapshots first)
+npm run db:backup          # online SQLite backup
+npm run test               # run the suite once
+npm run test:watch         # watch mode while you work
 ```
 
 Jalankan `npm run check` sebelum melaporkan selesai. Jangan pernah melaporkan sukses hanya karena "seharusnya jalan".
@@ -34,13 +36,13 @@ Jalankan `npm run check` sebelum melaporkan selesai. Jangan pernah melaporkan su
 Fitur = satu kemampuan bisnis, disimpan utuh di satu tempat:
 
 ```
-features/<nama>/
-├── contract.ts   # schema Zod + tipe turunannya
-├── index.ts      # BATAS SERVER
+features/<name>/
+├── contract.ts   # Zod schema and inferred types
+├── index.ts      # SERVER boundary
 ├── server/       # route, service, repository, config
-├── web/          # permukaan browser (opsional)
-│   ├── index.ts  # BATAS BROWSER
-│   ├── pages/    # otomatis jadi route lewat modules/features.ts
+├── web/          # browser surface (optional)
+│   ├── index.ts  # BROWSER boundary
+│   ├── pages/    # auto-routed by modules/features.ts
 │   └── components/
 └── tests/
 ```
@@ -52,19 +54,19 @@ Jangan membuat direktori `controllers/`, `services/`, `models/`, atau `repositor
 | Impor dari | Boleh dipakai di |
 |---|---|
 | `~~/features/<nama>` | kode server, kode server fitur lain |
-| `~~/features/<nama>/web` | komponen Vue, kode `web/` fitur lain |
+| `~~/features/<name>/web` | komponen Vue, kode `web/` fitur lain |
 
 **Salah di sini adalah cara termudah merusak build klien.**
 
-`~~/features/health` mengekspor `healthRoutes`, dan file itu mengimpor `better-sqlite3`. Kalau diimpor dari komponen Vue, modul native Node ikut masuk ke bundle browser. Kode browser harus mengimpor dari `~~/features/<nama>/web`.
+`~~/features/health` mengekspor `healthRoutes`, dan file itu mengimpor `better-sqlite3`. Kalau diimpor dari komponen Vue, modul native Node ikut masuk ke bundle browser. Kode browser harus mengimpor dari `~~/features/<name>/web`.
 
 Dua-duanya ditolak `arch:check`:
 
 ```ts
-// ditolak: deep import antar fitur (R2)
+// refused: deep cross-feature import (R2)
 import { getCurrentUser } from '~~/features/auth/server/repository'
 
-// ditolak: kode browser mengimpor batas server (R6)
+// refused: browser code using the server boundary (R6)
 import type { Post } from '~~/features/blog'
 ```
 
@@ -116,6 +118,22 @@ Kamu menulis TypeScript untuk tim yang masih belajar. Utamakan yang mudah dibaca
 - **Jangan membaca `process.env` di tempat lain, selain `shared/config/env.ts`.** Tambahkan field ke schema Zod di sana.
 - **`allowScripts` di `package.json` mem-pin persetujuan install script ke versi yang persis.** Saat meng-upgrade `better-sqlite3`, npm akan memperingatkan dan kamu harus menjalankan `npm install-scripts approve better-sqlite3`. Jangan pernah pakai `dangerously-allow-all-scripts`.
 
+## Testing
+
+```bash
+npm run test        # sekali
+npm run test:watch  # watch mode while you work
+```
+
+Test berjalan di environment `node`, tanpa build Nuxt dan tanpa server HTTP. `npm run check` menjalankan suite-nya, jadi test yang merah memblokir gerbangnya.
+
+- **Test unit** tinggal di `tests/unit/`. Apa pun yang tidak butuh framework tempatnya di sana.
+- **Test fitur** tinggal di `features/<name>/tests/`. Satu file per fitur cukup, sampai ternyata tidak.
+- **Jalankan Hono app yang sebenarnya.** `import { api } from '../../../shared/http/app'`, lalu `await api.request('/api/...')`. Jangan di-mock.
+- **Parse body-nya, jangan periksa field satu per satu.** `response.json()` bertipe `unknown`. Lewatkan ke schema Zod milik fitur dari `contract.ts`. Itu memvalidasi sekaligus menyempitkan tipe dalam satu langkah, dan yang diperiksa adalah kontraknya, bukan salinannya.
+- **Untuk respons error**, parse dengan `failureEnvelopeSchema` dari `shared/http/envelope.ts`.
+- **Semua respons `/api` memakai envelope.** Bentuk respons baru yang tidak memakainya itu bug, bukan variasi.
+
 ## SQLite dan migrasi
 
 - Migrasi itu SQL mentah di `database/migrations/`, dijalankan urut nama file, **forward-only**.
@@ -135,7 +153,17 @@ Sebelum menambah dependency, cek `ARCHITECTURE.md` bagian "Yang tidak kita bangu
 - **Inggris sebagai default.** `README.md`, `ARCHITECTURE.md`, `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/UPGRADING.md`.
 - **Indonesia sebagai pendamping.** Nama file sama, ditambah `.id.md`.
 - **Keduanya diperbarui dalam perubahan yang sama.** Perubahan yang hanya memperbarui satu bahasa belum selesai.
-- Kode, identifier, komentar, commit message, dan `AGENTS.md`: **Inggris**.
+- **Kode wajib Bahasa Inggris, tanpa pengecualian**: identifier, komentar, nama test, commit message, dan file ini. Kode campur bahasa berat dibaca manusia, dan lebih berat lagi dibaca tool, sementara kode framework ikut ter-merge ke setiap project klien.
+- **Satu pengecualian: teks untuk pengguna.** `app/**` dan `features/<name>/web/**` adalah permukaan browser, jadi situs klien yang ditujukan untuk pembaca Indonesia memang wajar berisi Bahasa Indonesia di sana. `npm run prose:check` yang menegakkan pembagian ini.
+
+## Styling
+
+Tailwind CSS v4, lewat plugin `@tailwindcss/vite`, bukan modul Nuxt.
+
+- **Pakai utility class.** Jangan tambah blok `<style>` di komponen. Kalau ada yang benar-benar tidak bisa dinyatakan sebagai utility, sebutkan alasannya di pull request.
+- **Pakai token semantik, jangan pernah nilai hex mentah.** `bg-card`, `text-muted-foreground`, `border-border`, `text-destructive`, `text-success`. Warna hard code itu bug rebranding yang menunggu waktu.
+- **Ubah warna di `app/assets/css/palette.css`**, jangan di komponen. File itu sumber kebenaran tunggalnya, dan setiap token punya nilai untuk dark mode.
+- **Sebuah direktori hanya dipindai kalau `app/assets/css/main.css` mendeklarasikannya** lewat `@source`. Kalau kamu menambah direktori top-level berisi komponen, tambahkan baris `@source`-nya. Kalau tidak, class-nya tidak akan pernah di-generate, dan tidak ada yang melaporkan error.
 
 ## Gaya penulisan
 
@@ -150,7 +178,7 @@ Berlaku untuk semua dokumen di repo ini, dalam kedua bahasa.
 
 1. `npm run check` hijau.
 2. Setiap route `/api` baru tinggal di dalam fitur dan di-mount di `shared/http/app.ts`.
-3. Kode browser hanya mengimpor dari `~~/features/<nama>/web`.
+3. Kode browser hanya mengimpor dari `~~/features/<name>/web`.
 4. Setiap perubahan schema punya file migrasi baru.
 5. Kedua versi bahasa dari dokumentasi yang terpengaruh sudah diperbarui.
 6. Perilaku baru punya minimal satu test, atau kamu menyebutkan alasannya kenapa tidak.

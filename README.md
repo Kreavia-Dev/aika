@@ -74,11 +74,13 @@ The pin is per exact version, deliberately. When `better-sqlite3` is upgraded, a
 | `npm run dev` | Dev server with HMR on :5555 |
 | `npm run build` | Production build into `.output/` |
 | `npm start` | Run the built output locally |
-| `npm run check` | **The canonical gate.** Nuxt typecheck + scripts typecheck + arch:check + prose:check |
+| `npm run check` | **The canonical gate.** Nuxt typecheck + scripts typecheck + arch:check + prose:check + test |
 | `npm run typecheck` | Typecheck the Nuxt/Vue side |
-| `npm run typecheck:scripts` | Typecheck `scripts/`, `shared/`, `features/` |
+| `npm run typecheck:scripts` | Typecheck `scripts/`, `shared/`, `features/` and the tests |
 | `npm run arch:check` | Enforce the feature boundary rules |
 | `npm run prose:check` | Refuse em and en dashes in any document |
+| `npm run test` | Run the test suite once |
+| `npm run test:watch` | Watch mode while you work |
 | `npm run db:migrate` | Apply migrations (snapshots first) |
 | `npm run db:backup` | Online SQLite snapshot, keeps the newest 14 |
 

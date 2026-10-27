@@ -16,7 +16,7 @@ It is deliberately not three other things:
 
 ## Where Aika stands
 
-One feature (`health`). The foundation is solid and verified: boundaries enforced, migrations snapshot first, backups taken online, one process.
+One feature (`health`). The foundation is solid and verified: boundaries enforced, migrations snapshot first, backups taken online, one process, 23 tests in under a second, and feature owned routing proven in a production build.
 
 **Nothing a client would pay for exists yet.** That is expected at this stage, but it should not be described as anything else.
 
@@ -28,13 +28,7 @@ These block whole phases. Decide them before starting the phase, not during it.
 |---|---|---|
 | **CMS: build a lean one, or adopt Directus or Payload?** | All of Phase 2 | Building the 80% of WordPress that clients actually use is roughly 10 to 14 weeks for one person. Adopting means a second framework in a stack that already has Nuxt, and possibly a schema that cannot be diffed in git, which would fight the distribution model. |
 | **How much of the admin UI gets generated from a schema?** | Phase 2 | If content models are declared as data, then admin CRUD screens, SEO fields, and content API endpoints can all be generated instead of written by hand. This is the highest-leverage investment available to Aika. |
-
-## Phase 0: make it verifiable
-
-Nothing after this can be trusted until this exists.
-
-- [ ] **Test runner.** `npm run check` currently verifies types and boundaries and zero behaviour.
-- [ ] **Prove the feature page mechanism.** `modules/features.ts` loads without error but has never been exercised, because no feature has a `web/pages/` directory yet. It is the only unverified architectural claim in the project.
+| **How does a client project learn to build a feature?** | Phase 1 | Twenty markdown files land in every client project, and a client's own README cannot live at the root without conflicting on every pull. The shape of both the documentation and any worked example is still undecided. |
 
 ## Phase 1: the minimum a client site needs
 
@@ -43,6 +37,7 @@ Nothing after this can be trusted until this exists.
 - [ ] **SEO**: meta tags, canonical URLs, `sitemap.xml`, `robots.txt`, Open Graph. Aika sells websites, so this is not optional, and today it is completely absent.
 - [ ] Error pages for 404 and 500 that are not Nuxt defaults.
 - [ ] `media`: upload, a storage contract with a local adapter, and image resizing.
+- [ ] **Restrict the `/health` page.** It currently exposes the version and the uptime to anyone who asks.
 
 ## Phase 2: the WordPress-like part
 

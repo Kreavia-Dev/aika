@@ -13,24 +13,24 @@ Kalau changelog menjawab *"apa yang berubah"*, dokumen ini menjawab *"apa yang h
 ## Prosedur standar
 
 ```bash
-cd nama-klien
+cd client-name
 
-# 1. Pastikan tidak ada kerjaan yang belum di-commit. Selalu.
-git status                 # harus bersih
-git checkout -b upgrade/aika-<versi>
+# 1. Make sure nothing is uncommitted. Always.
+git status                 # must be clean
+git checkout -b upgrade/aika-<version>
 
-# 2. Lihat apa yang akan masuk, SEBELUM merge.
+# 2. See what is coming, BEFORE merging.
 git fetch upstream
 git log --oneline HEAD..upstream/main
 git diff --stat HEAD..upstream/main
 
-# 3. Baca bagian versi terkait di CHANGELOG.
-#    Kalau ada bagian "perlu tindakan", kerjakan SETELAH merge, bukan sebelumnya.
+# 3. Read the relevant version section in the CHANGELOG.
+#    If there is an "action required" section, do it AFTER the merge.
 
 # 4. Merge.
 git merge upstream/main
 
-# 5. Verifikasi.
+# 5. Verify.
 npm ci
 npm run check
 npm run db:backup
@@ -57,7 +57,7 @@ Setiap versi Aika yang butuh tindakan mendapat satu bagian seperti ini:
 
 1. Pastikan environment di VPS punya `APP_URL` yang benar:
    ```
-   APP_URL=https://nama-klien.example.id
+   APP_URL=https://client-name.example.id
    ```
 2. Kalau file-nya ada di `/etc/aika/env`, ubah di sana juga.
 3. Jalankan `npm run build` dan `pm2 reload aika`, lalu cek `GET /api/health`.

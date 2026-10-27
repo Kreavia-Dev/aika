@@ -32,18 +32,18 @@ Buktinya, per commit pertama: `npm run check` hijau, `npm run build` hijau, `GET
 ## Isi repo
 
 ```
-app/                  shell Nuxt (pages, layouts), milik klien
-features/             potongan vertikal, satu fitur satu kemampuan bisnis
-  health/             fitur contoh: contract.ts, index.ts, web/index.ts, server/
-shared/               infrastruktur netral, tidak terikat domain
-  config/env.ts       SATU-SATUNYA tempat process.env dibaca, divalidasi Zod
-  database/client.ts  SATU-SATUNYA tempat SQLite dibuka, pemilik pragma WAL
-  errors/             error domain dengan code dan status HTTP yang tetap
-  http/app.ts         composition root Hono
-server/api/[...path].ts   satu-satunya jembatan Nitro → Hono
-modules/features.ts   mengubah features/*/web/pages/ jadi route Nuxt
+app/                  Nuxt shell (pages, layouts), client-owned
+features/             vertical slices, one feature per business capability
+  health/             reference feature: contract.ts, index.ts, web/index.ts, server/
+shared/               business-neutral infrastructure
+  config/env.ts       the ONLY place process.env is read, validated by Zod
+  database/client.ts  the ONLY place SQLite is opened, and the WAL pragmas
+  errors/             domain errors with a stable code and HTTP status
+  http/app.ts         the Hono composition root
+server/api/[...path].ts   the single Nitro to Hono adapter → Hono
+modules/features.ts   turns features/*/web/pages/ into Nuxt routes
 database/migrations/  SQL forward-only
-scripts/              migrate, backup, pemeriksa arsitektur
+scripts/              migrate, backup, architecture and prose checks
 ```
 
 ## Yang dibutuhkan
@@ -56,7 +56,7 @@ scripts/              migrate, backup, pemeriksa arsitektur
 ```bash
 npm install
 cp .env.example .env
-npm run setup      # jalankan migrasi (database di-snapshot dulu)
+npm run setup      # applies migrations (snapshots the database first)
 npm run dev        # http://localhost:5555
 ```
 
@@ -66,7 +66,7 @@ Buka halaman depannya. Kalau muncul `Database: up`, berarti seluruh rantainya su
 
 ```bash
 npm install-scripts ls
-npm install-scripts approve <paket>
+npm install-scripts approve <package>
 ```
 
 Persetujuannya di-pin ke versi yang persis, dan itu memang disengaja. Setiap kali `better-sqlite3` di-upgrade, persetujuannya harus diberikan ulang, ini fitur keamanan supply chain, bukan gangguan.
@@ -78,11 +78,13 @@ Persetujuannya di-pin ke versi yang persis, dan itu memang disengaja. Setiap kal
 | `npm run dev` | Server dev dengan HMR di :5555 |
 | `npm run build` | Build produksi ke `.output/` |
 | `npm start` | Jalankan hasil build di lokal |
-| `npm run check` | **Gerbang utama.** Typecheck Nuxt + typecheck scripts + arch:check + prose:check |
+| `npm run check` | **Gerbang utama.** Typecheck Nuxt + typecheck scripts + arch:check + prose:check + test |
 | `npm run typecheck` | Typecheck sisi Nuxt/Vue |
-| `npm run typecheck:scripts` | Typecheck `scripts/`, `shared/`, `features/` |
+| `npm run typecheck:scripts` | Typecheck `scripts/`, `shared/`, `features/`, dan test-nya |
 | `npm run arch:check` | Periksa aturan batas fitur |
 | `npm run prose:check` | Tolak em dash dan en dash di dokumen mana pun |
+| `npm run test` | Jalankan seluruh test sekali |
+| `npm run test:watch` | Mode watch sambil kerja |
 | `npm run db:migrate` | Jalankan migrasi (snapshot dulu) |
 | `npm run db:backup` | Snapshot online, menyimpan 14 file terbaru |
 
@@ -93,12 +95,12 @@ Persetujuannya di-pin ke versi yang persis, dan itu memang disengaja. Setiap kal
 Perpindahan kodenya lewat **git upstream**: bukan copy-paste, dan bukan monorepo.
 
 ```bash
-git clone git@github.com:Kreavia-Dev/aika.git nama-klien
-cd nama-klien
+git clone git@github.com:Kreavia-Dev/aika.git client-name
+cd client-name
 
-# origin milik Aika kita ganti nama jadi upstream; origin baru jadi milik klien.
+# Aika origin becomes upstream; the new origin belongs to the client.
 git remote rename origin upstream
-git remote add origin git@github.com:Kreavia-Dev/nama-klien.git
+git remote add origin git@github.com:Kreavia-Dev/client-name.git
 
 npm install
 cp .env.example .env
@@ -134,16 +136,16 @@ Daftar lengkapnya beserta alasannya ada di [ARCHITECTURE.id.md](./ARCHITECTURE.i
 ## Deploy
 
 ```bash
-# Di mesin lokal atau CI: jangan pernah build di VPS.
+# Local machine or CI: never build on the VPS.
 npm ci
 npm run check
 npm run build
 
-# Kirim artefaknya.
+# Ship the artefact.
 rsync -az --delete .output/ vps:/srv/aika/
 rsync -az database/migrations/ vps:/srv/aika/database/migrations/
 
-# Di VPS. Migrasi jalan SEBELUM reload, selalu.
+# On the VPS. Migrate BEFORE reloading, always.
 ssh vps 'cd /srv/aika && npm run db:backup && npm run db:migrate && pm2 reload aika'
 ```
 

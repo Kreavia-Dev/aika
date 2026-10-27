@@ -36,19 +36,19 @@ Tempel ini ke deskripsi PR, lalu isi:
 ## What
 ## Why
 ## Boundary impact
-- [ ] Tidak menyentuh file milik klien, atau: tercantum di bawah dan ada alasannya
-- [ ] Route `/api` baru tinggal di dalam fitur dan di-mount di shared/http/app.ts
-- [ ] Kode browser hanya mengimpor dari ~~/features/<nama>/web
-- [ ] Dependency baru ada justifikasinya terhadap ARCHITECTURE.md → "Yang tidak kita bangun"
+- [ ] No client-owned file touched, or: listed below with a reason
+- [ ] New `/api` routes live in a feature and are mounted in shared/http/app.ts
+- [ ] Browser code imports only from ~~/features/<name>/web
+- [ ] New dependency justified against ARCHITECTURE.md, "What Aika does not build"
 
 ## Verification
 - [ ] npm run check
 - [ ] npm run build
-- [ ] migrasi dijalankan dan diulang (aman kalau dua kali)
-- [ ] dokumentasi diperbarui di KEDUA bahasa
+- [ ] migration applied and re-run (idempotent)
+- [ ] docs updated in BOTH languages
 
 ## Downstream impact
-- [ ] Tidak ada tindakan yang diperlukan project klien, atau: docs/UPGRADING.md diperbarui
+- [ ] No action needed by client projects, or: docs/UPGRADING.md updated
 ```
 
 ## Mengubah batas antara framework dan klien

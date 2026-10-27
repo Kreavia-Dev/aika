@@ -1,0 +1,102 @@
+/*
+ * Aika palette: the single source of truth for colour.
+ *
+ * The architecture follows Nara's approach. Raw values live here as --aika-*
+ * variables, light and dark are both declared up front, and `main.css` maps
+ * semantic aliases onto them. Components then use Tailwind utilities such as
+ * `bg-background` or `text-muted-foreground` and never hard code a hex value.
+ *
+ * The values themselves are Aika's own, so the two tools stay visually
+ * distinguishable. Rebranding for a client is a change to the few accent
+ * variables, not a hunt through components.
+ */
+:root {
+  --aika-bg: #f7f7f4;
+  --aika-surface: #ffffff;
+  --aika-surface-soft: #eff1ef;
+  --aika-fg: #16181d;
+  --aika-muted: #5b6270;
+  --aika-faint: #8b92a0;
+  --aika-line: #e3e6ea;
+  --aika-line-strong: #cbd1d9;
+
+  --aika-accent: #4f6ef7;
+  --aika-accent-strong: #2d47c9;
+  --aika-accent-soft: #e9ecfe;
+  --aika-on-accent: #f8f9ff;
+
+  --aika-success: #15794a;
+  --aika-success-soft: #e5f4ec;
+  --aika-danger: #b3261e;
+  --aika-danger-soft: #fdecea;
+
+  /* Ink: the dark surface used for code and terminal style panels. */
+  --aika-ink: #101318;
+  --aika-ink-fg: #dfe3e8;
+  --aika-ink-muted: #8b94a1;
+  --aika-ink-line: #242b35;
+  --aika-ink-accent: #93a6ff;
+
+  --aika-grid: rgba(22, 24, 29, 0.05);
+  --aika-shadow: 0 1px 2px rgba(22, 24, 29, 0.04), 0 18px 40px -24px rgba(22, 24, 29, 0.25);
+  --aika-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* Semantic aliases. These are what Tailwind utilities resolve against. */
+  --background: var(--aika-bg);
+  --foreground: var(--aika-fg);
+  --card: var(--aika-surface);
+  --card-foreground: var(--aika-fg);
+  --muted: var(--aika-surface-soft);
+  --muted-foreground: var(--aika-muted);
+  --faint: var(--aika-faint);
+  --border: var(--aika-line);
+  --line-strong: var(--aika-line-strong);
+  --input: var(--aika-line);
+  --ring: var(--aika-accent-strong);
+  --primary: var(--aika-accent-strong);
+  --primary-foreground: var(--aika-on-accent);
+  --accent: var(--aika-accent-soft);
+  --accent-foreground: var(--aika-accent-strong);
+  --success: var(--aika-success);
+  --success-foreground: #ffffff;
+  --destructive: var(--aika-danger);
+  --destructive-foreground: #ffffff;
+
+  --radius: 0.625rem;
+}
+
+/*
+ * Dark theme.
+ *
+ * `main.css` declares the `dark` variant, so `dark:` utilities work as soon as
+ * something puts `.dark` on a root element. Nothing does yet: the application
+ * shell gains a theme switch in a later phase. Declaring the tokens now means
+ * that switch is a class toggle rather than a palette rewrite.
+ */
+.dark {
+  --aika-bg: #0f1216;
+  --aika-surface: #171b21;
+  --aika-surface-soft: #1f242b;
+  --aika-fg: #eef0f3;
+  --aika-muted: #a8b0bb;
+  --aika-faint: #7d8695;
+  --aika-line: #2a3038;
+  --aika-line-strong: #3d444e;
+
+  --aika-accent: #7d92ff;
+  --aika-accent-strong: #a3b2ff;
+  --aika-accent-soft: rgba(125, 146, 255, 0.12);
+  --aika-on-accent: #0f1216;
+
+  --aika-success: #5cc08d;
+  --aika-success-soft: rgba(92, 192, 141, 0.14);
+  --aika-danger: #f0837c;
+  --aika-danger-soft: rgba(240, 131, 124, 0.14);
+
+  --aika-grid: rgba(238, 240, 243, 0.045);
+  --aika-shadow: 0 1px 3px rgba(0, 0, 0, 0.2), 0 24px 50px -32px rgba(0, 0, 0, 0.6);
+
+  --accent-foreground: var(--aika-accent-strong);
+  --success-foreground: #0f1216;
+  --destructive-foreground: #0f1216;
+}

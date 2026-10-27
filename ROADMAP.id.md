@@ -16,7 +16,7 @@ Sengaja bukan tiga hal ini:
 
 ## Posisi Aika sekarang
 
-Satu fitur (`health`). Fondasinya sudah kokoh dan terbukti: batas ditegakkan, migrasi menulis snapshot lebih dulu, backup diambil saat aplikasi jalan, satu proses.
+Satu fitur (`health`). Fondasinya sudah kokoh dan terbukti: batas ditegakkan, migrasi menulis snapshot lebih dulu, backup diambil saat aplikasi jalan, satu proses, 23 test dalam waktu kurang dari satu detik, dan routing milik fitur sudah terbukti di build produksi.
 
 **Belum ada satu pun hal yang mau dibayar klien.** Itu wajar di tahap ini, tapi jangan disebut sebagai apa pun selain itu.
 
@@ -28,13 +28,7 @@ Ini memblokir satu fase penuh. Putuskan sebelum fasenya dimulai, bukan saat suda
 |---|---|---|
 | **CMS: bangun sendiri yang ringkas, atau adopsi Directus atau Payload?** | Seluruh Fase 2 | Membangun 80% WordPress yang benar-benar dipakai klien butuh sekitar 10 sampai 14 minggu untuk satu orang. Kalau mengadopsi, berarti ada framework kedua di stack yang sudah punya Nuxt, dan schemanya mungkin tidak bisa di-diff di git, yang justru melawan cara perpindahan kode kita. |
 | **Seberapa banyak admin UI yang bisa di-generate dari schema?** | Fase 2 | Kalau content model dideklarasikan sebagai data, maka layar CRUD admin, field SEO, dan endpoint content API bisa di-generate, bukan ditulis satu per satu. Ini investasi dengan hasil paling besar yang tersedia untuk Aika. |
-
-## Fase 0: buat semuanya bisa diverifikasi
-
-Yang setelah ini tidak bisa dipercaya sebelum fase ini ada.
-
-- [ ] **Test runner.** `npm run check` saat ini memverifikasi tipe dan batas, dan nol perilaku.
-- [ ] **Buktikan mekanisme halaman fitur.** `modules/features.ts` termuat tanpa error, tapi belum pernah benar-benar dijalankan karena belum ada fitur yang punya direktori `web/pages/`. Ini satu-satunya klaim arsitektur yang belum terbukti di proyek ini.
+| **Bagaimana project klien belajar membangun fitur?** | Fase 1 | Dua puluh file markdown masuk ke setiap project klien, dan README milik klien sendiri tidak bisa berada di root tanpa berkonflik di setiap pull. Bentuk dokumentasinya dan bentuk contoh kerjanya masih belum diputuskan. |
 
 ## Fase 1: kebutuhan minimum satu situs klien
 
@@ -43,6 +37,7 @@ Yang setelah ini tidak bisa dipercaya sebelum fase ini ada.
 - [ ] **SEO**: meta tag, canonical URL, `sitemap.xml`, `robots.txt`, Open Graph. Aika menjual situs, jadi ini bukan opsional, dan sekarang belum ada sama sekali.
 - [ ] Halaman error 404 dan 500 yang bukan bawaan Nuxt.
 - [ ] `media`: upload, kontrak storage dengan adapter lokal, dan resize gambar.
+- [ ] **Batasi akses halaman `/health`.** Sekarang halaman itu membuka versi dan uptime ke siapa pun yang meminta.
 
 ## Fase 2: bagian yang mirip WordPress
 

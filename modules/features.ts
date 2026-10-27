@@ -1,31 +1,18 @@
-import { existsSync, readdirSync, statSync } from 'node:fs'
-import { join, relative } from 'node:path'
+import { join } from 'node:path'
 import { defineNuxtModule } from '@nuxt/kit'
+import { collectFeaturePages } from '../shared/nuxt/feature-pages'
 
 /**
  * Aika feature module.
  *
- * A feature owns its own browser surface under `features/<name>/web/`.
- * This module makes those pages real without any feature having to edit
+ * A feature owns its own browser surface under `features/<name>/web/pages/`.
+ * This module makes those pages real routes without any feature having to edit
  * the application's routing. That is what keeps `git pull upstream` from
  * turning into a merge conflict: upstream changes never touch client code.
  *
- * Route convention: features/blog/web/pages/index.vue  ->  /blog
- *                   features/blog/web/pages/[slug].vue ->  /blog/:slug
+ * The route computation itself lives in `shared/nuxt/feature-pages.ts` as a
+ * pure function, so it is covered by unit tests rather than by hoping.
  */
-function walk(dir: string): string[] {
-  const out: string[] = []
-  for (const entry of readdirSync(dir)) {
-    const full = join(dir, entry)
-    if (statSync(full).isDirectory()) {
-      out.push(...walk(full))
-    } else if (entry.endsWith('.vue')) {
-      out.push(full)
-    }
-  }
-  return out
-}
-
 export default defineNuxtModule({
   meta: {
     name: 'aika-features',
@@ -34,34 +21,14 @@ export default defineNuxtModule({
 
   setup(_options, nuxt) {
     const featuresDir = join(nuxt.options.rootDir, 'features')
-    if (!existsSync(featuresDir)) return
-
-    const features = readdirSync(featuresDir).filter((name) =>
-      statSync(join(featuresDir, name)).isDirectory(),
-    )
 
     nuxt.hook('pages:extend', (pages) => {
-      for (const feature of features) {
-        const pagesDir = join(featuresDir, feature, 'web', 'pages')
-        if (!existsSync(pagesDir)) continue
-
-        for (const file of walk(pagesDir)) {
-          const rel = relative(pagesDir, file)
-            .split(/[\\/]/)
-            .join('/')
-            .replace(/\.vue$/, '')
-
-          const routePath
-            = rel === 'index'
-              ? `/${feature}`
-              : `/${feature}/${rel.replace(/\/index$/, '')}`
-
-          pages.push({
-            name: `${feature}-${rel.replace(/\//g, '-')}`,
-            path: routePath,
-            file,
-          })
-        }
+      for (const page of collectFeaturePages(featuresDir)) {
+        pages.push({
+          name: page.name,
+          path: page.path,
+          file: page.file,
+        })
       }
     })
   },
