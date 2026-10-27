@@ -6,6 +6,8 @@
  * implementation a client project will restyle. It posts to the API and lets
  * the API decide, so the browser never validates a credential.
  */
+import { messageFromApiError } from '~~/shared/http/error-message'
+
 useHead({ title: 'Sign in' })
 
 /*
@@ -20,25 +22,6 @@ const password = ref('')
 const errorMessage = ref<string | null>(null)
 const submitting = ref(false)
 
-/**
- * Narrows an unknown thrown value into something printable.
- *
- * `catch (error)` gives `unknown`, and the API's message lives on
- * `error.data.message`. Reaching it means narrowing twice rather than casting
- * to `any`, which is the habit that makes a codebase unsafe later.
- */
-function messageFrom(error: unknown): string {
-  if (typeof error === 'object' && error !== null && 'data' in error) {
-    const data = (error as { data: unknown }).data
-    if (typeof data === 'object' && data !== null && 'message' in data) {
-      const message = (data as { message: unknown }).message
-      if (typeof message === 'string' && message.length > 0) return message
-    }
-  }
-
-  return 'Sign in failed. Please try again.'
-}
-
 async function submit(): Promise<void> {
   errorMessage.value = null
   submitting.value = true
@@ -52,7 +35,7 @@ async function submit(): Promise<void> {
     await navigateTo('/')
   }
   catch (error) {
-    errorMessage.value = messageFrom(error)
+    errorMessage.value = messageFromApiError(error, 'Sign in failed. Please try again.')
   }
   finally {
     submitting.value = false

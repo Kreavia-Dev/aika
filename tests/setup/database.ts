@@ -8,14 +8,31 @@ import { applyMigrations } from '../../shared/database/migrate'
  * against the development database. This brings that file up to the same schema
  * the deploy uses, through the same `applyMigrations` the CLI calls, so a test
  * can never pass against a schema nobody ships.
- *
- * Rows are cleared afterwards so a file starts from a known state. Tests within
- * one file still share a database, so they create their own users under distinct
- * emails rather than assuming an empty table.
  */
 const db = getDb()
 
 applyMigrations(db)
 
-db.exec('DELETE FROM sessions')
-db.exec('DELETE FROM users')
+/**
+ * Empty every table the application owns.
+ *
+ * Discovered rather than listed, so adding a feature does not mean remembering
+ * to come back here and a forgotten table cannot leak state into the next run.
+ * `_aika_migrations` is excluded because the schema depends on it, and `sqlite_`
+ * tables are SQLite's own.
+ *
+ * The table name is interpolated because a name cannot be a bound parameter, and
+ * it comes from `sqlite_master`, not from anything a caller controls.
+ */
+const ownedTables = db
+  .prepare(`
+    SELECT name FROM sqlite_master
+    WHERE type = 'table'
+      AND name NOT LIKE 'sqlite_%'
+      AND name <> '_aika_migrations'
+  `)
+  .all() as Array<{ name: string }>
+
+for (const table of ownedTables) {
+  db.exec(`DELETE FROM "${table.name}"`)
+}

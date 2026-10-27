@@ -65,7 +65,7 @@ Blocked by the open decisions above.
 
 - [ ] Server-sent events for live updates.
 - [ ] Multi-language content.
-- [ ] Contact forms and other submissions.
+- [ ] **Notify someone when a contact form is submitted, and give staff an inbox to read them in.** `features/contact/` stores submissions now, but nobody is told and there is no screen to read them on, so a message currently sits in the table until somebody opens the database by hand.
 
 ## Deliberately not on this roadmap
 

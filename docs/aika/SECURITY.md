@@ -39,6 +39,18 @@ This is deliberate, and it is not a small thing. A per account lockout is trivia
 
 Until then: use the generated passwords, keep the sign in page out of public indexes, and never reuse a staff password anywhere else.
 
+## Data the site collects
+
+The contact form stores a name, an email address, a message body, and the sender's
+user agent. That is personal data, and once a form like it is public on a client's
+site it is the thing most likely to bring an obligation with it.
+
+- **Decide a retention period and honour it.** Nothing in Aika deletes old submissions, so without a decision they accumulate forever. A scheduled `DELETE` is a few lines, and deciding the period belongs to whoever owns the client relationship.
+- **Do not add fields you do not need.** Every field is data you are then responsible for.
+- **Do not log the message body.** A submission is stored deliberately. A copy in the process log is stored by accident, with a different retention period and a different set of people who can read it.
+- **The sender's user agent is truncated to 300 characters**, because it arrives unbounded and attacker controlled.
+- **The sender's IP address is deliberately not stored.** Add it only if spam becomes a real problem, and write down why on the day you add it.
+
 ## Dependencies
 
 Check before adding:

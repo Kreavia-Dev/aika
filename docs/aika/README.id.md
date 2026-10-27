@@ -36,10 +36,11 @@ app/                  situs klien: pages, layouts, components, site.ts
   site.ts             nama situs, tagline, navigasi, kontak. Edit ini duluan
   app.vue             akarnya, dan wajib membungkus NuxtPage dengan NuxtLayout
   layouts/default.vue kerangka situs yang dipakai semua halaman
-  components/         SiteHeader, SiteFooter, AikaWatermark
+  components/         SiteHeader, SiteFooter, ContactForm, AikaWatermark
   middleware/auth.ts  mengarahkan pengunjung yang belum masuk ke halaman masuk
 features/             vertical slices, one feature per business capability
   auth/               masuk, sesi, penjaga halaman
+  contact/            form kontak: tabel, contract, endpoint. Tanpa UI, dan itu sengaja
   health/             status, dan rujukan untuk fitur paling minimal
 shared/               business-neutral infrastructure
   config/env.ts       the ONLY place process.env is read, validated by Zod
@@ -47,6 +48,7 @@ shared/               business-neutral infrastructure
   database/migrate.ts penjalan migrasi, dipakai CLI dan test
   errors/             domain errors with a stable code and HTTP status
   http/app.ts         the Hono composition root
+  http/error-message.ts   mengubah error fetch jadi pesan yang bisa dibaca
   nuxt/feature-pages.ts   mengubah features/*/web/pages/ jadi route record
 server/api/[...path].ts   the single Nitro to Hono adapter, lalu ke Hono
 modules/features.ts   menyambungkan halaman fitur ke Nuxt

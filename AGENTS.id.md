@@ -129,6 +129,12 @@ Pemilik autentikasi adalah `features/auth/`, dan itu rujukan untuk fitur yang me
 - **`users.role` ada dan tidak ditegakkan di mana pun.** Setiap user yang login sekarang efektif sebagai administrator. Jangan membangun fitur yang mengasumsikan sebaliknya.
 - **Proses masuk tidak dibatasi.** Lihat `docs/aika/SECURITY.id.md` untuk artinya dalam praktik.
 
+## Di mana sebuah layar tinggal
+
+- **Layar yang akan ditulis ulang setiap klien tinggal di `app/`, bukan di sebuah fitur.** Layar yang dipakai bersama semua klien, seperti panel status atau form login, boleh tinggal di fitur.
+- **Fitur tanpa UI itu wajar.** `features/contact/` itu tabel, contract, dan endpoint. Jangan menambahkan halaman ke situ hanya supaya punya halaman.
+- **Kode browser mengimpor fitur lewat `~~/features/<nama>/web`, jangan lewat `~~/features/<nama>`.** Pintu server menjangkau `better-sqlite3`, dan aturan R6 menolak impor yang akan menyeretnya ke bundle browser.
+
 ## Testing
 
 ```bash

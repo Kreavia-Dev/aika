@@ -127,6 +127,12 @@ You are writing TypeScript for a team that is still learning it. Optimise for re
 - **`users.role` exists and nothing enforces it.** Every signed-in user is currently an administrator. Do not build a feature that assumes otherwise.
 - **Sign in is not rate limited.** See `docs/aika/SECURITY.md` for what that means in practice.
 
+## Where a screen lives
+
+- **A screen every client would rewrite goes in `app/`, not in a feature.** A screen every client shares, such as a status panel or a sign in form, can live in a feature.
+- **A feature with no UI is normal.** `features/contact/` is a table, a contract, and an endpoint. Do not add a page to it just so it has one.
+- **Browser code imports a feature through `~~/features/<name>/web`, never through `~~/features/<name>`.** The server door reaches `better-sqlite3`, and rule R6 refuses the import that would drag it into the browser bundle.
+
 ## Testing
 
 ```bash

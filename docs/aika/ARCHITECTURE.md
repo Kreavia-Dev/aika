@@ -176,6 +176,28 @@ That is why `ecosystem.config.cjs` uses `exec_mode: 'fork'` with `instances: 1`.
 
 The database file, its WAL sidecars, and backups **must** live on storage local to the application host. Never on a shared network filesystem.
 
+### Where a screen lives
+
+A feature is a slice of the system, not a folder for frontend code. The question
+that decides where a screen goes is not "is it UI", it is **"will every client
+want the same thing here"**.
+
+| Screen | Lives in | Why |
+|---|---|---|
+| The contact page and form | `app/` | Every client words it differently, and many change the fields |
+| The status panel at `/health` | `features/health/` | A status panel looks the same for every client, and no client wants to rewrite it |
+| The sign in form at `/auth/login` | `features/auth/` | The same reasoning. It is tooling, not branding |
+
+Two consequences worth stating plainly, because both are easy to get wrong:
+
+- **A feature can have no UI at all.** `features/contact/` is a table, a contract,
+  and an endpoint. The client's page imports its types through the browser door
+  and posts to it. Do not add a page to a feature just so the feature has one.
+- **A shared file does not protect against merge conflicts.** Putting a client's
+  copy inside a feature does not stop the client editing it. It only moves the
+  conflict somewhere less obvious, and it means the next upstream change to that
+  file arrives as a conflict in code the client was told not to touch.
+
 ## Authentication
 
 Written in house rather than adopted, and deliberately the smallest thing that

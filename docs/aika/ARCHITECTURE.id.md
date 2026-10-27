@@ -178,6 +178,30 @@ Itu sebabnya `ecosystem.config.cjs` memakai `exec_mode: 'fork'` dengan `instance
 
 File database, sidecar WAL-nya, dan semua backup **harus** ada di storage lokal host aplikasi. Jangan pernah di network filesystem bersama.
 
+### Di mana sebuah layar tinggal
+
+Fitur itu potongan dari sistem, bukan folder untuk kode frontend. Pertanyaan yang
+menentukan letak sebuah layar bukan "ini UI atau bukan", melainkan **"apakah
+semua klien mau hal yang sama di sini"**.
+
+| Layar | Tinggal di | Kenapa |
+|---|---|---|
+| Halaman dan form kontak | `app/` | Tiap klien memakai kata yang berbeda, dan banyak yang mengganti field-nya |
+| Panel status di `/health` | `features/health/` | Panel status tampak sama untuk semua klien, dan tidak ada klien yang mau menulis ulang |
+| Form login di `/auth/login` | `features/auth/` | Alasan yang sama. Itu peralatan, bukan branding |
+
+Dua konsekuensi yang perlu diucapkan terang-terangan, karena keduanya gampang
+salah:
+
+- **Fitur boleh sama sekali tanpa UI.** `features/contact/` itu tabel, contract,
+  dan endpoint. Halaman milik klien mengimpor tipenya lewat pintu browser lalu
+  memanggilnya. Jangan menambahkan halaman ke sebuah fitur hanya supaya fiturnya
+  punya halaman.
+- **File bersama tidak melindungi dari konflik merge.** Menaruh teks klien di
+  dalam sebuah fitur tidak menghentikan klien mengeditnya. Itu cuma memindahkan
+  konfliknya ke tempat yang lebih tidak jelas, dan membuat perubahan upstream
+  berikutnya datang sebagai konflik di kode yang dibilang jangan disentuh.
+
 ## Autentikasi
 
 Ditulis sendiri, bukan diadopsi, dan sengaja yang paling kecil yang bisa jalan.

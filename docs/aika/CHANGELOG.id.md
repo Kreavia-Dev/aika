@@ -42,8 +42,13 @@ Aturan versinya: perubahan yang memaksa project klien mengedit kode atau konfigu
 - **Kerangka situs yang jalan.** `app/layouts/default.vue`, `app/components/SiteHeader.vue` dan `SiteFooter.vue`, plus tiga halaman sungguhan: Home, About, dan Contact. Sebelumnya `npm run dev` cuma menghasilkan panel status dan tidak ada apa pun yang menyerupai situs, sehingga cara pakai Aika memang sulit dilihat.
 - **`app/site.ts`**, satu-satunya file yang diedit saat memulai project klien: nama situs, tagline, navigasi, detail kontak, dan bahasa dokumen. `nuxt.config.ts` juga membaca nama dan bahasanya dari situ, jadi rebranding cukup satu file.
 
+- **Fitur `contact` dan form rujukannya.** Tabel `contact_messages`, `POST /api/contact` dengan validasi Zod, honeypot yang membuang bot bodoh sambil menjawab seolah berhasil, dan form di `/contact`. 15 test. Ini rung yang memperlihatkan seluruh tumpukan sekaligus: migrasi, contract, route, validasi, envelope, dan form yang menampilkan pesan error dari server.
+- **`shared/http/error-message.ts`**, supaya form login dan form kontak mengubah error fetch jadi pesan yang bisa dibaca di satu tempat, bukan dua.
+
 ### Diubah
 
+- **Aturan soal di mana sebuah layar tinggal sekarang tertulis.** `features/contact/` murni potongan backend dan `app/components/ContactForm.vue` milik klien. Garis pemisahnya bukan frontend versus backend, melainkan apa yang semua klien pakai bersama versus apa yang cuma klien ini punya. `features/health` dan `features/auth` memang punya halaman sendiri, karena panel status dan form login itu peralatan, bukan branding. Lihat `docs/aika/ARCHITECTURE.id.md`.
+- **Setup test mengosongkan setiap tabel yang ditemukannya**, bukan dua tabel yang dulu disebut namanya, jadi fitur baru tidak bisa membocorkan state ke run berikutnya karena terlupa.
 - **Situs rujukannya sekarang berlabel Aika, bukan klien fiktif.** Sebelumnya tertulis "Meridian Studio" dengan teks ala agensi, yang membuat pembaca menebak apa yang sedang dilihatnya. Sekarang halamannya menyebut dirinya apa dan ke mana harus membaca selanjutnya, dan itu memang tugas sebuah contoh.
 - **`app/components/AikaWatermark.vue`**, tanda kecil tetap di pojok setiap halaman, dikendalikan `site.watermark` di `app/site.ts`. Itu kredit agensi, bukan kredit klien, jadi sakelarnya terpisah dari nama situs: klien mengganti nama, studio yang memutuskan soal tandanya.
 - **`app/app.vue` sekarang membungkus `<NuxtPage>` dengan `<NuxtLayout>`.** Sebelumnya tidak, sehingga `app/layouts/` tidak pernah dipakai dan `definePageMeta({ layout: ... })` diabaikan tanpa peringatan di mana pun. Ketemu saat membangun kerangka situs, dan ini akan menghabiskan setengah hari seseorang.

@@ -41,6 +41,18 @@ Ini disengaja, dan ini bukan hal kecil. Lockout per akun gampang disalahgunakan 
 
 Sampai itu ada: pakai password hasil generate, jangan biarkan halaman masuk terindeks publik, dan jangan pernah memakai ulang password staf di tempat lain.
 
+## Data yang dikumpulkan situs
+
+Form kontak menyimpan nama, alamat email, isi pesan, dan user agent pengirim. Itu
+data pribadi, dan begitu form seperti itu terbuka di situs klien, ia jadi hal yang
+paling mungkin membawa kewajiban serta.
+
+- **Tentukan masa simpan dan patuhi.** Tidak ada apa pun di Aika yang menghapus kiriman lama, jadi tanpa keputusan ia menumpuk selamanya. `DELETE` terjadwal itu beberapa baris, dan yang menentukan lamanya adalah siapa pun yang memegang hubungan dengan klien itu.
+- **Jangan menambah field yang tidak perlu.** Setiap field adalah data yang jadi tanggung jawabmu.
+- **Jangan menulis isi pesannya ke log.** Kiriman disimpan dengan sengaja. Salinan di log proses tersimpan tanpa sengaja, dengan masa simpan yang berbeda dan daftar pembaca yang berbeda.
+- **User agent pengirim dipotong di 300 karakter**, karena datangnya tanpa batas dan bisa dikendalikan penyerang.
+- **Alamat IP pengirim sengaja tidak disimpan.** Tambahkan hanya kalau spam benar-benar jadi masalah, dan tulis alasannya di hari kamu menambahkannya.
+
 ## Dependency
 
 Yang perlu diperiksa sebelum menambah:

@@ -65,7 +65,7 @@ Diblokir keputusan yang masih terbuka di atas.
 
 - [ ] Server-sent events untuk update langsung.
 - [ ] Konten multi-bahasa.
-- [ ] Form kontak dan kiriman sejenisnya.
+- [ ] **Beri tahu seseorang saat form kontak dikirim, dan sediakan inbox untuk membacanya.** `features/contact/` sekarang menyimpan kiriman, tapi tidak ada yang diberi tahu dan tidak ada layar untuk membacanya, jadi pesannya duduk di tabel sampai ada yang membuka database secara manual.
 
 ## Yang sengaja tidak masuk roadmap
 

@@ -40,8 +40,13 @@ Versioning rule: a change that forces a client project to edit code or configura
 - **A working site shell.** `app/layouts/default.vue`, `app/components/SiteHeader.vue` and `SiteFooter.vue`, and three real pages: Home, About, and Contact. Until now `npm run dev` produced a status panel and nothing that resembled a website, which made it genuinely hard to see how Aika is meant to be used.
 - **`app/site.ts`**, the one file to edit when starting a client project: site name, tagline, navigation, contact details, and document language. `nuxt.config.ts` reads the name and the language from it as well, so a rebrand is one file rather than a hunt.
 
+- **The `contact` feature and the reference form.** A `contact_messages` table, `POST /api/contact` with Zod validation, a honeypot that drops obvious bots while answering as though it succeeded, and a form on `/contact`. 15 tests. This is the rung that shows the whole stack in one place: migration, contract, route, validation, the response envelope, and a form that displays the server's own error text.
+- **`shared/http/error-message.ts`**, so the sign in form and the contact form turn a thrown fetch error into something readable in one place rather than two.
+
 ### Changed
 
+- **The rule for where a screen lives is now written down.** `features/contact/` is a pure backend slice and `app/components/ContactForm.vue` is the client's. The dividing line is not frontend versus backend, it is what every client shares versus what only this client has. `features/health` and `features/auth` do own pages, because a status panel and a sign in form are tooling rather than branding. See `docs/aika/ARCHITECTURE.md`.
+- **The test setup empties every table it finds** rather than the two it used to name, so a new feature cannot leak state into the next run by being forgotten.
 - **The reference site is branded Aika, not a fictional client.** It said "Meridian Studio" with agency copy, which left a reader guessing what they were actually looking at. The pages now say what they are and where to read next, which is the whole job of an example.
 - **`app/components/AikaWatermark.vue`**, a small fixed mark in the corner of every page, switched by `site.watermark` in `app/site.ts`. It is the agency's credit rather than the client's, so it is a separate switch from the site name: a client changes the name, the studio decides about the mark.
 - **`app/app.vue` now wraps `<NuxtPage>` in `<NuxtLayout>`.** It did not before, so `app/layouts/` was never applied and `definePageMeta({ layout: ... })` was silently ignored with no warning anywhere. Found while building the site shell, and it would have cost somebody an afternoon.
