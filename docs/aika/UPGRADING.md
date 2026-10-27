@@ -62,6 +62,28 @@ If step 2 shows changes to a file on the "legitimately differs per client" list,
 
 **Also affected:** the page at `/health` now requires a session. The endpoint at `/api/health` stays public, because uptime monitoring cannot sign in. If anything in your deployment polls `/health` as a page rather than `/api/health`, point it at the API.
 
+### to 0.2.0 (unreleased): media uploads
+
+**What changed.** A new `media` feature adds an authenticated upload endpoint at `POST /api/media`, a library screen at `/media`, and a public route that serves what was uploaded at `/media/<filename>`. Nothing existing changes behaviour.
+
+**Two things are required of you:**
+
+1. Set `MEDIA_ROOT` in the deployment's environment. It is where uploaded files are written, and it must be an absolute path outside the application directory.
+
+   ```bash
+   MEDIA_ROOT=/srv/aika/data/media
+   ```
+
+   **Why this matters.** The default is `./storage/media`, which resolves against the working directory. Left unset on a server, uploaded files land inside the deployed application directory, and the next deploy that replaces that directory removes a client's images with no error anywhere.
+
+2. Apply the migration. `0005_media.sql` adds the `media_files` table. It only creates a table, so it cannot collide with existing data.
+
+   ```bash
+   npm run db:migrate
+   ```
+
+**Also worth knowing:** the serving route is public. Anyone holding a file's URL can fetch it, which is the normal shape for images on a public site, since the URL is the thing that gets pasted into content. Uploading and listing are not public.
+
 ## Entry format in this document
 
 Every Aika release that requires action gets a section like this:

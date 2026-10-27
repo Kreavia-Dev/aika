@@ -64,6 +64,28 @@ Kalau langkah 2 menunjukkan ada perubahan di file yang masuk daftar "wajar berbe
 
 **Yang juga terpengaruh:** halaman `/health` sekarang butuh sesi. Endpoint `/api/health` tetap publik, karena pemantauan uptime tidak bisa login. Kalau ada yang memantau `/health` sebagai halaman, bukan `/api/health`, ubah ke API-nya.
 
+### ke 0.2.0 (belum dirilis): unggahan media
+
+**Apa yang berubah.** Fitur `media` yang baru menambahkan endpoint unggah yang butuh login di `POST /api/media`, halaman pustaka di `/media`, dan rute publik yang menyajikan hasil unggahan di `/media/<nama-berkas>`. Tidak ada perilaku lama yang berubah.
+
+**Dua hal yang harus kamu lakukan:**
+
+1. Setel `MEDIA_ROOT` di environment deployment. Itu tempat berkas unggahan ditulis, dan harus path absolut di luar direktori aplikasi.
+
+   ```bash
+   MEDIA_ROOT=/srv/aika/data/media
+   ```
+
+   **Kenapa ini penting.** Nilai bawaannya `./storage/media`, yang dihitung relatif terhadap direktori kerja. Kalau dibiarkan kosong di server, berkas unggahan mendarat di dalam direktori aplikasi, dan deploy berikutnya yang mengganti direktori itu akan menghapus gambar milik klien tanpa satu pun pesan error.
+
+2. Jalankan migrasinya. `0005_media.sql` menambahkan tabel `media_files`. Ia hanya membuat tabel, jadi tidak bisa bertabrakan dengan data yang sudah ada.
+
+   ```bash
+   npm run db:migrate
+   ```
+
+**Perlu juga diketahui:** rute penyajiannya publik. Siapa pun yang memegang URL sebuah berkas bisa mengambilnya, dan itu bentuk yang wajar untuk gambar di situs publik, karena URL-nya memang yang ditempel ke konten. Yang tidak publik adalah mengunggah dan mendaftar.
+
 ## Format entri di dokumen ini
 
 Setiap versi Aika yang butuh tindakan mendapat satu bagian seperti ini:

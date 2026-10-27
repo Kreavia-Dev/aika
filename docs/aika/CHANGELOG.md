@@ -21,6 +21,8 @@ Versioning rule: a change that forces a client project to edit code or configura
 
 ### Added
 
+- **A `media` feature.** A staff member uploads an image at `/media`, and Aika stores it, records it, and serves it back at `/media/<filename>`, which is the URL that gets pasted into content. Uploaded filenames are generated rather than taken from the browser, so nothing a visitor sends is ever used to build a path, and SVG is refused on purpose: it is a document that can carry script, and served from your own origin it would run in your own origin. **Action required:** a deployment must set `MEDIA_ROOT`, or uploaded files land inside the application directory where a redeploy removes them. See [docs/UPGRADING.md](./UPGRADING.md).
+
 - **CI, at `.github/workflows/check.yml`.** It runs the gate, builds, migrates a fresh database, then starts the built server and asks it questions: that `/api/health` reports the database up, that the home page renders a header, and that `/contact/messages` still redirects a signed out visitor. A build that produces something which cannot serve a page is not a passing build. This matters more than usual because Aika is worked on in bursts, and the failure that hurts is the project quietly stopping working while it sits.
 - **`ROADMAP.md` and `ROADMAP.id.md`.** The single place that answers what is being built next and why. Its discipline: shipped work leaves the roadmap entirely and appears here instead, so the two files never overlap.
 - **`npm run prose:check`**, wired into `npm run check`. It refuses em dashes and en dashes anywhere in the repository, in either language and in code comments. Use a comma, a colon, a full stop, or parentheses. A plain hyphen is still fine inside words and ranges such as `R1-R6`.
