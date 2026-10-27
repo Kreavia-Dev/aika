@@ -52,7 +52,7 @@ tests/                unit tests, and the database setup the suite runs on
 database/migrations/  forward-only SQL
 docs/aika/            Aika's own documentation
 .github/workflows/    the CI gate, which runs the suite and then the built server
-scripts/              migrate, backup, create-user, architecture and prose checks
+scripts/              migrate, backup, create-user, manage-users, arch and prose checks
 ```
 
 ## Requirements
@@ -97,6 +97,9 @@ The pin is per exact version, deliberately. When `better-sqlite3` is upgraded, a
 | `npm run db:migrate` | Apply migrations (snapshots first) |
 | `npm run db:backup` | Online SQLite snapshot, keeps the newest 14 |
 | `npm run user:create` | Create a user. There is no sign up screen, on purpose |
+| `npm run user:list` | Every account, and whether it is active |
+| `npm run user:disable` | End an account's access, and every session it holds, immediately |
+| `npm run user:enable` | Let a disabled account sign in again |
 
 `npm run check` must be green before a PR is merged. That is the Definition of Done in this repository.
 

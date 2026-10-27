@@ -137,6 +137,12 @@ Pemilik autentikasi adalah `features/auth/`, dan itu rujukan untuk fitur yang me
 - **`app/layouts/` hanya bekerja karena `app/app.vue` membungkus `NuxtPage` dengan `NuxtLayout`.** Tanpa pembungkus itu Nuxt mengabaikan semua layout tanpa suara, dan aturan R7 menolak kombinasinya.
 - **Direktori top-level baru wajib ditambahkan ke peta di `docs/aika/README.id.md`.** Aturan R8 menolak yang tidak, karena peta yang salah lebih buruk daripada tidak ada peta.
 
+## Daur hidup akun
+
+- **Mencabut akses sebuah akun itu perintah shell, bukan rute.** `npm run user:disable -- --email=<alamat>` menulis `disabled_at` dan menghapus semua sesi dalam satu operasi. Jangan tambahkan rute web untuk itu selama semua akun administrator: user mana pun yang login lalu bisa mengunci user lain.
+- **Mengganti password mengakhiri semua sesi lain.** Kalau nanti kamu menambah cara lain untuk menulis password, akhiri sesinya juga, kalau tidak perubahannya tidak berarti apa-apa bagi yang sudah punya sesi.
+- **Akun yang dinonaktifkan ditolak di dua tempat.** `signIn` menolaknya setelah password diverifikasi, supaya waktunya sama dengan password salah, dan `resolveSessionDetail` menolaknya di setiap request supaya sesi yang muncul kembali tidak bisa memakai akun itu.
+
 ## Testing
 
 ```bash

@@ -3,13 +3,16 @@ import { deleteCookie, getCookie, setCookie } from 'hono/cookie'
 import { env } from '../../../shared/config/env'
 import { ValidationError } from '../../../shared/errors'
 import {
+  MIN_PASSWORD_LENGTH,
   SESSION_COOKIE,
+  changePasswordInputSchema,
+  changePasswordResponseSchema,
   loginInputSchema,
   logoutResponseSchema,
   sessionResponseSchema,
 } from '../contract'
 import { requireUser } from './guard'
-import { signIn, signOut } from './service'
+import { changePassword, signIn, signOut } from './service'
 
 export const authRoutes = new Hono()
 
@@ -64,5 +67,48 @@ authRoutes.get('/auth/me', (c) => {
     success: true,
     message: 'OK',
     data: { user },
+  }))
+})
+
+/**
+ * Changing your own password.
+ *
+ * There is no route for changing somebody else's, and no route for revoking an
+ * account. Both are shell commands, because revocation is an action taken by
+ * whoever runs the deployment, and a web route would let any signed-in user lock
+ * out any other while every account is an administrator.
+ */
+authRoutes.post('/auth/password', async (c) => {
+  /*
+   * The documented first line for a handler that must not run anonymously, even
+   * though `changePassword` refuses an absent session by itself. The extra cost
+   * is one indexed select on an action nobody performs weekly, and it keeps the
+   * convention visible where a reader looks for it. The route tests assert the
+   * 401 this produces.
+   */
+  requireUser(c)
+
+  const body = await c.req.json().catch(() => null)
+  const parsed = changePasswordInputSchema.safeParse(body)
+
+  if (!parsed.success) {
+    throw new ValidationError(
+      `Please check the form. A new password must be at least ${MIN_PASSWORD_LENGTH} characters.`,
+      parsed.error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`),
+    )
+  }
+
+  const { otherSessionsRevoked } = await changePassword({
+    token: getCookie(c, SESSION_COOKIE),
+    currentPassword: parsed.data.currentPassword,
+    newPassword: parsed.data.newPassword,
+  })
+
+  return c.json(changePasswordResponseSchema.parse({
+    success: true,
+    message: otherSessionsRevoked === 0
+      ? 'Password changed. Your other devices were already signed out.'
+      : `Password changed, and ${otherSessionsRevoked} other session(s) were signed out.`,
+    data: { changed: true, otherSessionsRevoked },
   }))
 })

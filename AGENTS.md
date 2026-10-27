@@ -135,6 +135,12 @@ You are writing TypeScript for a team that is still learning it. Optimise for re
 - **`app/layouts/` only works because `app/app.vue` wraps `NuxtPage` in `NuxtLayout`.** Without that wrapper Nuxt ignores every layout in silence, and rule R7 refuses the combination.
 - **A new top level directory must be added to the map in `docs/aika/README.md`.** Rule R8 refuses one that is not, because a map that is wrong is worse than no map.
 
+## Account lifecycle
+
+- **Revoking an account is a shell command, not a route.** `npm run user:disable -- --email=<address>` sets `disabled_at` and deletes every session in one operation. Do not add a web route for it while every account is an administrator: any signed-in user could then lock out any other.
+- **Changing a password ends every other session.** If you ever add another way to set a password, end the sessions too, or the change means nothing to whoever already holds one.
+- **A disabled account is refused in two places.** `signIn` refuses it after verifying the password, so the timing matches a wrong password, and `resolveSessionDetail` refuses it on every request so a session that reappears cannot authenticate.
+
 ## Testing
 
 ```bash

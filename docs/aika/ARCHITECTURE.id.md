@@ -245,6 +245,25 @@ Halaman `/health` butuh sesi. Endpoint `/api/health` tidak. Itu bukan kelalaian.
 Pemantauan tidak bisa login, dan health endpoint yang butuh kredensial akan gagal
 tepat saat dibutuhkan. Satu permukaan untuk mesin, satu untuk manusia.
 
+### Mencabut akses
+
+Menonaktifkan akun menulis `users.disabled_at` dan menghapus semua sesi milik akun itu
+dalam satu operasi. Salah satu saja bukan pencabutan: timestamp tanpa penghapusan sesi
+membuat browser yang sudah login tetap bekerja sampai tiga puluh hari, dan penghapusan
+tanpa timestamp membuat orangnya bisa langsung login lagi dengan password yang sudah
+dia tahu.
+
+`resolveSessionDetail` juga memeriksa `disabled_at` di setiap request, jadi sesi yang
+muncul kembali dari backup atau dimasukkan manual tetap tidak bisa memakai akun itu. Ia
+menghapus baris yang ditemukannya, supaya request berikutnya mulai dari nol.
+
+Tidak ada rute web untuk ini. `POST /api/auth/password` adalah satu-satunya rute akun,
+dan itu mengganti password sendiri, satu-satunya tindakan akun yang memang harus bisa
+dilakukan pemiliknya sendiri. Pencabutan milik orang lain. Yang menjalankan deployment
+sudah punya shell, jadi ia tinggal di sana, dan rute web harus menjawab "siapa boleh
+mencabut siapa" sementara semua akun sekarang administrator. Pertanyaan itu tempatnya
+bersama penegakan `role`, yang masih ada di roadmap.
+
 ## Testing
 
 Test berjalan di environment `node`, tanpa build Nuxt dan tanpa server HTTP. Itu bisa karena `shared/http/app.ts` tidak mengimpor apa pun dari Nitro: Hono app bisa langsung didorong dengan `Request` standar Web.

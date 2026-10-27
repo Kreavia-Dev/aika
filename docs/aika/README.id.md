@@ -56,7 +56,7 @@ tests/                test unit, dan setup database untuk seluruh suite
 database/migrations/  SQL forward-only
 docs/aika/            dokumentasi Aika sendiri
 .github/workflows/    gerbang CI, menjalankan suite lalu server hasil build
-scripts/              migrate, backup, create-user, pemeriksa arsitektur dan gaya
+scripts/              migrate, backup, create-user, manage-users, pemeriksa arsitektur dan gaya
 ```
 
 ## Yang dibutuhkan
@@ -99,6 +99,9 @@ Persetujuannya di-pin ke versi yang persis, dan itu memang disengaja. Setiap kal
 | `npm run test` | Jalankan seluruh test sekali |
 | `npm run test:watch` | Mode watch sambil kerja |
 | `npm run user:create` | Buat user. Tidak ada halaman pendaftaran, dan itu disengaja |
+| `npm run user:list` | Semua akun, dan apakah aktif |
+| `npm run user:disable` | Akhiri akses sebuah akun, beserta semua sesinya, seketika |
+| `npm run user:enable` | Izinkan akun yang dinonaktifkan login lagi |
 | `npm run db:migrate` | Jalankan migrasi (snapshot dulu) |
 | `npm run db:backup` | Snapshot online, menyimpan 14 file terbaru |
 

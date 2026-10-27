@@ -15,6 +15,8 @@ export type UserRow = {
   password_hash: string
   role: Role
   created_at: string
+  /** Null while the account is active. Set when access is revoked. */
+  disabled_at: string | null
 }
 
 export type SessionRow = {
@@ -24,16 +26,43 @@ export type SessionRow = {
   expires_at: string
 }
 
+const USER_COLUMNS = 'id, email, password_hash, role, created_at, disabled_at'
+
 export function findUserByEmail(email: string): UserRow | undefined {
   return getDb()
-    .prepare('SELECT id, email, password_hash, role, created_at FROM users WHERE email = ?')
+    .prepare(`SELECT ${USER_COLUMNS} FROM users WHERE email = ?`)
     .get(email) as UserRow | undefined
 }
 
 export function findUserById(id: string): UserRow | undefined {
   return getDb()
-    .prepare('SELECT id, email, password_hash, role, created_at FROM users WHERE id = ?')
+    .prepare(`SELECT ${USER_COLUMNS} FROM users WHERE id = ?`)
     .get(id) as UserRow | undefined
+}
+
+export function listUsers(): UserRow[] {
+  return getDb()
+    .prepare(`SELECT ${USER_COLUMNS} FROM users ORDER BY created_at`)
+    .all() as UserRow[]
+}
+
+/**
+ * Active accounts only.
+ *
+ * Disabling is refused when this would reach zero, so it is the count that
+ * decides whether a revocation is allowed, not the total.
+ */
+export function countActiveUsers(): number {
+  const row = getDb()
+    .prepare('SELECT COUNT(*) AS total FROM users WHERE disabled_at IS NULL')
+    .get() as { total: number }
+
+  return row.total
+}
+
+export function countUsers(): number {
+  const row = getDb().prepare('SELECT COUNT(*) AS total FROM users').get() as { total: number }
+  return row.total
 }
 
 export function insertUser(user: {
@@ -48,9 +77,12 @@ export function insertUser(user: {
     .run(user.id, user.email, user.passwordHash, user.role, user.createdAt)
 }
 
-export function countUsers(): number {
-  const row = getDb().prepare('SELECT COUNT(*) AS total FROM users').get() as { total: number }
-  return row.total
+export function updateUserPassword(id: string, passwordHash: string): void {
+  getDb().prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(passwordHash, id)
+}
+
+export function setUserDisabledAt(id: string, disabledAt: string | null): void {
+  getDb().prepare('UPDATE users SET disabled_at = ? WHERE id = ?').run(disabledAt, id)
 }
 
 export function insertSession(session: SessionRow): void {
@@ -67,6 +99,22 @@ export function findSessionById(id: string): SessionRow | undefined {
 
 export function deleteSessionById(id: string): void {
   getDb().prepare('DELETE FROM sessions WHERE id = ?').run(id)
+}
+
+/**
+ * Ends a user's sessions, optionally sparing one.
+ *
+ * Sparing the current session is what makes changing a password usable: the user
+ * is signed out everywhere else and not from the tab they are sitting in.
+ */
+export function deleteUserSessions(userId: string, exceptSessionId?: string): number {
+  if (exceptSessionId === undefined) {
+    return getDb().prepare('DELETE FROM sessions WHERE user_id = ?').run(userId).changes
+  }
+
+  return getDb()
+    .prepare('DELETE FROM sessions WHERE user_id = ? AND id <> ?')
+    .run(userId, exceptSessionId).changes
 }
 
 /**

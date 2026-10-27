@@ -15,6 +15,21 @@ export const publicUserSchema = z.object({
   role: roleSchema,
 })
 
+/**
+ * The shortest password Aika accepts.
+ *
+ * Twelve characters, and deliberately no composition rules. Demanding a digit and
+ * a symbol is how you get `Password1!`, which is weaker than a longer phrase.
+ * Length is the part that actually helps, and the generated password from
+ * `npm run user:create` clears this by a wide margin.
+ *
+ * The browser is not told this number. The change password form relies on
+ * `required` and shows the server's refusal, which costs one round trip for an
+ * action nobody performs weekly. Copying the number into a component is how the
+ * two drift apart, and the server is the authority either way.
+ */
+export const MIN_PASSWORD_LENGTH = 12
+
 export const loginInputSchema = z.object({
   // Normalised here rather than in the handler, so every caller gets the same
   // treatment and the database lookup cannot miss on casing.
@@ -22,6 +37,11 @@ export const loginInputSchema = z.object({
   // The upper bound is not about entropy. It is because hashing an enormous
   // string is an easy way to burn a server's CPU.
   password: z.string().min(1).max(200),
+})
+
+export const changePasswordInputSchema = z.object({
+  currentPassword: z.string().min(1).max(200),
+  newPassword: z.string().min(MIN_PASSWORD_LENGTH).max(200),
 })
 
 export const sessionResponseSchema = z.object({
@@ -36,11 +56,27 @@ export const logoutResponseSchema = z.object({
   data: z.object({ signedOut: z.literal(true) }),
 })
 
+export const changePasswordResponseSchema = z.object({
+  success: z.literal(true),
+  message: z.string(),
+  data: z.object({
+    changed: z.literal(true),
+    /**
+     * How many other sessions were ended. Zero is the ordinary case, and a
+     * number above zero is the interesting one: it means somebody else's
+     * browser was signed in as this user.
+     */
+    otherSessionsRevoked: z.number().int(),
+  }),
+})
+
 export type Role = z.infer<typeof roleSchema>
 export type PublicUser = z.infer<typeof publicUserSchema>
 export type LoginInput = z.infer<typeof loginInputSchema>
+export type ChangePasswordInput = z.infer<typeof changePasswordInputSchema>
 export type SessionResponse = z.infer<typeof sessionResponseSchema>
 export type LogoutResponse = z.infer<typeof logoutResponseSchema>
+export type ChangePasswordResponse = z.infer<typeof changePasswordResponseSchema>
 
 /** Cookie name. Shared so the server and the browser cannot disagree. */
 export const SESSION_COOKIE = 'aika_session'

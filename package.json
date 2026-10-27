@@ -24,6 +24,9 @@
     "db:migrate": "tsx scripts/migrate.ts",
     "db:backup": "tsx scripts/db-backup.ts",
     "user:create": "tsx scripts/create-user.ts",
+    "user:list": "tsx scripts/manage-users.ts list",
+    "user:disable": "tsx scripts/manage-users.ts disable",
+    "user:enable": "tsx scripts/manage-users.ts enable",
     "setup": "npm run db:migrate",
     "check": "npm run typecheck && npm run typecheck:scripts && npm run arch:check && npm run prose:check && npm run test"
   },

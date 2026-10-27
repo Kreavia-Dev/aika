@@ -242,6 +242,25 @@ That is not an oversight. Monitoring cannot sign in, and a health endpoint that
 requires credentials fails exactly when it is needed. One surface is for
 machines, the other is for people.
 
+### Revoking access
+
+Disabling an account sets `users.disabled_at` and deletes every session that account
+holds, in one operation. Either half alone is not revocation: the timestamp without
+the session deletion leaves a signed-in browser working for up to thirty days, and
+the deletion without the timestamp lets the person sign straight back in with the
+password they already know.
+
+`resolveSessionDetail` also checks `disabled_at` on every request, so a session that
+reappeared from a backup or was inserted by hand still cannot authenticate. It deletes
+the row it finds, so the next request starts from nothing.
+
+There is no web route for this. `POST /api/auth/password` is the only account route,
+and it changes your own password, which is the one account action the account holder
+has to be able to take themselves. Revocation belongs to somebody else. Whoever runs
+the deployment already has a shell, so it lives there, and a web route would have to
+answer "who may revoke whom" while every account is an administrator. That question
+belongs with role enforcement, which is still on the roadmap.
+
 ## Testing
 
 Tests run in the `node` environment, with no Nuxt build and no HTTP server. That is possible because `shared/http/app.ts` imports nothing from Nitro: a Hono app can be driven directly with a Web `Request`.

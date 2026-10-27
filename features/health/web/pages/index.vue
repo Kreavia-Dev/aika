@@ -121,6 +121,14 @@ const { data, error, refresh, status } = await useFetch<HealthResponse>('/api/he
             Everything the contact form has received
           </span>
         </li>
+        <li>
+          <NuxtLink to="/auth/password" class="underline underline-offset-2 hover:text-accent-foreground">
+            Change password
+          </NuxtLink>
+          <span class="ml-2 text-muted-foreground">
+            Ends every other session this account has open
+          </span>
+        </li>
       </ul>
     </nav>
   </div>

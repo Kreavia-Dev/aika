@@ -40,7 +40,6 @@ sebagai contoh nyata. Dokumentasi Aika dipindah ke `docs/aika/` supaya
 
 ## Fase 1: kebutuhan minimum satu situs klien
 
-- [ ] **Ganti password, dan nonaktifkan akun.** Sekarang password tidak bisa diganti, dan akun tidak bisa dicabut, tanpa mengedit database secara manual.
 - [ ] **Tegakkan `role`.** `users.role` ada tapi tidak ada yang membacanya, jadi setiap user yang login sekarang efektif sebagai administrator.
 - [ ] **SEO**: meta tag, canonical URL, `sitemap.xml`, `robots.txt`, Open Graph. Aika menjual situs, jadi ini bukan opsional, dan sekarang belum ada sama sekali.
 - [ ] Halaman error 404 dan 500 yang bukan bawaan Nuxt.

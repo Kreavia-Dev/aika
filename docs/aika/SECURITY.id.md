@@ -77,4 +77,4 @@ Aika menyediakan fondasi, bukan jaminan. Sebelum situs klien naik ke produksi, p
 - File `.env` di VPS izin bacanya terbatas.
 - Backup terjadwal **dan pernah di-restore minimal sekali**. Backup yang belum pernah diuji restore belum bisa disebut backup.
 - Reverse proxy tidak men-buffer `text/event-stream`.
-- Akun admin bawaan pengembangan sudah diganti. Belum ada perintah hapus user, jadi buat akun sungguhannya dengan `npm run user:create -- --email=<alamat>` dan jangan bikin akun sekali pakai di database produksi sejak awal.
+- Akun admin bawaan pengembangan sudah diganti. Tidak ada perintah hapus user, dan itu disengaja, tapi ada `npm run user:disable -- --email=<alamat>`, yang mengakhiri semua sesi akun itu dan menghentikannya login lagi. Buat akun sungguhannya dengan `npm run user:create -- --email=<alamat>`, jangan tinggalkan akun sekali pakai di database produksi.

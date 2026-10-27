@@ -75,4 +75,4 @@ Aika provides a foundation, not a guarantee. Before any client site goes to prod
 - The `.env` file on the VPS has restricted read permissions.
 - Backups are scheduled **and have been restored at least once**. A backup that has never been test-restored is not a backup.
 - The reverse proxy does not buffer `text/event-stream`.
-- Any development admin account has been replaced. There is no delete-user command yet, so create the real account with `npm run user:create -- --email=<address>` and do not create a throwaway account on a production database in the first place.
+- Any development admin account has been replaced. There is no delete-user command, deliberately, but there is `npm run user:disable -- --email=<address>`, which ends every session that account holds and stops it signing in again. Create the real account with `npm run user:create -- --email=<address>` rather than leaving a throwaway one on a production database.

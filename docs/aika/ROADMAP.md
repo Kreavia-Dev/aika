@@ -40,7 +40,6 @@ example. Aika's own documentation moved into `docs/aika/` so that a client's
 
 ## Phase 1: the minimum a client site needs
 
-- [ ] **Password change, and account deactivation.** Today a password cannot be changed, and an account cannot be revoked, without editing the database by hand.
 - [ ] **Enforce `role`.** `users.role` exists and nothing reads it, so every signed-in user is currently an administrator.
 - [ ] **SEO**: meta tags, canonical URLs, `sitemap.xml`, `robots.txt`, Open Graph. Aika sells websites, so this is not optional, and today it is completely absent.
 - [ ] Error pages for 404 and 500 that are not Nuxt defaults.
