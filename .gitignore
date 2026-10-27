@@ -1,0 +1,27 @@
+node_modules/
+.nuxt/
+.output/
+dist/
+coverage/
+
+# Environment — never commit. Templates are explicitly un-ignored below.
+.env
+.env.*
+!.env.example
+!.env.production.example
+
+# SQLite database, WAL sidecars, and backups are runtime state, not source.
+database/*.db
+database/*.db-wal
+database/*.db-shm
+database/backups/
+
+storage/
+logs/
+*.log
+
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json

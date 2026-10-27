@@ -1,0 +1,46 @@
+{
+  "name": "aika",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Aika — internal application kit for client web apps. Build by feature, not by layer. Nuxt + Hono + SQLite.",
+  "license": "UNLICENSED",
+  "type": "module",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "packageManager": "npm@11.19.1",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "start": "node --env-file-if-exists=.env .output/server/index.mjs",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "typecheck": "nuxt typecheck",
+    "typecheck:scripts": "tsc --noEmit -p tsconfig.scripts.json",
+    "arch:check": "tsx scripts/check-boundaries.ts",
+    "db:migrate": "tsx scripts/migrate.ts",
+    "db:backup": "tsx scripts/db-backup.ts",
+    "setup": "npm run db:migrate",
+    "check": "npm run typecheck && npm run typecheck:scripts && npm run arch:check"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.4.1",
+    "hono": "^4.13.5",
+    "nuxt": "^4.0.0",
+    "vue": "^3.5.0",
+    "vue-router": "^5.4.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@nuxt/kit": "^4.0.0",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^24.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.3",
+    "vue-tsc": "^3.0.0"
+  },
+  "allowScripts": {
+    "better-sqlite3@12.11.1": true,
+    "esbuild@0.28.2": true
+  }
+}

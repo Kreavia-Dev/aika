@@ -1,0 +1,70 @@
+# Changelog
+
+**English** · [Bahasa Indonesia](./CHANGELOG.id.md)
+
+All notable changes to Aika are documented in this file.
+
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/).
+
+## How to write entries
+
+This changelog is read by the people **maintaining client projects**, not by the people who wrote Aika. Write for that reader.
+
+- **State the impact, not the diff.** "The `/api/users` route now requires a session" — not "changed middleware in features/users/server/routes.ts".
+- **Every entry that changes behaviour must answer:** does a client project need to do something? If yes, link to its section in [docs/UPGRADING.md](./docs/UPGRADING.md).
+- **Categories:** `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, `Security`.
+- The `Unreleased` section is always present at the top.
+
+Versioning rule: a change that forces a client project to edit code or configuration is a **major** change, even when nothing fails to compile.
+
+## [Unreleased]
+
+### Added
+
+- **Test runner is missing.** There is no `vitest` (or equivalent) configured yet. This is a known gap, recorded here rather than left implicit. The reference feature currently has no test; `npm run check` covers types and boundaries only. Next up.
+
+### Changed
+
+- Documentation is now bilingual. English files are canonical; Indonesian translations live alongside them as `<name>.id.md`. Both must be updated in the same change.
+
+## [0.1.0] — 2026-10-28
+
+First release. The foundation stands; there is no domain feature yet.
+
+### Added
+
+- **Distribution model:** no monorepo. Each client project is a clone of this repo, with improvements pulled via `git merge upstream/main`. The framework/client boundary is what keeps that merge cheap.
+- **Feature convention** (`contract.ts` / `index.ts` / `server/` / `web/` / `tests/`) with boundaries enforced by `npm run arch:check`.
+- **Two boundaries per feature.** `index.ts` is the server door; `web/index.ts` is the browser-safe door. Without the split, a Vue component importing a feature type would drag `better-sqlite3` into the client bundle.
+- **`health` reference feature**, proving the chain Nuxt → Nitro → Hono → SQLite end to end.
+- **`modules/features.ts`:** pages in `features/*/web/pages/` become Nuxt routes automatically, so no feature has to edit application routing.
+- **`shared/config/env.ts`:** the only place `process.env` is read, validated by Zod, failing at boot with a readable message.
+- **`shared/database/client.ts`:** the only place SQLite is opened, owning the WAL pragmas including `foreign_keys` and `busy_timeout`, which are not defaults anywhere.
+- **`shared/errors/`:** domain errors carrying a stable `code` and HTTP `status`.
+- **`shared/http/app.ts`:** the Hono composition root and the single place errors are mapped to the JSON envelope.
+- **`server/api/[...path].ts`:** the one Nitro → Hono adapter. Hono imports nothing from Nitro, so a standalone Hono process remains a one-file swap.
+- **`scripts/migrate.ts`:** forward-only SQL migrations that write a snapshot first and refuse to run if the snapshot fails.
+- **`scripts/db-backup.ts`:** online snapshot via better-sqlite3's `.backup()`, with retention. Deliberately not `cp`, which would capture a torn WAL state.
+- **`scripts/check-boundaries.ts`:** six boundary rules (R1–R6), including browser-safety and cycle detection.
+- **`ecosystem.config.cjs`:** PM2 `fork` mode with a single instance, with the reasoning written in the file.
+- Documentation: `README.md`, `ARCHITECTURE.md`, `AGENTS.md`, `CONTRIBUTING.md`, `SECURITY.md`, `docs/UPGRADING.md` — each with an Indonesian counterpart.
+- **`allowScripts` pinned** in `package.json` for `better-sqlite3` and `esbuild`. npm 11 holds back install scripts by default; without this pin, a fresh clone would be missing the native SQLite binary.
+
+### Verified at this release
+
+Not claims — observed output:
+
+- `npm run check` green: Nuxt typecheck, scripts typecheck, `arch:check` (1 feature, 0 violations).
+- `npm run build` green: Nitro `node-server` preset, `.output/server/index.mjs` emitted.
+- `GET /api/health` → `200 {"success":true,"message":"OK","data":{"status":"ok","version":"0.1.0","database":"up","uptimeSeconds":1}}`.
+- Unknown `/api` path → `404 {"success":false,"message":"Endpoint not found.","code":"NOT_FOUND"}`.
+- `GET /` renders the health panel into server HTML (`Database: up`) — SSR works, not just the API.
+- `npm run db:migrate` applied `0001_init.sql`, then reported "up to date" on re-run (idempotent).
+- `npm run db:backup` and the pre-migration snapshot both wrote valid files.
+
+### Notes for downstream projects
+
+There are no client projects yet. Nothing to do.
+
+[Unreleased]: https://github.com/Kreavia-Dev/aika/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/Kreavia-Dev/aika/releases/tag/v0.1.0
