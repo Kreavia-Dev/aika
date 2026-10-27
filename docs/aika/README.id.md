@@ -55,6 +55,7 @@ modules/features.ts   menyambungkan halaman fitur ke Nuxt
 tests/                test unit, dan setup database untuk seluruh suite
 database/migrations/  SQL forward-only
 docs/aika/            dokumentasi Aika sendiri
+.github/workflows/    gerbang CI, menjalankan suite lalu server hasil build
 scripts/              migrate, backup, create-user, pemeriksa arsitektur dan gaya
 ```
 

@@ -152,6 +152,7 @@ Test berjalan di environment `node`, tanpa build Nuxt dan tanpa server HTTP. `np
 - **Parse body-nya, jangan periksa field satu per satu.** `response.json()` bertipe `unknown`. Lewatkan ke schema Zod milik fitur dari `contract.ts`. Itu memvalidasi sekaligus menyempitkan tipe dalam satu langkah, dan yang diperiksa adalah kontraknya, bukan salinannya.
 - **Untuk respons error**, parse dengan `failureEnvelopeSchema` dari `shared/http/envelope.ts`.
 - **Skrip sekali pakai dan probe wajib mengarahkan `DATABASE_PATH` ke file sementara.** Default-nya adalah database pengembangan, dan skrip yang menulis baris akan menghancurkannya tanpa suara. `npm run test` sudah terisolasi lewat `vitest.config.ts`. Apa pun yang kamu jalankan manual tidak, dan tidak ada penjaga mekanis untuk itu, jadi aturannya ada di sini bukan di skrip.
+- **CI menjalankan gate yang sama, plus tambahan.** `.github/workflows/check.yml` menjalankan `npm run check`, build, migrasi database baru, lalu menyalakan server hasil build dan menanyainya. Kalau gate-nya berubah, CI harus ikut berubah, kalau tidak CI mulai menjamin lebih sedikit daripada gate-nya.
 - **Semua respons `/api` memakai envelope.** Bentuk respons baru yang tidak memakainya itu bug, bukan variasi.
 
 ## SQLite dan migrasi

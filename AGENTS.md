@@ -150,6 +150,7 @@ Tests run in the `node` environment, with no Nuxt build and no HTTP server. `npm
 - **Parse the body, do not assert fields one at a time.** `response.json()` is typed `unknown`. Pass it through the feature's Zod schema from `contract.ts`. That validates and narrows in one step, and it checks the contract rather than a copy of it.
 - **For error responses**, parse with `failureEnvelopeSchema` from `shared/http/envelope.ts`.
 - **Scratch scripts and probes must point `DATABASE_PATH` at a throwaway file.** The default is the development database, and a one-off script that writes rows will quietly destroy it. `npm run test` is already isolated by `vitest.config.ts`. Anything you run by hand is not, and there is no mechanical guard for it, so it belongs here as a rule rather than in a script.
+- **CI runs the same gate and then some.** `.github/workflows/check.yml` runs `npm run check`, builds, migrates a fresh database, and then starts the built server and questions it. If the gate changes, CI has to change with it, or CI starts certifying less than the gate does.
 - **Every `/api` response uses the envelope.** A new response shape that does not use it is a bug, not a variation.
 
 ## SQLite and migrations

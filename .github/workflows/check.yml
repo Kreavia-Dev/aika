@@ -1,0 +1,104 @@
+# The gate that runs when nobody is looking.
+#
+# Aika is worked on in bursts, with gaps of weeks or months between sessions, and
+# the failure that hurts is not a broken feature. It is the project quietly
+# stopping working while it sits: a Nuxt update, a stale lockfile, a native module
+# that no longer builds, a Node version that moved. Without this, that is
+# discovered on the day somebody sits down to work, with no memory of how any of
+# it fits together.
+#
+# So this does more than run the test suite. It builds, it migrates a fresh
+# database, it starts the built server, and it asks the running application a
+# question. A build that produces something which cannot serve a page is not a
+# passing build.
+
+name: check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Read only. Nothing here writes to the repository, so nothing here needs to.
+permissions:
+  contents: read
+
+# A second push supersedes the first. Cancelling saves runner minutes and the
+# answer for the old commit is no longer interesting.
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use the Node version the project pins
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      # The project declares `packageManager` in package.json, and Corepack is
+      # what makes the runner honour it. Without this, CI would install with
+      # whatever npm the runner happens to ship, which is how a lockfile starts
+      # behaving differently in CI than it does locally.
+      - name: Honour the declared package manager
+        run: corepack enable
+
+      - name: Install exactly what the lockfile says
+        run: npm ci
+
+      # Typecheck, boundary rules R1 to R8, prose rules, and the suite.
+      - name: Run the canonical gate
+        run: npm run check
+
+      - name: Build
+        run: npm run build
+
+      # The deploy path, exercised rather than assumed. `db:migrate` takes a
+      # snapshot first, so this also proves the snapshot step works on an empty
+      # database, which is what a new client project looks like.
+      - name: Migrate a fresh database
+        run: npm run db:migrate
+
+      # The point of the whole job. Start what was built and ask it something.
+      - name: Start the built server and ask it for a health report
+        env:
+          PORT: 3000
+        run: |
+          set -euo pipefail
+
+          node .output/server/index.mjs > server.log 2>&1 &
+          SERVER_PID=$!
+
+          for attempt in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:3000/api/health > /dev/null; then
+              break
+            fi
+            sleep 1
+          done
+
+          echo "health endpoint:"
+          curl -sf http://127.0.0.1:3000/api/health | tee /dev/stderr
+          curl -sf http://127.0.0.1:3000/api/health | grep -q '"database":"up"'
+
+          # The home page has to render, not merely return 200. A Nuxt build that
+          # skips the layouts, or a broken component, would still answer 200.
+          echo "home page:"
+          curl -sf http://127.0.0.1:3000/ | grep -q 'Aika'
+          curl -sf http://127.0.0.1:3000/ | grep -q '<header'
+
+          # The guarded page must still redirect, because that is the only thing
+          # between a visitor and a client's inbox.
+          echo "guard:"
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/contact/messages)" = "302"
+
+          kill $SERVER_PID
+
+      - name: Show the server log when something failed
+        if: failure()
+        run: cat server.log || echo "the server never wrote a log"

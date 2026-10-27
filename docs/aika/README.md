@@ -51,6 +51,7 @@ modules/features.ts   wires feature pages into Nuxt
 tests/                unit tests, and the database setup the suite runs on
 database/migrations/  forward-only SQL
 docs/aika/            Aika's own documentation
+.github/workflows/    the CI gate, which runs the suite and then the built server
 scripts/              migrate, backup, create-user, architecture and prose checks
 ```
 

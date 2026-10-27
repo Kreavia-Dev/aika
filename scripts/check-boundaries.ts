@@ -296,24 +296,30 @@ if (documentedTopLevel === null) {
   })
 }
 else {
-  const actualTopLevel = readdirSync(root)
-    .filter(entry => !entry.startsWith('.') && !IGNORED_TOP_LEVEL.has(entry))
+  /*
+   * Every directory, including the dot ones, so that a map entry for `.github/`
+   * can be verified. The two loops deliberately use different sets. An
+   * undocumented dot directory is tooling and not worth naming, but a dot
+   * directory the map DOES name has to actually exist, or the map is lying.
+   */
+  const everyDirectory = readdirSync(root)
     .filter(entry => statSync(join(root, entry)).isDirectory())
     .sort()
 
   const documentedSet = new Set(documentedTopLevel)
 
-  for (const entry of actualTopLevel) {
-    if (!documentedSet.has(entry)) {
-      violations.push({
-        file: `${entry}/`,
-        message: 'R8: this top level directory is not in the map in docs/aika/README.md. Add it there with a one line description, or put the code somewhere that already exists',
-      })
-    }
+  for (const entry of everyDirectory) {
+    if (entry.startsWith('.') || IGNORED_TOP_LEVEL.has(entry)) continue
+    if (documentedSet.has(entry)) continue
+
+    violations.push({
+      file: `${entry}/`,
+      message: 'R8: this top level directory is not in the map in docs/aika/README.md. Add it there with a one line description, or put the code somewhere that already exists',
+    })
   }
 
   for (const entry of documentedSet) {
-    if (!actualTopLevel.includes(entry)) {
+    if (!everyDirectory.includes(entry)) {
       violations.push({
         file: 'docs/aika/README.md',
         message: `R8: the map lists \`${entry}/\` but no such directory exists`,
