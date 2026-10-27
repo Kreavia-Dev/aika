@@ -2,7 +2,7 @@
 
 [English](./UPGRADING.md) · **Bahasa Indonesia**
 
-Dokumen ini berisi **prosedur**, bukan catatan rilis. Catatan rilisnya ada di [CHANGELOG.id.md](../CHANGELOG.id.md).
+Dokumen ini berisi **prosedur**, bukan catatan rilis. Catatan rilisnya ada di [CHANGELOG.id.md](./CHANGELOG.id.md).
 
 Kalau changelog menjawab *"apa yang berubah"*, dokumen ini menjawab *"apa yang harus saya lakukan"*.
 

@@ -2,7 +2,7 @@
 
 **English** · [Bahasa Indonesia](./AGENTS.id.md)
 
-Read this before writing code. `ARCHITECTURE.md` is the authority. If this file and `ARCHITECTURE.md` disagree, `ARCHITECTURE.md` wins. Say so instead of guessing.
+Read this before writing code. `docs/aika/ARCHITECTURE.md` is the authority. If this file and that one disagree, the architecture document wins. Say so instead of guessing.
 
 ## What Aika is
 
@@ -146,9 +146,24 @@ Aika deliberately has no custom runtime, HTTP framework, ORM, auth framework, DI
 
 Before adding a dependency, check `ARCHITECTURE.md` → "What Aika does not build" and "Design filters". If a mainstream ecosystem tool already solves it, use that tool directly rather than wrapping it.
 
+## Where the documentation lives
+
+| Path | Owner | Why there |
+|---|---|---|
+| `README.md` | **the client project** | A client replaces it with their own front page. Aika does not change it, so it never conflicts |
+| `AGENTS.md` | Aika | At the root by convention: agent tooling looks for it there, so it cannot move |
+| `docs/aika/**` | Aika | Every other Aika document. Updated by `git pull upstream`, never edited locally |
+| `LICENSE` | Aika | At the root by legal convention |
+
+If a change affects behaviour a client project depends on, update the document
+under `docs/aika/`. The root README is not Aika's to write.
+
+Start here: [docs/aika/BUILDING.md](./docs/aika/BUILDING.md) for the how, and
+[docs/aika/ARCHITECTURE.md](./docs/aika/ARCHITECTURE.md) for the why.
+
 ## Documentation language
 
-- **English is the default.** `README.md`, `ARCHITECTURE.md`, `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/UPGRADING.md`.
+- **English is the default.** Every file under `docs/aika/`, plus `AGENTS.md`.
 - **Indonesian is secondary.** Same filename plus `.id.md`.
 - **Both files are updated in the same change.** A change that updates only one language is incomplete.
 - **Code is English without exception**: identifiers, comments, test names, commit messages, and this file. Mixed-language code reads badly for people and worse for tools, and framework code is merged into every client project.

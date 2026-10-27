@@ -5,7 +5,7 @@
  * `cluster` mode would start N worker processes, each holding its own
  * SQLite connection. SQLite serialises writes at the file level, so extra
  * writers buy no throughput and only introduce SQLITE_BUSY variance.
- * Scale vertically. See ARCHITECTURE.md ("SQLite in production").
+ * Scale vertically. See docs/aika/ARCHITECTURE.md ("SQLite in production").
  */
 module.exports = {
   apps: [

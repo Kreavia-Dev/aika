@@ -2,7 +2,7 @@
 
 **English** · [Bahasa Indonesia](./UPGRADING.id.md)
 
-This document is a **procedure**, not a release log. Release notes live in [CHANGELOG.md](../CHANGELOG.md).
+This document is a **procedure**, not a release log. Release notes live in [CHANGELOG.md](./CHANGELOG.md).
 
 If the changelog answers *"what changed"*, this document answers *"what do I have to do"*.
 

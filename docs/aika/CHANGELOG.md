@@ -11,7 +11,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 This changelog is read by the people **maintaining client projects**, not by the people who wrote Aika. Write for that reader.
 
 - **State the impact, not the diff.** "The `/api/users` route now requires a session", not "changed middleware in features/users/server/routes.ts".
-- **Every entry that changes behaviour must answer:** does a client project need to do something? If yes, link to its section in [docs/UPGRADING.md](./docs/UPGRADING.md).
+- **Every entry that changes behaviour must answer:** does a client project need to do something? If yes, link to its section in [docs/UPGRADING.md](./UPGRADING.md).
 - **Categories:** `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, `Security`.
 - The `Unreleased` section is always present at the top.
 
@@ -30,9 +30,12 @@ Versioning rule: a change that forces a client project to edit code or configura
 - **Tailwind CSS v4**, wired through `@tailwindcss/vite` rather than a Nuxt module. `app/assets/css/palette.css` holds the tokens for both themes, and `main.css` maps them onto Tailwind's theme, so components use `bg-card` and `text-muted-foreground` instead of hex values.
 - **`@source` declarations for `app/` and `features/`.** Tailwind v4 detects sources automatically, but `features/` is a sibling of `app/` rather than a child of it, so relying on the heuristic is a silent failure mode. Verified: classes used only by `features/health/web/pages/index.vue` do appear in the built CSS.
 
+- **`docs/aika/BUILDING.md`**: how to add a feature, end to end, using the `health` feature as the worked example. Every snippet is real code, and it is now the document to read first.
+
 ### Changed
 
-- **The feature page mechanism is now proven.** `modules/features.ts` loaded without error from the very first commit but had never been exercised, because no feature had a `web/pages/` directory. It was the last unverified architectural claim in the project. It is now covered by unit tests and confirmed in a production build: `GET /health` renders the feature page, and `useHead` applies the title.
+- **Documentation moved into `docs/aika/`.** The root `README.md` now belongs to the client project, so a client can describe their own site without ever conflicting with an upstream change. This was a real defect: `README.md` was not on the list of files a client may edit, which left a client repository whose front page described Aika instead of the client. `AGENTS.md` stays at the root because agent tooling looks for it there, and `LICENSE` stays by legal convention. Every relative link was rewritten and checked.
+- The root `README.md` is a short signpost here, and the client's own front page in a client project. It is now on the list of files that legitimately differ per client. `modules/features.ts` loaded without error from the very first commit but had never been exercised, because no feature had a `web/pages/` directory. It was the last unverified architectural claim in the project. It is now covered by unit tests and confirmed in a production build: `GET /health` renders the feature page, and `useHead` applies the title.
 - `npm run check` now also runs the test suite.
 - **New writing rule for every document and comment: no em dashes, no en dashes.** The characters are invisible in review, so nobody notices one being added. That is why this is enforced by a script rather than written down and trusted.
 - **Indonesian documentation rewritten to read naturally.** The earlier versions were translated word for word, which produced passive-heavy sentences with English clause structure. Translating a document is not the same as writing one.

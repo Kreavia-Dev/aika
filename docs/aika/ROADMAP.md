@@ -28,7 +28,11 @@ These block whole phases. Decide them before starting the phase, not during it.
 |---|---|---|
 | **CMS: build a lean one, or adopt Directus or Payload?** | All of Phase 2 | Building the 80% of WordPress that clients actually use is roughly 10 to 14 weeks for one person. Adopting means a second framework in a stack that already has Nuxt, and possibly a schema that cannot be diffed in git, which would fight the distribution model. |
 | **How much of the admin UI gets generated from a schema?** | Phase 2 | If content models are declared as data, then admin CRUD screens, SEO fields, and content API endpoints can all be generated instead of written by hand. This is the highest-leverage investment available to Aika. |
-| **How does a client project learn to build a feature?** | Phase 1 | Twenty markdown files land in every client project, and a client's own README cannot live at the root without conflicting on every pull. The shape of both the documentation and any worked example is still undecided. |
+
+Resolved: a client project learns the conventions from `docs/aika/BUILDING.md`,
+which walks through adding a feature using the `health` feature as the worked
+example. Aika's own documentation moved into `docs/aika/` so that a client's
+`README.md` can live at the root without ever conflicting.
 
 ## Phase 1: the minimum a client site needs
 

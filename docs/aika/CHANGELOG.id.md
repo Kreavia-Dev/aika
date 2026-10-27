@@ -13,7 +13,7 @@ Formatnya mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/), da
 Pembaca changelog ini adalah **orang yang memelihara project klien**, bukan orang yang menulis Aika. Jadi tulis untuk mereka.
 
 - **Tulis dampaknya, bukan diff-nya.** "Route `/api/users` sekarang butuh sesi", bukan "mengubah middleware di features/users/server/routes.ts".
-- **Setiap entri yang mengubah perilaku harus bisa menjawab:** apakah project klien perlu melakukan sesuatu? Kalau ya, tautkan ke bagiannya di [docs/UPGRADING.id.md](./docs/UPGRADING.id.md).
+- **Setiap entri yang mengubah perilaku harus bisa menjawab:** apakah project klien perlu melakukan sesuatu? Kalau ya, tautkan ke bagiannya di [docs/UPGRADING.id.md](./UPGRADING.id.md).
 - **Kategori:** `Ditambahkan`, `Diubah`, `Usang`, `Dihapus`, `Diperbaiki`, `Keamanan`.
 - Bagian `Belum Dirilis` selalu ada di paling atas.
 
@@ -32,8 +32,12 @@ Aturan versinya: perubahan yang memaksa project klien mengedit kode atau konfigu
 - **`ROADMAP.md` dan `ROADMAP.id.md`.** Satu-satunya tempat yang menjawab apa yang mau dibangun berikutnya dan kenapa. Disiplinnya: yang sudah selesai keluar sepenuhnya dari roadmap dan pindah ke file ini, jadi keduanya tidak pernah tumpang tindih.
 - **`npm run prose:check`**, ikut jalan di `npm run check`. Dia menolak em dash dan en dash di mana pun dalam repo, di kedua bahasa dan di komentar kode. Pakai koma, titik dua, titik, atau tanda kurung. Tanda hubung biasa tetap boleh di dalam kata dan rentang seperti `R1-R6`.
 
+- **`docs/aika/BUILDING.id.md`**: cara menambah fitur dari awal sampai jalan, memakai fitur `health` sebagai contoh nyata. Semua potongan kodenya kode asli, dan sekarang ini dokumen yang dibaca pertama.
+
 ### Diubah
 
+- **Dokumentasi dipindah ke `docs/aika/`.** `README.md` di root sekarang milik project klien, jadi klien bisa menjelaskan situsnya sendiri tanpa pernah berkonflik dengan perubahan dari upstream. Ini bug nyata: `README.md` tidak ada di daftar file yang boleh diedit klien, sehingga yang terjadi adalah repo klien yang halaman depannya menjelaskan Aika, bukan kliennya. `AGENTS.md` tetap di root karena tool agent mencarinya di situ, dan `LICENSE` tetap karena konvensi hukum. Semua tautan relatifnya ditulis ulang dan diperiksa.
+- `README.md` di root sekarang jadi penunjuk singkat di repo Aika, dan jadi halaman depan milik klien di project klien. Ia sekarang masuk daftar file yang wajar berbeda di tiap klien.
 - **Mekanisme halaman fitur sudah terbukti.** `modules/features.ts` termuat tanpa error sejak commit pertama tapi belum pernah dijalankan, karena belum ada fitur yang punya direktori `web/pages/`. Itu klaim arsitektur terakhir yang belum terbukti di proyek ini. Sekarang sudah dicakup test unit dan dikonfirmasi di build produksi: `GET /health` merender halaman fiturnya, dan `useHead` memasang judulnya.
 - `npm run check` sekarang juga menjalankan test suite.
 - **Aturan penulisan baru untuk semua dokumen dan komentar: tidak ada em dash dan en dash.** Karakter ini tidak terlihat saat review, jadi tidak ada yang sadar kalau ada yang menambahkannya. Karena itu aturannya ditegakkan skrip, bukan sekadar ditulis lalu dipercaya.

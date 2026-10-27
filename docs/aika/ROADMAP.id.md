@@ -28,7 +28,11 @@ Ini memblokir satu fase penuh. Putuskan sebelum fasenya dimulai, bukan saat suda
 |---|---|---|
 | **CMS: bangun sendiri yang ringkas, atau adopsi Directus atau Payload?** | Seluruh Fase 2 | Membangun 80% WordPress yang benar-benar dipakai klien butuh sekitar 10 sampai 14 minggu untuk satu orang. Kalau mengadopsi, berarti ada framework kedua di stack yang sudah punya Nuxt, dan schemanya mungkin tidak bisa di-diff di git, yang justru melawan cara perpindahan kode kita. |
 | **Seberapa banyak admin UI yang bisa di-generate dari schema?** | Fase 2 | Kalau content model dideklarasikan sebagai data, maka layar CRUD admin, field SEO, dan endpoint content API bisa di-generate, bukan ditulis satu per satu. Ini investasi dengan hasil paling besar yang tersedia untuk Aika. |
-| **Bagaimana project klien belajar membangun fitur?** | Fase 1 | Dua puluh file markdown masuk ke setiap project klien, dan README milik klien sendiri tidak bisa berada di root tanpa berkonflik di setiap pull. Bentuk dokumentasinya dan bentuk contoh kerjanya masih belum diputuskan. |
+
+Sudah diputuskan: project klien mempelajari konvensinya dari
+`docs/aika/BUILDING.id.md`, yang memandu menambah fitur memakai fitur `health`
+sebagai contoh nyata. Dokumentasi Aika dipindah ke `docs/aika/` supaya
+`README.md` milik klien bisa tinggal di root tanpa pernah berkonflik.
 
 ## Fase 1: kebutuhan minimum satu situs klien
 

@@ -228,6 +228,7 @@ Daftar tertutup. Sisanya milik Aika.
 
 | File | Kenapa |
 |---|---|
+| `README.md` | Halaman depan milik klien sendiri. Aika tidak mengubahnya |
 | `app/pages/*`, `app/layouts/*`, `app/app.vue` | UI dan brand klien |
 | `shared/http/app.ts` | Baris mount fitur tiap klien |
 | `features/<fitur-milik-klien>/**` | Semua pekerjaan custom |

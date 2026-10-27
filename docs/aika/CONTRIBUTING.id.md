@@ -79,7 +79,7 @@ Kalau perubahanmu menyentuh file di daftar "wajar berbeda di tiap klien", atau m
 Tulis untuk orang yang memelihara project klien, bukan untuk penulis diff-nya:
 
 - Tulis dampaknya, bukan diff-nya. "Route `/api/users` sekarang butuh sesi", bukan "mengubah middleware di features/users/server/routes.ts".
-- Setiap entri yang mengubah perilaku harus bisa menjawab: apakah project klien perlu melakukan sesuatu? Kalau ya, tautkan ke bagiannya di [docs/UPGRADING.id.md](./docs/UPGRADING.id.md).
+- Setiap entri yang mengubah perilaku harus bisa menjawab: apakah project klien perlu melakukan sesuatu? Kalau ya, tautkan ke bagiannya di [docs/UPGRADING.id.md](./UPGRADING.id.md).
 - Perubahan yang memaksa project klien mengedit kode atau konfigurasi itu **major**, walaupun tidak ada yang gagal dikompilasi.
 
 ## Review

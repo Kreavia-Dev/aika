@@ -2,7 +2,7 @@
 
 [English](./AGENTS.md) · **Bahasa Indonesia**
 
-Baca ini sebelum menulis kode. Yang jadi acuan adalah `ARCHITECTURE.md`. Kalau file ini berbeda dengan `ARCHITECTURE.md`, yang menang `ARCHITECTURE.md`, katakan kalau ada yang tidak cocok, jangan menebak.
+Baca ini sebelum menulis kode. Yang jadi acuan adalah `docs/aika/ARCHITECTURE.md`. Kalau file ini berbeda dengan dokumen itu, yang menang dokumen arsitekturnya, katakan kalau ada yang tidak cocok, jangan menebak.
 
 > **Catatan:** yang benar-benar dibaca agent adalah [AGENTS.md](./AGENTS.md), dan itu ditulis dalam Bahasa Inggris. File ini versi Indonesianya, untuk dibaca manusia. Isinya sama.
 
@@ -148,9 +148,25 @@ Aika sengaja tidak punya runtime buatan sendiri, framework HTTP, ORM, framework 
 
 Sebelum menambah dependency, cek `ARCHITECTURE.md` bagian "Yang tidak kita bangun" dan "Filter desain". Kalau tool di ekosistem sudah menyelesaikannya, pakai tool itu langsung, jangan dibikin wrapper sendiri.
 
+## Di mana dokumentasinya tinggal
+
+| Path | Pemilik | Kenapa di situ |
+|---|---|---|
+| `README.md` | **project klien** | Klien menggantinya dengan halaman depannya sendiri. Aika tidak mengubahnya, jadi tidak pernah berkonflik |
+| `AGENTS.md` | Aika | Di root karena konvensi: tool agent mencarinya di situ, jadi tidak bisa dipindah |
+| `docs/aika/**` | Aika | Semua dokumen Aika lainnya. Diperbarui lewat `git pull upstream`, tidak pernah diedit lokal |
+| `LICENSE` | Aika | Di root karena konvensi hukum |
+
+Kalau sebuah perubahan memengaruhi perilaku yang diandalkan project klien,
+perbarui dokumen di `docs/aika/`. README di root bukan milik Aika untuk ditulis.
+
+Mulai dari sini: [docs/aika/BUILDING.id.md](./docs/aika/BUILDING.id.md) untuk
+bagian bagaimana, dan [docs/aika/ARCHITECTURE.id.md](./docs/aika/ARCHITECTURE.id.md)
+untuk bagian kenapa.
+
 ## Bahasa dokumentasi
 
-- **Inggris sebagai default.** `README.md`, `ARCHITECTURE.md`, `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `docs/UPGRADING.md`.
+- **Inggris sebagai default.** Semua file di `docs/aika/`, plus `AGENTS.md`.
 - **Indonesia sebagai pendamping.** Nama file sama, ditambah `.id.md`.
 - **Keduanya diperbarui dalam perubahan yang sama.** Perubahan yang hanya memperbarui satu bahasa belum selesai.
 - **Kode wajib Bahasa Inggris, tanpa pengecualian**: identifier, komentar, nama test, commit message, dan file ini. Kode campur bahasa berat dibaca manusia, dan lebih berat lagi dibaca tool, sementara kode framework ikut ter-merge ke setiap project klien.

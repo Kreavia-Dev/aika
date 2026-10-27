@@ -5,7 +5,7 @@ import { z } from 'zod'
  *
  * Every feature declares its inputs, outputs and errors here first. Zod
  * schemas give runtime validation and TypeScript gives compile-time types
- * from the same source, see ARCHITECTURE.md, "The feature model".
+ * from the same source, see docs/aika/ARCHITECTURE.md, "The feature model".
  *
  * Nothing outside this feature imports from this file directly. It is
  * re-exported through `index.ts` (server boundary) and `web/index.ts`

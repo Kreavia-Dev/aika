@@ -226,6 +226,7 @@ A closed list. Everything else belongs to Aika.
 
 | File | Why |
 |---|---|
+| `README.md` | The client's own front page. Aika does not change it |
 | `app/pages/*`, `app/layouts/*`, `app/app.vue` | Client UI and branding |
 | `shared/http/app.ts` | Per-client feature mount lines |
 | `features/<client-specific>/**` | All custom work |

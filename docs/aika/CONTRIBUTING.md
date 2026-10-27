@@ -78,7 +78,7 @@ Applies to both languages.
 Write for the person maintaining a client project, not for the person who wrote the diff:
 
 - Say the impact, not the diff. "The `/api/users` route now requires a session", not "changed middleware in features/users/server/routes.ts".
-- Every entry that changes behaviour must answer: does a client project need to do something? If yes, link to its section in [docs/UPGRADING.md](./docs/UPGRADING.md).
+- Every entry that changes behaviour must answer: does a client project need to do something? If yes, link to its section in [docs/UPGRADING.md](./UPGRADING.md).
 - A change that forces a client project to edit code or configuration is **major**, even if nothing fails to compile.
 
 ## Reviewing

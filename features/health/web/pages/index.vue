@@ -88,7 +88,7 @@ const { data, error, refresh, status } = await useFetch<HealthResponse>('/api/he
 
     <p class="mt-8 rounded-md border-l-2 border-line-strong bg-muted px-4 py-3 text-sm text-muted-foreground">
       Note: this page is not access restricted yet. Restrict it before the first
-      client goes to production. See ROADMAP.md, Phase 3.
+      client goes to production. See docs/aika/ROADMAP.md, Phase 3.
     </p>
   </main>
 </template>

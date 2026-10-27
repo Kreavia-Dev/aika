@@ -131,7 +131,7 @@ Sisanya milik Aika. Jangan diubah tanpa alasan kuat.
 - `database/migrations/*`, hanya menambah file baru, tidak pernah mengubah yang lama
 - `.env`, `ecosystem.config.cjs`
 
-Daftar lengkapnya beserta alasannya ada di [ARCHITECTURE.id.md](./ARCHITECTURE.id.md). Prosedur upgrade-nya ada di [docs/UPGRADING.id.md](./docs/UPGRADING.id.md).
+Daftar lengkapnya beserta alasannya ada di [ARCHITECTURE.id.md](./ARCHITECTURE.id.md). Prosedur upgrade-nya ada di [docs/UPGRADING.id.md](./UPGRADING.id.md).
 
 ## Deploy
 
@@ -171,8 +171,8 @@ Dokumentasi ditulis dalam dua bahasa, tapi yang Inggris selalu jadi acuan. Kalau
 |---|---|
 | [ROADMAP.id.md](./ROADMAP.id.md) | Apa yang mau dibangun berikutnya, dan kenapa. Yang sudah selesai keluar dari sana |
 | [ARCHITECTURE.id.md](./ARCHITECTURE.id.md) | **Acuan utama.** Stack, model fitur, batas, dan alasan tiap keputusan |
-| [AGENTS.id.md](./AGENTS.id.md) | Aturan untuk AI coding agent |
+| [AGENTS.id.md](../../AGENTS.id.md) | Aturan untuk AI coding agent |
 | [CONTRIBUTING.id.md](./CONTRIBUTING.id.md) | Aturan kontribusi dan review |
-| [docs/UPGRADING.id.md](./docs/UPGRADING.id.md) | Cara menarik update ke project klien |
+| [docs/UPGRADING.id.md](./UPGRADING.id.md) | Cara menarik update ke project klien |
 | [CHANGELOG.id.md](./CHANGELOG.id.md) | Riwayat versi Aika |
 | [SECURITY.id.md](./SECURITY.id.md) | Penanganan rahasia dan celah keamanan |

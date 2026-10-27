@@ -3,7 +3,7 @@ import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 /**
- * Aika architecture check: the enforcement half of ARCHITECTURE.md.
+ * Aika architecture check: the enforcement half of docs/aika/ARCHITECTURE.md.
  *
  * This is a heuristic lint over source text, not a compiler. It reads import
  * specifiers with a regex, so a specifier built from a template string can
