@@ -82,6 +82,6 @@ Naikkan sebuah item hanya dengan alasan yang terikat ke klien. Kalau ada klien b
 
 ## Kenapa file ini ada, dan bukan dokumen daftar fitur
 
-Katalog fitur terpisah, yang memetakan klien mana punya fitur mana, belum layak dipelihara sekarang. Belum ada klien yang tumpang tindih fiturnya cukup banyak untuk membuat katalog itu layak dipelihara, jadi ia langsung membusuk.
+Katalog fitur terpisah, yang memetakan klien mana punya fitur mana, belum layak dipelihara sekarang. Belum ada klien yang perlu dipetakan, jadi katalog itu langsung membusuk.
 
 Buat nanti saat project klien ketiga mulai. Sampai itu, roadmap ini ditambah changelog sudah cukup untuk melihat posisi kita.
