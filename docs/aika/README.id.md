@@ -36,7 +36,7 @@ app/                  situs klien: pages, layouts, components, site.ts
   site.ts             nama situs, tagline, navigasi, kontak. Edit ini duluan
   app.vue             akarnya, dan wajib membungkus NuxtPage dengan NuxtLayout
   layouts/default.vue kerangka situs yang dipakai semua halaman
-  components/         SiteHeader, SiteFooter
+  components/         SiteHeader, SiteFooter, AikaWatermark
   middleware/auth.ts  mengarahkan pengunjung yang belum masuk ke halaman masuk
 features/             vertical slices, one feature per business capability
   auth/               masuk, sesi, penjaga halaman

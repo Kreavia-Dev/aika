@@ -44,6 +44,8 @@ Aturan versinya: perubahan yang memaksa project klien mengedit kode atau konfigu
 
 ### Diubah
 
+- **Situs rujukannya sekarang berlabel Aika, bukan klien fiktif.** Sebelumnya tertulis "Meridian Studio" dengan teks ala agensi, yang membuat pembaca menebak apa yang sedang dilihatnya. Sekarang halamannya menyebut dirinya apa dan ke mana harus membaca selanjutnya, dan itu memang tugas sebuah contoh.
+- **`app/components/AikaWatermark.vue`**, tanda kecil tetap di pojok setiap halaman, dikendalikan `site.watermark` di `app/site.ts`. Itu kredit agensi, bukan kredit klien, jadi sakelarnya terpisah dari nama situs: klien mengganti nama, studio yang memutuskan soal tandanya.
 - **`app/app.vue` sekarang membungkus `<NuxtPage>` dengan `<NuxtLayout>`.** Sebelumnya tidak, sehingga `app/layouts/` tidak pernah dipakai dan `definePageMeta({ layout: ... })` diabaikan tanpa peringatan di mana pun. Ketemu saat membangun kerangka situs, dan ini akan menghabiskan setengah hari seseorang.
 - **Halaman depan tidak lagi membuktikan rantai Nuxt ke SQLite.** Sekarang tugas itu milik `/health`, dan itu halaman yang dibuka kalau mau memastikan deployment tersambung benar. Halaman depan klien seharusnya bukan panel status.
 - Halaman masuk keluar dari kerangka situs lewat `definePageMeta({ layout: false })`. Navbar di atas form login mengundang orang berkeliling alih-alih masuk. Endpoint `/api/health` tetap publik, karena pemantauan uptime tidak bisa login. Pembagian ini disengaja: satu permukaan untuk mesin, satu untuk manusia.

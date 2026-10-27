@@ -2,30 +2,32 @@
 /**
  * The home page.
  *
- * Placeholder copy, written to look like a real small business site so the
- * structure is visible rather than described. Replace it with the client's.
+ * Placeholder copy, but deliberately honest rather than pretending to be a
+ * fictional agency. This repository ships as its own example, so the page says
+ * what the reader is looking at and where to read the source. A page that claims
+ * to be "Meridian Studio" leaves everyone guessing.
  *
- * Note what this page no longer does: it used to fetch `/api/health` to prove the
- * Nuxt to Nitro to Hono to SQLite loop. That job belongs to `/health`, which
- * reads from the database and is the page to open when you want to confirm a
- * deployment is wired correctly. A client home page should not be a status panel.
+ * Note what this page does not do: it used to fetch `/api/health` to prove the
+ * Nuxt to Nitro to Hono to SQLite loop. That job belongs to `/health` now, which
+ * reads from the database and is the page to open when confirming a deployment
+ * is wired correctly.
  */
 import { site } from '~/site'
 
 useHead({ title: 'Home' })
 
-const services = [
+const sections = [
   {
-    title: 'Websites',
-    body: 'Fast, accessible sites built to be edited by the people who own them.',
+    title: 'Static pages',
+    body: 'Open app/pages/about.vue. It is the smallest page Aika allows: one file, one title, some markup. No feature, no API, and no database.',
   },
   {
-    title: 'Web apps',
-    body: 'Dashboards, booking systems, and internal tools that fit how you already work.',
+    title: 'Feature pages',
+    body: 'The page at /health comes from features/health/web/pages/. A slice can own its own screens without the application knowing about it.',
   },
   {
-    title: 'Care',
-    body: 'Hosting, backups, and small changes, handled without a support ticket.',
+    title: 'Sessions',
+    body: 'The page at /health also requires a sign in. The guard, the password hashing, and the session table all live in features/auth/.',
   },
 ]
 </script>
@@ -37,34 +39,48 @@ const services = [
     </h1>
 
     <p class="mt-6 max-w-2xl text-lg text-muted-foreground">
-      We build the unglamorous part well: pages that load quickly, forms that
-      actually reach someone, and a site your team can update without calling us.
+      This is not a client project. It is the example kept inside Aika itself,
+      and it is shaped like a real small site: a header, three pages, a footer,
+      and a sign in. Read the source in the order below and the rest of Aika
+      stops being abstract.
     </p>
 
     <div class="mt-8">
       <NuxtLink
-        to="/contact"
+        to="/about"
         class="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
       >
-        Start a project
+        How this is put together
       </NuxtLink>
     </div>
 
     <section class="mt-20 sm:mt-28">
       <h2 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        What we do
+        What is here
       </h2>
 
       <ul class="mt-6 grid gap-8 sm:grid-cols-3">
-        <li v-for="service in services" :key="service.title">
+        <li v-for="section in sections" :key="section.title">
           <h3 class="font-medium">
-            {{ service.title }}
+            {{ section.title }}
           </h3>
           <p class="mt-2 text-sm text-muted-foreground">
-            {{ service.body }}
+            {{ section.body }}
           </p>
         </li>
       </ul>
+    </section>
+
+    <section class="mt-20 border-t border-border pt-10 sm:mt-28">
+      <h2 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        Start here
+      </h2>
+      <p class="mt-4 max-w-2xl text-muted-foreground">
+        <span class="font-mono text-sm text-foreground">app/site.ts</span> holds
+        everything about this site: the name in the header and the browser tab, the
+        tagline above, the navigation, the contact details, and the small mark in
+        the corner. Change that one file and reload. Nothing else needs touching.
+      </p>
     </section>
   </div>
 </template>

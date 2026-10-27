@@ -32,7 +32,7 @@ app/                  the client's site: pages, layouts, components, site.ts
   site.ts             site name, tagline, nav, contact. Edit this first
   app.vue             the root, and it must wrap NuxtPage in NuxtLayout
   layouts/default.vue the site chrome shared by every page
-  components/         SiteHeader, SiteFooter
+  components/         SiteHeader, SiteFooter, AikaWatermark
   middleware/auth.ts  sends a signed out visitor to the sign in page
 features/             vertical slices, one business capability each
   auth/               sign in, sessions, the page guard

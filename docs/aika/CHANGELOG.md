@@ -42,6 +42,8 @@ Versioning rule: a change that forces a client project to edit code or configura
 
 ### Changed
 
+- **The reference site is branded Aika, not a fictional client.** It said "Meridian Studio" with agency copy, which left a reader guessing what they were actually looking at. The pages now say what they are and where to read next, which is the whole job of an example.
+- **`app/components/AikaWatermark.vue`**, a small fixed mark in the corner of every page, switched by `site.watermark` in `app/site.ts`. It is the agency's credit rather than the client's, so it is a separate switch from the site name: a client changes the name, the studio decides about the mark.
 - **`app/app.vue` now wraps `<NuxtPage>` in `<NuxtLayout>`.** It did not before, so `app/layouts/` was never applied and `definePageMeta({ layout: ... })` was silently ignored with no warning anywhere. Found while building the site shell, and it would have cost somebody an afternoon.
 - **The home page no longer proves the loop.** `/health` carries that job now, and it is the page to open when confirming a deployment is wired correctly. A client home page should not be a status panel.
 - The sign in page opts out of the site chrome with `definePageMeta({ layout: false })`. A navigation bar above a login form invites people to wander off instead of signing in. The endpoint at `/api/health` stays public, because uptime monitoring cannot sign in. This split is deliberate: one surface is for machines, the other is for people.

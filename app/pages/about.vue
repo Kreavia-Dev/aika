@@ -2,37 +2,40 @@
 /**
  * The about page.
  *
- * Placeholder copy. This is the page to look at to see the smallest possible
- * page in Aika: a file in `app/pages/`, a title, and some markup. No feature, no
- * API, no database.
+ * Also the answer to "where do I start reading". The facts below describe the
+ * approach rather than counting things, because a page that says "62 tests"
+ * becomes a lie the first time somebody adds a test.
  */
 import { site } from '~/site'
 
 useHead({ title: 'About' })
 
 const facts = [
-  { label: 'Founded', value: '2019' },
-  { label: 'People', value: 'Six' },
-  { label: 'Based in', value: site.contact.address },
+  { label: 'Runtime', value: 'One Node process' },
+  { label: 'Database', value: 'SQLite in WAL mode' },
+  { label: 'Updates', value: 'git merge upstream' },
 ]
 </script>
 
 <template>
   <div class="mx-auto max-w-2xl px-6 py-16 sm:py-24">
     <h1 class="text-3xl font-semibold tracking-tight">
-      About us
+      About this site
     </h1>
 
     <div class="mt-6 space-y-4 text-muted-foreground">
       <p>
-        We are a small studio, and we intend to stay small. Every project is
-        handled by the people who will still be here when you need a change made
-        two years from now.
+        This page exists to be the smallest complete example in the repository. A
+        page in Aika is a file in
+        <span class="font-mono text-sm text-foreground">app/pages/</span>, a
+        title, and some markup. Nothing else is required, and that is the point:
+        the layers above are there for when a page needs them, not before.
       </p>
       <p>
-        Most of our work replaces a site that became impossible to update. We
-        start by looking at how your team actually works today, then build
-        something that fits that, rather than asking your team to fit the tool.
+        The page you are reading is owned by the client project. The pages under
+        <span class="font-mono text-sm text-foreground">features/</span> are owned
+        by a feature. Both end up in the same site, and Aika keeps them apart so
+        that pulling an upstream change never overwrites your work.
       </p>
     </div>
 
@@ -46,5 +49,11 @@ const facts = [
         </dd>
       </div>
     </dl>
+
+    <p class="mt-12 border-t border-border pt-8 text-sm text-muted-foreground">
+      The site name, the navigation, and the contact details on these pages all
+      come from
+      <span class="font-mono text-xs text-foreground">app/site.ts</span>.
+    </p>
   </div>
 </template>

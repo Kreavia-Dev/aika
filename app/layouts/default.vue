@@ -7,5 +7,7 @@
     </main>
 
     <SiteFooter />
+
+    <AikaWatermark />
   </div>
 </template>

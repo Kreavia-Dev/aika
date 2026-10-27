@@ -4,7 +4,10 @@
  *
  * Right now this page shows details and links out to email. The next rung adds a
  * form here that writes to the database, which is where this page stops being
- * static and starts exercising the whole stack.
+ * static and starts exercising the whole stack: a migration, a contract, a POST
+ * route, Zod validation, and somewhere to show the error when validation fails.
+ *
+ * The details come from `app/site.ts`.
  */
 import { site } from '~/site'
 
@@ -24,8 +27,9 @@ const details = [
     </h1>
 
     <p class="mt-6 text-muted-foreground">
-      Tell us what you need and what is in the way. If we are not the right
-      studio for it, we will say so and point you at someone who is.
+      In a client project this page becomes the contact form, and it is the best
+      single example of how a page talks to the database. Until the form exists,
+      the details below are how to reach the people who maintain this.
     </p>
 
     <dl class="mt-12 divide-y divide-border border-y border-border">
@@ -45,5 +49,11 @@ const details = [
         </dd>
       </div>
     </dl>
+
+    <p class="mt-12 border-t border-border pt-8 text-sm text-muted-foreground">
+      These values live in
+      <span class="font-mono text-xs text-foreground">app/site.ts</span>, not in
+      this page.
+    </p>
   </div>
 </template>
