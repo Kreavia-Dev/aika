@@ -91,15 +91,37 @@ jobs:
             sleep 1
           done
 
+          # Each response is fetched once into a file, and the assertions read the
+          # file. Two reasons, and both cost a failed build to learn.
+          #
+          # NO `-f` ON A REQUEST WHOSE STATUS IS THE POINT. `curl -f` treats an
+          # HTTP error as a failure and prints no body at all, so
+          # `curl -sf .../no-such-page` returns zero bytes and exit 22, and an
+          # assertion about the 404 page's content fails while the page is working
+          # perfectly. Measured: 0 bytes with `-f`, 3944 without.
+          #
+          # NO `curl ... | grep -q ...` UNDER `set -o pipefail`. grep -q exits at
+          # the first match, which closes the pipe while curl may still be writing,
+          # and pipefail then reports curl's SIGPIPE as a failed step.
+          mkdir -p /tmp/aika-smoke
+
           echo "health endpoint:"
-          curl -sf http://127.0.0.1:3000/api/health | tee /dev/stderr
-          curl -sf http://127.0.0.1:3000/api/health | grep -q '"database":"up"'
+          curl -s http://127.0.0.1:3000/api/health -o /tmp/aika-smoke/health.json
+          cat /tmp/aika-smoke/health.json
+          grep -q '"database":"up"' /tmp/aika-smoke/health.json
 
           # The home page has to render, not merely return 200. A Nuxt build that
           # skips the layouts, or a broken component, would still answer 200.
           echo "home page:"
-          curl -sf http://127.0.0.1:3000/ | grep -q 'Aika'
-          curl -sf http://127.0.0.1:3000/ | grep -q '<header'
+          curl -s http://127.0.0.1:3000/ -o /tmp/aika-smoke/home.html
+          grep -q 'Aika' /tmp/aika-smoke/home.html
+          grep -q '<header' /tmp/aika-smoke/home.html
+
+          # The page head has to carry a description and an Open Graph title, or
+          # the SEO work is not actually reaching the response.
+          echo "page head:"
+          grep -q '<meta name="description"' /tmp/aika-smoke/home.html
+          grep -q 'property="og:title"' /tmp/aika-smoke/home.html
 
           # The guarded page must still redirect, because that is the only thing
           # between a visitor and a client's inbox.
@@ -109,32 +131,30 @@ jobs:
           # SEO files. These are Nitro routes rather than Hono ones, so nothing
           # else in the build would notice if they stopped resolving.
           echo "robots.txt:"
-          curl -sf http://127.0.0.1:3000/robots.txt | grep -q 'User-agent'
-          curl -sf http://127.0.0.1:3000/robots.txt | grep -q 'Disallow: /api/'
+          curl -s http://127.0.0.1:3000/robots.txt -o /tmp/aika-smoke/robots.txt
+          grep -q 'User-agent' /tmp/aika-smoke/robots.txt
+          grep -q 'Disallow: /api/' /tmp/aika-smoke/robots.txt
 
           echo "sitemap.xml:"
-          curl -sf http://127.0.0.1:3000/sitemap.xml | grep -q '<urlset'
-
-          # The page head has to carry a description and an Open Graph title, or
-          # the SEO work is not actually reaching the response.
-          echo "page head:"
-          curl -sf http://127.0.0.1:3000/ | grep -q '<meta name="description"'
-          curl -sf http://127.0.0.1:3000/ | grep -q 'property="og:title"'
+          curl -s http://127.0.0.1:3000/sitemap.xml -o /tmp/aika-smoke/sitemap.xml
+          grep -q '<urlset' /tmp/aika-smoke/sitemap.xml
 
           # The 404 page is a real page, not the Nuxt default.
           #
-          # The Accept header is not optional here. Nitro content-negotiates its
-          # error handler: a client that does not accept HTML gets JSON, so a plain
-          # curl of a missing path looks like the error page is broken when it is
-          # not. That cost me a diagnosis; it should not cost the next person one.
+          # The Accept header is not optional. Nitro content-negotiates its error
+          # handler: a client that does not accept HTML gets JSON, so a plain curl
+          # of a missing path looks like the error page is broken when it is not.
           echo "404:"
-          test "$(curl -s -o /dev/null -w '%{http_code}' -H 'Accept: text/html' http://127.0.0.1:3000/no-such-page)" = "404"
-          curl -sf -H 'Accept: text/html' http://127.0.0.1:3000/no-such-page | grep -q 'does not exist'
-          curl -sf -H 'Accept: text/html' http://127.0.0.1:3000/no-such-page | grep -q 'noindex'
+          missing_status=$(curl -s -o /tmp/aika-smoke/404.html -w '%{http_code}' \
+            -H 'Accept: text/html' http://127.0.0.1:3000/no-such-page)
+          test "$missing_status" = "404"
+          grep -q 'does not exist' /tmp/aika-smoke/404.html
+          grep -q 'noindex' /tmp/aika-smoke/404.html
 
           # Staff screens must keep themselves out of search results.
           echo "noindex:"
-          curl -sf http://127.0.0.1:3000/auth/login | grep -q 'noindex'
+          curl -s http://127.0.0.1:3000/auth/login -o /tmp/aika-smoke/login.html
+          grep -q 'noindex' /tmp/aika-smoke/login.html
 
           kill $SERVER_PID
 
