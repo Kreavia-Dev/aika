@@ -20,7 +20,11 @@
 import type { ChangePasswordResponse } from '../contract'
 import { messageFromApiError } from '~~/shared/http/error-message'
 
-useHead({ title: 'Change password' })
+useHead({
+  title: 'Change password',
+  // Tooling rather than content. See the SEO section in AGENTS.md.
+  meta: [{ name: 'robots', content: 'noindex, nofollow' }],
+})
 
 definePageMeta({ middleware: 'auth' })
 

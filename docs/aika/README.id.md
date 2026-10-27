@@ -37,6 +37,8 @@ app/                  situs klien: pages, layouts, components, site.ts
   app.vue             akarnya, dan wajib membungkus NuxtPage dengan NuxtLayout
   layouts/default.vue kerangka situs yang dipakai semua halaman
   components/         SiteHeader, SiteFooter, ContactForm, AikaWatermark
+  composables/usePageSeo.ts   tag head yang dibutuhkan halaman klien, dari satu panggilan
+  error.vue           halaman 404 dan 500, yang mempertahankan kerangka situs
   middleware/auth.ts  mengarahkan pengunjung yang belum masuk ke halaman masuk
 features/             vertical slices, one feature per business capability
   auth/               masuk, sesi, penjaga halaman
@@ -50,7 +52,9 @@ shared/               business-neutral infrastructure
   http/app.ts         the Hono composition root
   http/error-message.ts   mengubah error fetch jadi pesan yang bisa dibaca
   nuxt/feature-pages.ts   mengubah features/*/web/pages/ jadi route record
+  seo/site-files.ts   membuat robots.txt dan sitemap.xml, sebagai fungsi murni
 server/api/[...path].ts   the single Nitro to Hono adapter, lalu ke Hono
+server/routes/            robots.txt dan sitemap.xml, yang harus ada di root domain
 modules/features.ts   menyambungkan halaman fitur ke Nuxt
 tests/                test unit, dan setup database untuk seluruh suite
 database/migrations/  SQL forward-only

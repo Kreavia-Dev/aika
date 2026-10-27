@@ -17,7 +17,11 @@
  */
 import type { HealthResponse } from '../index'
 
-useHead({ title: 'System status' })
+useHead({
+  title: 'System status',
+  // Tooling rather than content. See the SEO section in AGENTS.md.
+  meta: [{ name: 'robots', content: 'noindex, nofollow' }],
+})
 
 /*
  * Staff only. Without a session the middleware sends the visitor to

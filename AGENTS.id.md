@@ -143,6 +143,14 @@ Pemilik autentikasi adalah `features/auth/`, dan itu rujukan untuk fitur yang me
 - **Mengganti password mengakhiri semua sesi lain.** Kalau nanti kamu menambah cara lain untuk menulis password, akhiri sesinya juga, kalau tidak perubahannya tidak berarti apa-apa bagi yang sudah punya sesi.
 - **Akun yang dinonaktifkan ditolak di dua tempat.** `signIn` menolaknya setelah password diverifikasi, supaya waktunya sama dengan password salah, dan `resolveSessionDetail` menolaknya di setiap request supaya sesi yang muncul kembali tidak bisa memakai akun itu.
 
+## SEO
+
+- **Halaman milik klien memakai `usePageSeo`, bukan `useHead` berisi judul saja.** Ia menerima judul dan deskripsi, lalu memancarkan description, pasangan Open Graph, kartu Twitter, dan URL canonical dari keduanya. Halaman yang hanya mengirim judul tidak punya deskripsi, dan deskripsi itulah tag yang menentukan hasil pencarian diklik atau tidak.
+- **Halaman fitur yang berupa perkakas menyatakan `noindex, nofollow` sendiri.** Semua layar staf begitu. `robots.txt` tidak bisa melakukannya untukmu: `Disallow` hanya meminta crawler tidak mengambil sebuah path, dan halaman bisa terindeks dari tautan tanpa pernah diambil.
+- **`app/site.ts` perlu diisi `url` sebelum peluncuran, dan kosong itu keadaan yang disengaja, bukan yang belum selesai.** Selama kosong, halaman tidak memancarkan canonical maupun URL Open Graph, dan `/sitemap.xml` berupa urlset valid tapi kosong. Itu benar: canonical yang mengarah ke placeholder lebih buruk daripada tidak ada canonical sama sekali.
+- **`robots.txt` dan `sitemap.xml` itu rute Nitro, bukan rute Hono.** Hono dijangkau lewat tepat satu adapter dan memiliki `/api`. Apa pun yang harus berada di root domain itu milik Nitro.
+- **`sitemap.xml` mencantumkan `site.nav`, dan belum ada yang lain yang bisa menyumbang.** Fitur dengan konten publik, blog contoh paling jelas, belum punya cara memberi tahu apa yang ia terbitkan. Itu butuh content registry, pertanyaan yang sama dengan keputusan CMS yang masih terbuka.
+
 ## Testing
 
 ```bash

@@ -41,8 +41,6 @@ example. Aika's own documentation moved into `docs/aika/` so that a client's
 ## Phase 1: the minimum a client site needs
 
 - [ ] **Enforce `role`.** `users.role` exists and nothing reads it, so every signed-in user is currently an administrator.
-- [ ] **SEO**: meta tags, canonical URLs, `sitemap.xml`, `robots.txt`, Open Graph. Aika sells websites, so this is not optional, and today it is completely absent.
-- [ ] Error pages for 404 and 500 that are not Nuxt defaults.
 - [ ] `media`: upload, a storage contract with a local adapter, and image resizing.
 
 ## Phase 2: the WordPress-like part

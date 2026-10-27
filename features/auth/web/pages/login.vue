@@ -8,7 +8,12 @@
  */
 import { messageFromApiError } from '~~/shared/http/error-message'
 
-useHead({ title: 'Sign in' })
+useHead({
+  title: 'Sign in',
+  // Tooling rather than content. A staff screen must keep itself out of search
+  // results, and only `noindex` does that. See the SEO section in AGENTS.md.
+  meta: [{ name: 'robots', content: 'noindex, nofollow' }],
+})
 
 /*
  * No site chrome on the sign in page. It is reached from the footer, and a

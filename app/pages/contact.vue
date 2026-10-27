@@ -20,7 +20,10 @@
  */
 import { site } from '~/site'
 
-useHead({ title: 'Contact' })
+usePageSeo({
+  title: 'Contact',
+  description: 'Send a message to Aika. It is stored in the database, and read by staff on a page that requires a sign in.',
+})
 
 const details = [
   { label: 'Email', value: site.contact.email, href: `mailto:${site.contact.email}` },

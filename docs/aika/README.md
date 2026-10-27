@@ -33,6 +33,8 @@ app/                  the client's site: pages, layouts, components, site.ts
   app.vue             the root, and it must wrap NuxtPage in NuxtLayout
   layouts/default.vue the site chrome shared by every page
   components/         SiteHeader, SiteFooter, ContactForm, AikaWatermark
+  composables/usePageSeo.ts   the head tags every client page needs, from one call
+  error.vue           the 404 and 500 page, which keeps the site chrome
   middleware/auth.ts  sends a signed out visitor to the sign in page
 features/             vertical slices, one business capability each
   auth/               sign in, sessions, the page guard
@@ -46,7 +48,9 @@ shared/               business-neutral infrastructure
   http/app.ts         Hono composition root
   http/error-message.ts   turns a thrown fetch error into a readable message
   nuxt/feature-pages.ts   turns features/*/web/pages/ into route records
+  seo/site-files.ts   builds robots.txt and sitemap.xml, as pure functions
 server/api/[...path].ts   the single Nitro → Hono adapter
+server/routes/            robots.txt and sitemap.xml, which must sit at the domain root
 modules/features.ts   wires feature pages into Nuxt
 tests/                unit tests, and the database setup the suite runs on
 database/migrations/  forward-only SQL

@@ -106,6 +106,36 @@ jobs:
           echo "guard:"
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/contact/messages)" = "302"
 
+          # SEO files. These are Nitro routes rather than Hono ones, so nothing
+          # else in the build would notice if they stopped resolving.
+          echo "robots.txt:"
+          curl -sf http://127.0.0.1:3000/robots.txt | grep -q 'User-agent'
+          curl -sf http://127.0.0.1:3000/robots.txt | grep -q 'Disallow: /api/'
+
+          echo "sitemap.xml:"
+          curl -sf http://127.0.0.1:3000/sitemap.xml | grep -q '<urlset'
+
+          # The page head has to carry a description and an Open Graph title, or
+          # the SEO work is not actually reaching the response.
+          echo "page head:"
+          curl -sf http://127.0.0.1:3000/ | grep -q '<meta name="description"'
+          curl -sf http://127.0.0.1:3000/ | grep -q 'property="og:title"'
+
+          # The 404 page is a real page, not the Nuxt default.
+          #
+          # The Accept header is not optional here. Nitro content-negotiates its
+          # error handler: a client that does not accept HTML gets JSON, so a plain
+          # curl of a missing path looks like the error page is broken when it is
+          # not. That cost me a diagnosis; it should not cost the next person one.
+          echo "404:"
+          test "$(curl -s -o /dev/null -w '%{http_code}' -H 'Accept: text/html' http://127.0.0.1:3000/no-such-page)" = "404"
+          curl -sf -H 'Accept: text/html' http://127.0.0.1:3000/no-such-page | grep -q 'does not exist'
+          curl -sf -H 'Accept: text/html' http://127.0.0.1:3000/no-such-page | grep -q 'noindex'
+
+          # Staff screens must keep themselves out of search results.
+          echo "noindex:"
+          curl -sf http://127.0.0.1:3000/auth/login | grep -q 'noindex'
+
           kill $SERVER_PID
 
       - name: Show the server log when something failed

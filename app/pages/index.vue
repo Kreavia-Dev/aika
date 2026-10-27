@@ -14,7 +14,10 @@
  */
 import { site } from '~/site'
 
-useHead({ title: 'Home' })
+usePageSeo({
+  title: 'Home',
+  description: 'Aika is a starter kit for client web apps: Nuxt, Hono, and SQLite, built by feature rather than by layer, and distributed by git merge.',
+})
 
 const sections = [
   {

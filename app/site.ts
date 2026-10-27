@@ -31,6 +31,34 @@ export const site = {
    */
   lang: 'en',
 
+  /**
+   * The site's public address, with no trailing slash. Empty until you know it.
+   *
+   * WHY EMPTY IS THE SAFE DEFAULT. A canonical URL is a promise about where a page
+   * lives, and a sitemap is a list of addresses a search engine should go and
+   * fetch. Pointing either at a placeholder is worse than pointing at nothing: a
+   * canonical aimed at example.com tells a search engine the real page lives
+   * somewhere it does not, and a sitemap full of example.com URLs asks it to
+   * index somebody else's domain.
+   *
+   * So while this is empty, pages emit no canonical and no Open Graph URL, and
+   * /sitemap.xml returns a valid but empty urlset. Set it to the client's domain
+   * before launch, and everything switches on at once.
+   */
+  url: '',
+
+  /**
+   * The image that appears when somebody shares a link, relative to `url`.
+   *
+   * Empty means no image tag is emitted at all, rather than one that 404s. A
+   * shared link with no picture still shows the title and description; a shared
+   * link with a broken picture looks broken.
+   *
+   * This is the first thing worth setting on a real launch. Putting a file in
+   * `public/` and naming it here is the whole job.
+   */
+  socialImage: '',
+
   nav: [
     { label: 'Home', path: '/' },
     { label: 'About', path: '/about' },

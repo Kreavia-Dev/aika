@@ -141,6 +141,14 @@ You are writing TypeScript for a team that is still learning it. Optimise for re
 - **Changing a password ends every other session.** If you ever add another way to set a password, end the sessions too, or the change means nothing to whoever already holds one.
 - **A disabled account is refused in two places.** `signIn` refuses it after verifying the password, so the timing matches a wrong password, and `resolveSessionDetail` refuses it on every request so a session that reappears cannot authenticate.
 
+## SEO
+
+- **A client page calls `usePageSeo`, not `useHead` with a title.** It takes a title and a description, and emits the description, the Open Graph pair, the Twitter card, and a canonical URL from them. A page that passes only a title ships no description, and the description is the tag that decides whether a search result gets clicked.
+- **A feature page that is tooling declares `noindex, nofollow` itself.** The staff screens do. `robots.txt` cannot do it for you: `Disallow` asks a crawler not to fetch a path, and a page can be indexed from a link without ever being fetched.
+- **`app/site.ts` needs `url` set before launch, and empty is a deliberate state rather than an unfinished one.** While it is empty, pages emit no canonical and no Open Graph URL, and `/sitemap.xml` is a valid but empty urlset. That is correct: a canonical pointing at a placeholder is worse than no canonical at all.
+- **`robots.txt` and `sitemap.xml` are Nitro routes, not Hono routes.** Hono is reached through exactly one adapter and owns `/api`. Anything that has to sit at the root of the domain belongs to Nitro.
+- **`sitemap.xml` lists `site.nav`, and nothing else can contribute yet.** A feature with public content, a blog being the obvious one, has no way to say what it published. That needs a content registry, which is the same question as the open CMS decision.
+
 ## Testing
 
 ```bash

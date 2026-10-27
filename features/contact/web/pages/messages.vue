@@ -14,7 +14,12 @@
  */
 import type { ContactMessagesResponse } from '../index'
 
-useHead({ title: 'Contact messages' })
+useHead({
+  title: 'Contact messages',
+  // Tooling rather than content. A list of a client's inbound messages must never
+  // appear in a search result. See the SEO section in AGENTS.md.
+  meta: [{ name: 'robots', content: 'noindex, nofollow' }],
+})
 
 /*
  * Staff only. The message list is everything a client's visitors have ever sent,

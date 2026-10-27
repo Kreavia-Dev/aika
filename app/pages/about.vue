@@ -8,7 +8,10 @@
  */
 import { site } from '~/site'
 
-useHead({ title: 'About' })
+usePageSeo({
+  title: 'About',
+  description: 'What Aika is, who it is for, and the handful of decisions that shape everything built with it.',
+})
 
 const facts = [
   { label: 'Runtime', value: 'One Node process' },
