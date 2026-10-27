@@ -7,7 +7,7 @@
  * If this renders "database: up", the foundation is wired correctly.
  *
  * Note where the type comes from: `~~/features/health/web`, the feature's
- * browser-safe boundary — NOT `~~/features/health`, which would pull
+ * browser-safe boundary. NOT `~~/features/health`, which would pull
  * better-sqlite3 into the client bundle.
  *
  * The explicit `useFetch<HealthResponse>` is what gives this page a typed

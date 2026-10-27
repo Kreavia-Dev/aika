@@ -4,7 +4,7 @@ node_modules/
 dist/
 coverage/
 
-# Environment — never commit. Templates are explicitly un-ignored below.
+# Environment: never commit. Templates are explicitly un-ignored below.
 .env
 .env.*
 !.env.example

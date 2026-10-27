@@ -6,7 +6,7 @@ import { closeDb, getDb } from '../shared/database/client'
 /**
  * Online SQLite backup using better-sqlite3's `.backup()`.
  *
- * This is safe to run while the application is serving traffic — it does not
+ * This is safe to run while the application is serving traffic, it does not
  * copy the file, and it does not need the app stopped. Do NOT replace this
  * with `cp` on a WAL-mode database: you would capture a torn state.
  *

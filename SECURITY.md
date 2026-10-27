@@ -12,9 +12,9 @@ Report through an internal channel (team group or a DM to the repository owner).
 
 ## Secrets
 
-- **No secrets in the repository.** No API keys, credentials, or connection strings — not in code, not in tests, not in fixtures, not in comments.
+- **No secrets in the repository.** No API keys, credentials, or connection strings, not in code, not in tests, not in fixtures, not in comments.
 - `.env` is never committed. `.gitignore` already excludes it. Only `.env.example` is committed, and it contains fake values only.
-- On the VPS, the environment lives at `/etc/aika/env` — **outside the deployed application directory**. It is read via `--env-file-if-exists` from `ecosystem.config.cjs`.
+- On the VPS, the environment lives at `/etc/aika/env`, **outside the deployed application directory**. It is read via `--env-file-if-exists` from `ecosystem.config.cjs`.
 - If a secret does land in git, changing it in a later commit is **not enough**. It is in the history. Rotate the secret, then clean the history.
 
 ## Database

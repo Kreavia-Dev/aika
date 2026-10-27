@@ -2,7 +2,7 @@
   "name": "aika",
   "version": "0.1.0",
   "private": true,
-  "description": "Aika — internal application kit for client web apps. Build by feature, not by layer. Nuxt + Hono + SQLite.",
+  "description": "Aika: internal application kit for client web apps. Build by feature, not by layer. Nuxt + Hono + SQLite.",
   "license": "UNLICENSED",
   "type": "module",
   "engines": {
@@ -18,10 +18,11 @@
     "typecheck": "nuxt typecheck",
     "typecheck:scripts": "tsc --noEmit -p tsconfig.scripts.json",
     "arch:check": "tsx scripts/check-boundaries.ts",
+    "prose:check": "tsx scripts/check-prose.ts",
     "db:migrate": "tsx scripts/migrate.ts",
     "db:backup": "tsx scripts/db-backup.ts",
     "setup": "npm run db:migrate",
-    "check": "npm run typecheck && npm run typecheck:scripts && npm run arch:check"
+    "check": "npm run typecheck && npm run typecheck:scripts && npm run arch:check && npm run prose:check"
   },
   "dependencies": {
     "better-sqlite3": "^12.4.1",

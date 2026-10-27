@@ -4,7 +4,7 @@
 
 Internal application kit for building client web applications. **Nuxt + Hono + SQLite**, TypeScript, one Node process, deployed to a VPS with PM2.
 
-Aika is not open source and not a framework. It is a **living starting point**: every client project begins as a clone of this repository, then keeps pulling improvements from `upstream` with git — no manual copying.
+Aika is not open source and not a framework. It is a **living starting point**: every client project begins as a clone of this repository, then keeps pulling improvements from `upstream` with git, no manual copying.
 
 ## Verified baseline
 
@@ -28,7 +28,7 @@ Evidence, as of the initial commit: `npm run check` green, `npm run build` green
 ## Layout
 
 ```
-app/                  Nuxt shell (pages, layouts) — client-owned
+app/                  Nuxt shell (pages, layouts), client-owned
 features/             vertical slices, one business capability each
   health/             reference feature: contract.ts, index.ts, web/index.ts, server/
 shared/               business-neutral infrastructure
@@ -44,7 +44,7 @@ scripts/              migrate, backup, architecture check
 
 ## Requirements
 
-- Node.js >= 22 (the team runs 24 — see `.nvmrc`)
+- Node.js >= 22 (the team runs 24, see `.nvmrc`)
 - npm
 
 ## Getting started
@@ -65,7 +65,7 @@ npm install-scripts ls
 npm install-scripts approve <package>
 ```
 
-The pin is per exact version, deliberately. When `better-sqlite3` is upgraded, approval must be granted again — that is a supply-chain feature, not an annoyance.
+The pin is per exact version, deliberately. When `better-sqlite3` is upgraded, approval must be granted again, that is a supply-chain feature, not an annoyance.
 
 ## Commands
 
@@ -74,10 +74,11 @@ The pin is per exact version, deliberately. When `better-sqlite3` is upgraded, a
 | `npm run dev` | Dev server with HMR on :5555 |
 | `npm run build` | Production build into `.output/` |
 | `npm start` | Run the built output locally |
-| `npm run check` | **The canonical gate.** Nuxt typecheck + scripts typecheck + arch:check |
+| `npm run check` | **The canonical gate.** Nuxt typecheck + scripts typecheck + arch:check + prose:check |
 | `npm run typecheck` | Typecheck the Nuxt/Vue side |
 | `npm run typecheck:scripts` | Typecheck `scripts/`, `shared/`, `features/` |
 | `npm run arch:check` | Enforce the feature boundary rules |
+| `npm run prose:check` | Refuse em and en dashes in any document |
 | `npm run db:migrate` | Apply migrations (snapshots first) |
 | `npm run db:backup` | Online SQLite snapshot, keeps the newest 14 |
 
@@ -85,7 +86,7 @@ The pin is per exact version, deliberately. When `better-sqlite3` is upgraded, a
 
 ## Starting a new client project
 
-Distribution is **git upstream** — not copy-paste, and not a monorepo.
+Distribution is **git upstream**: not copy-paste, and not a monorepo.
 
 ```bash
 git clone git@github.com:Kreavia-Dev/aika.git client-name
@@ -110,18 +111,18 @@ git fetch upstream
 git merge upstream/main
 ```
 
-**This stays painless only because the boundary is real.** Most Aika updates land in `shared/`, `server/`, and `modules/` — files a client project never touches. Client work lives in `features/<client-specific>/`. Two nearly disjoint file sets means a trivial merge.
+**This stays painless only because the boundary is real.** Most Aika updates land in `shared/`, `server/`, and `modules/`, files a client project never touches. Client work lives in `features/<client-specific>/`. Two nearly disjoint file sets means a trivial merge.
 
-If merging starts to hurt, that is a signal the boundary has leaked — not a signal that the model is wrong. Fix the boundary, then run `npm run arch:check`.
+If merging starts to hurt, that is a signal the boundary has leaked, not a signal that the model is wrong. Fix the boundary, then run `npm run arch:check`.
 
 ### Files that legitimately differ per client
 
 Everything else belongs to Aika; do not change it without a strong reason.
 
 - `app/pages/*`, `app/layouts/*`, `app/app.vue`
-- `shared/http/app.ts` — the feature mount lines only
+- `shared/http/app.ts`, the feature mount lines only
 - `features/<client-specific>/**`
-- `database/migrations/*` — add files, never edit them
+- `database/migrations/*`, add files, never edit them
 - `.env`, `ecosystem.config.cjs`
 
 See [ARCHITECTURE.md](./ARCHITECTURE.md) for the full list with reasoning, and [docs/UPGRADING.md](./docs/UPGRADING.md) for the upgrade procedure.
@@ -129,7 +130,7 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) for the full list with reasoning, and [
 ## Deployment
 
 ```bash
-# Local machine or CI — never build on the VPS.
+# Local machine or CI: never build on the VPS.
 npm ci
 npm run check
 npm run build
@@ -142,7 +143,7 @@ rsync -az database/migrations/ vps:/srv/aika/database/migrations/
 ssh vps 'cd /srv/aika && npm run db:backup && npm run db:migrate && pm2 reload aika'
 ```
 
-Migrations are never run on app boot. If they ran on boot, rolled-back code would meet a migration that already advanced — and a restart cannot fix that.
+Migrations are never run on app boot. If they ran on boot, rolled-back code would meet a migration that already advanced, and a restart cannot fix that.
 
 `ecosystem.config.cjs` uses `fork` mode with a single instance on purpose. See the comment inside it and the SQLite section of ARCHITECTURE.md.
 
@@ -158,10 +159,13 @@ Environment lives at `/etc/aika/env` on the VPS, outside the deployed directory.
 
 This README is the canonical version. [`README.id.md`](./README.id.md) is a translation kept in sync in the same pull request. When the two disagree, the English file is correct.
 
+One style rule applies to both languages: **no em dashes and no en dashes.** Use a comma, a colon, a full stop, or parentheses. `npm run prose:check` enforces it.
+
 ## Documentation
 
 | Document | Contents |
 |---|---|
+| [ROADMAP.md](./ROADMAP.md) | What is being built next, and why. Shipped work moves out of it |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | **The authority.** Locked stack, feature model, boundaries, why each decision was made |
 | [AGENTS.md](./AGENTS.md) | Contract for AI coding agents |
 | [CONTRIBUTING.md](./CONTRIBUTING.md) | Contribution and review rules |

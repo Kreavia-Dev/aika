@@ -3,7 +3,7 @@ import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 /**
- * Aika architecture check — the enforcement half of ARCHITECTURE.md.
+ * Aika architecture check: the enforcement half of ARCHITECTURE.md.
  *
  * This is a heuristic lint over source text, not a compiler. It reads import
  * specifiers with a regex, so a specifier built from a template string can
@@ -21,7 +21,7 @@ import { fileURLToPath } from 'node:url'
  * Why this exists: Aika is distributed by `git pull upstream` into client
  * projects. That only stays mergeable while the framework/client boundary is
  * real, and it only stays *correct* while the server/browser boundary is real.
- * This script keeps both honest. There is no `nara doctor` here — just the
+ * This script keeps both honest. There is no `nara doctor` here, just the
  * rules that matter, and they are deliberately few.
  */
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -83,7 +83,7 @@ function featureRef(absPath: string): { feature: string, sub: string } | null {
 }
 
 /**
- * R6 — anything that cannot run in a browser.
+ * R6: anything that cannot run in a browser.
  *
  * `shared/database` is matched by a path fragment because feature code reaches
  * it through a relative path (`../../../shared/database/client`).
@@ -114,7 +114,7 @@ for (const feature of features) {
     if (!existsSync(join(featuresDir, feature, required))) {
       violations.push({
         file: `features/${feature}`,
-        message: `R1 — missing required file \`${required}\``,
+        message: `R1: missing required file \`${required}\``,
       })
     }
   }
@@ -123,12 +123,12 @@ for (const feature of features) {
   if (existsSync(webDir) && !existsSync(join(webDir, 'index.ts'))) {
     violations.push({
       file: `features/${feature}/web`,
-      message: 'R1 — has a `web/` directory but no browser-safe `web/index.ts` boundary',
+      message: 'R1, has a `web/` directory but no browser-safe `web/index.ts` boundary',
     })
   }
 }
 
-// ── R2, R3, R4, R6 ───────────────────────────────────────────────────────────
+// ── R2-R3, R4-R6 ───────────────────────────────────────────────────────────
 for (const feature of features) {
   for (const file of listSourceFiles(join(featuresDir, feature))) {
     const relFile = relative(root, file).split(/[\\/]/).join('/')
@@ -141,14 +141,14 @@ for (const feature of features) {
       if (specifier === 'better-sqlite3') {
         violations.push({
           file: relFile,
-          message: 'R4 — opens SQLite directly; import from shared/database/client instead',
+          message: 'R4, opens SQLite directly; import from shared/database/client instead',
         })
       }
 
       if (isBrowserCode && isServerOnly(specifier)) {
         violations.push({
           file: relFile,
-          message: `R6 — browser code imports server-only \`${specifier}\`; it would be bundled for the client`,
+          message: `R6: browser code imports server-only \`${specifier}\`; it would be bundled for the client`,
         })
       }
 
@@ -158,7 +158,7 @@ for (const feature of features) {
       if (!relative(appDir, abs).startsWith('..')) {
         violations.push({
           file: relFile,
-          message: `R3 — imports browser shell code \`${specifier}\`; features must not depend on app/`,
+          message: `R3: imports browser shell code \`${specifier}\`; features must not depend on app/`,
         })
       }
 
@@ -171,7 +171,7 @@ for (const feature of features) {
       if (!ALLOWED_CROSS_FEATURE_DOORS.has(ref.sub)) {
         violations.push({
           file: relFile,
-          message: `R2 — deep cross-feature import \`${specifier}\`; use features/${ref.feature} or features/${ref.feature}/web`,
+          message: `R2: deep cross-feature import \`${specifier}\`; use features/${ref.feature} or features/${ref.feature}/web`,
         })
       }
     }
@@ -212,17 +212,17 @@ for (const feature of featureSet) {
 for (const cycle of cycles) {
   violations.push({
     file: 'features',
-    message: `R5 — dependency cycle: ${cycle.join(' -> ')}`,
+    message: `R5: dependency cycle: ${cycle.join(' -> ')}`,
   })
 }
 
 // ── Report ───────────────────────────────────────────────────────────────────
 if (violations.length === 0) {
-  console.log(`arch:check passed — ${features.length} feature(s), no violations.`)
+  console.log(`arch:check passed: ${features.length} feature(s), no violations.`)
   process.exit(0)
 }
 
-console.error(`arch:check failed — ${violations.length} violation(s):\n`)
+console.error(`arch:check failed: ${violations.length} violation(s):\n`)
 
 for (const violation of violations) {
   console.error(`  ${violation.file}`)

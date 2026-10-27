@@ -13,7 +13,7 @@
 *.bat text eol=crlf
 *.cmd text eol=crlf
 
-# Binary — never normalise, never attempt a textual diff.
+# Binary: never normalise, never attempt a textual diff.
 *.db      binary
 *.db-wal  binary
 *.db-shm  binary

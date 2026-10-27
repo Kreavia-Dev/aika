@@ -9,8 +9,8 @@ import { z } from 'zod'
  *
  * NOTE: `PORT` is deliberately NOT here. Nitro owns the listening socket and
  * reads `PORT` itself (default 3000). Mirroring it here would create a second
- * source of truth that can silently disagree with the port actually bound —
- * exactly the kind of bug that wastes an afternoon. Dev uses 5555 via
+ * source of truth that can silently disagree with the port actually bound.
+ * Exactly the kind of bug that wastes an afternoon. Dev uses 5555 via
  * `devServer.port` in nuxt.config.ts; production sets `PORT` in its env file.
  */
 const envSchema = z.object({

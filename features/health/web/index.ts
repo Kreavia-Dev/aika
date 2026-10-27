@@ -3,8 +3,8 @@
  *
  * A feature has TWO doors, and they are not interchangeable:
  *
- *   index.ts      server / general boundary  — may pull in server-only code
- *   web/index.ts  browser-safe boundary      — must NEVER pull in server code
+ *   index.ts      server / general boundary, may pull in server-only code
+ *   web/index.ts  browser-safe boundary, must NEVER pull in server code
  *
  * This split is not ceremony. `index.ts` exports `healthRoutes`, which imports
  * `better-sqlite3`. A Vue component importing from `index.ts` would drag a

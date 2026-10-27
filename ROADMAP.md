@@ -1,0 +1,89 @@
+# Roadmap
+
+**English** · [Bahasa Indonesia](./ROADMAP.id.md)
+
+## What this file is
+
+This is the only place that answers "what are we building next, and why".
+
+It is deliberately not three other things:
+
+- **Not a changelog.** Shipped work leaves this file and appears in [CHANGELOG.md](./CHANGELOG.md). Nothing is ever ticked off and kept.
+- **Not an architecture document.** [ARCHITECTURE.md](./ARCHITECTURE.md) says how Aika is built.
+- **Not a wish list.** Every item here traces back to shipping a real client site.
+
+**The one discipline that keeps it honest:** when something ships, delete it from here. A roadmap that accumulates finished items becomes a roadmap nobody reads. If this file grows past roughly one page, it has stopped working.
+
+## Where Aika stands
+
+One feature (`health`). The foundation is solid and verified: boundaries enforced, migrations snapshot first, backups taken online, one process.
+
+**Nothing a client would pay for exists yet.** That is expected at this stage, but it should not be described as anything else.
+
+## Open decisions
+
+These block whole phases. Decide them before starting the phase, not during it.
+
+| Decision | Blocks | Why it is still open |
+|---|---|---|
+| **CMS: build a lean one, or adopt Directus or Payload?** | All of Phase 2 | Building the 80% of WordPress that clients actually use is roughly 10 to 14 weeks for one person. Adopting means a second framework in a stack that already has Nuxt, and possibly a schema that cannot be diffed in git, which would fight the distribution model. |
+| **How much of the admin UI gets generated from a schema?** | Phase 2 | If content models are declared as data, then admin CRUD screens, SEO fields, and content API endpoints can all be generated instead of written by hand. This is the highest-leverage investment available to Aika. |
+
+## Phase 0: make it verifiable
+
+Nothing after this can be trusted until this exists.
+
+- [ ] **Test runner.** `npm run check` currently verifies types and boundaries and zero behaviour.
+- [ ] **Prove the feature page mechanism.** `modules/features.ts` loads without error but has never been exercised, because no feature has a `web/pages/` directory yet. It is the only unverified architectural claim in the project.
+
+## Phase 1: the minimum a client site needs
+
+- [ ] `auth`: sessions, login, roles. It also exercises both boundaries at real scale.
+- [ ] Real layouts and navigation. `app/pages/index.vue` is a reference page, not a site.
+- [ ] **SEO**: meta tags, canonical URLs, `sitemap.xml`, `robots.txt`, Open Graph. Aika sells websites, so this is not optional, and today it is completely absent.
+- [ ] Error pages for 404 and 500 that are not Nuxt defaults.
+- [ ] `media`: upload, a storage contract with a local adapter, and image resizing.
+
+## Phase 2: the WordPress-like part
+
+Blocked by the open decisions above.
+
+- [ ] Content model registry: collections and fields declared as data.
+- [ ] Admin CRUD generated from that registry.
+- [ ] `blog` as the first real content type, proving the pattern.
+- [ ] Draft and published states.
+- [ ] Rich text or block content.
+
+## Phase 3: production hardening
+
+- [ ] Structured logging. Today the only logging is one `console.error` call.
+- [ ] Security headers, CSRF, rate limiting, and a request body size budget.
+- [ ] Rate limiting on auth endpoints specifically.
+- [ ] A deploy script per client, with health check gating and rollback.
+- [ ] **Backup restore exercised in CI.** A backup that has never been restored is not a backup.
+- [ ] Error tracking.
+
+## Phase 4: only when a client pays for it
+
+- [ ] Server-sent events for live updates.
+- [ ] Multi-language content.
+- [ ] Contact forms and other submissions.
+
+## Deliberately not on this roadmap
+
+Recorded so nobody reopens them without a reason. Cross-check [ARCHITECTURE.md](./ARCHITECTURE.md), "What Aika does not build".
+
+- A visual page builder. It is the largest single item in any CMS build and the least used by small clients.
+- Multi-tenancy in one database. Every client gets its own VPS and its own database file.
+- A plugin system. Features are installed by pulling source.
+- A second frontend framework.
+
+## How to change this file
+
+Move an item up only with a reason tied to a client. If a client needs something that is not listed here, that is the correct reason to add it, and it should replace something else rather than being appended.
+
+## Why this file exists at all, rather than a features document
+
+A separate feature catalogue, mapping which client has which feature, is not worth maintaining yet. With one feature and no clients it would rot immediately.
+
+Add one when the third client project starts. Until then this roadmap plus [FEATURES in the changelog](./CHANGELOG.md) is enough to see where things stand.

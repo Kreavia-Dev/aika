@@ -3,12 +3,12 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
 
   // Dev server port. In production Nitro reads `PORT` from the environment
-  // instead — see shared/config/env.ts for why the port is not duplicated there.
+  // instead: see shared/config/env.ts for why the port is not duplicated there.
   devServer: { port: 5555 },
 
   // Nuxt 4 app dir is `app/`. Feature web surfaces live in `features/<name>/web/`
   // and are registered by the local module in `modules/features.ts`.
-  // Local modules in `modules/` are auto-registered — do not list them here.
+  // Local modules in `modules/` are auto-registered: do not list them here.
 
   typescript: {
     strict: true,

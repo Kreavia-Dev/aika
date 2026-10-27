@@ -26,10 +26,10 @@ The primary unit is a **feature**: one business capability kept together.
 ```text
 features/billing/
 ├── contract.ts       # this feature's Zod schemas and inferred types
-├── index.ts          # SERVER boundary — one door for server code
+├── index.ts          # SERVER boundary: one door for server code
 ├── server/           # routes, services, repositories, config
 ├── web/              # optional browser surface
-│   ├── index.ts      # BROWSER boundary — one door for browser code
+│   ├── index.ts      # BROWSER boundary: one door for browser code
 │   ├── pages/        #   -> auto-routed by modules/features.ts
 │   └── components/
 └── tests/
@@ -44,7 +44,7 @@ A feature has **two doors**, and they are not interchangeable:
 | `index.ts` | server code, other features' server code | anything |
 | `web/index.ts` | Vue components, other features' `web/` code | browser-safe code and types only |
 
-**Why this exists.** `features/health/index.ts` exports `healthRoutes`, which imports `better-sqlite3`. A Vue component importing from `index.ts` would drag a native Node module into the browser bundle. Importing from `web/` instead makes that mistake structurally impossible — and rule **R6** in `npm run arch:check` catches it if anyone tries anyway.
+**Why this exists.** `features/health/index.ts` exports `healthRoutes`, which imports `better-sqlite3`. A Vue component importing from `index.ts` would drag a native Node module into the browser bundle. Importing from `web/` instead makes that mistake structurally impossible, and rule **R6** in `npm run arch:check` catches it if anyone tries anyway.
 
 This is not hypothetical. It was found while building the reference feature: the first version of the home page imported the type from `index.ts`, and TypeScript could not type the response because the contract was not reachable through a browser-safe door.
 
@@ -60,11 +60,11 @@ Types cost the browser nothing: `import type` is erased at build time, so re-exp
 6. **`web/` code never imports server-only modules.** Not `node:*` builtins, not `better-sqlite3`, not `shared/database`, not its own `server/`.
 7. **The feature dependency graph is acyclic.**
 
-All seven are enforced by `scripts/check-boundaries.ts` (`npm run arch:check`), rules R1–R6. It is a heuristic text-based lint, not a compiler — a specifier built from a template string can fool it. It catches the mistakes people actually make.
+All seven are enforced by `scripts/check-boundaries.ts` (`npm run arch:check`), rules R1-R6. It is a heuristic text-based lint, not a compiler. A specifier built from a template string can fool it. It catches the mistakes people actually make.
 
 ### Why features, not layers
 
-One test: *"I need to change how invoice cancellation works — how many folders do I open?"*
+One test: *"I need to change how invoice cancellation works. How many folders do I open?"*
 
 Grouped by layer, the answer is four or more: `controllers/`, `services/`, `models/`, `components/`. Grouped by feature, the answer is one.
 
@@ -76,13 +76,13 @@ The trap to avoid: a `shared/` folder that grows into a second layer. `shared/` 
 
 ## Application and shared layers
 
-- **`app/`** — the Nuxt application shell: `app.vue`, `layouts/`, `pages/`. Browser composition.
-- **`server/`** — the Nitro directory. Exactly one file: `server/api/[...path].ts`, the Hono adapter.
-- **`shared/config/`** — the only place `process.env` is read, validated by Zod, failing at boot.
-- **`shared/database/`** — the only place SQLite is opened, owning the pragmas.
-- **`shared/errors/`** — domain errors with a stable `code` and HTTP `status`.
-- **`shared/http/app.ts`** — the **server composition root**: the Hono app and every feature mount.
-- **`modules/features.ts`** — the Nuxt module that registers `features/*/web/pages/` as routes.
+- **`app/`**: the Nuxt application shell: `app.vue`, `layouts/`, `pages/`. Browser composition.
+- **`server/`**: the Nitro directory. Exactly one file: `server/api/[...path].ts`, the Hono adapter.
+- **`shared/config/`**: the only place `process.env` is read, validated by Zod, failing at boot.
+- **`shared/database/`**: the only place SQLite is opened, owning the pragmas.
+- **`shared/errors/`**: domain errors with a stable `code` and HTTP `status`.
+- **`shared/http/app.ts`**: the **server composition root**: the Hono app and every feature mount.
+- **`modules/features.ts`**: the Nuxt module that registers `features/*/web/pages/` as routes.
 
 `shared/http/` is a deliberate exception to "`shared/` is business-neutral": composition has to live somewhere, and one small file is a better place than scattering mounts across features.
 
@@ -100,7 +100,7 @@ Every `/api` response uses the same shape:
 { "success": false, "message": "…", "code": "VALIDATION_ERROR", "errors": [] }
 ```
 
-Error messages are in English — this is API surface, not UI copy. User-facing text is translated on the client.
+Error messages are in English. This is API surface, not UI copy. User-facing text is translated on the client.
 
 ### Validation
 
@@ -116,7 +116,7 @@ Handlers throw `AppError` (or a subclass: `ValidationError`, `NotFoundError`, `U
 
 | Option | Why not |
 |---|---|
-| Separate Hono process | Every SSR render pays a real TCP round-trip, and browser cookies are not forwarded automatically — authenticated pages can intermittently render logged-out. Plus two deploy units, two health checks, two log streams per VPS. |
+| Separate Hono process | Every SSR render pays a real TCP round-trip, and browser cookies are not forwarded automatically. Authenticated pages can intermittently render logged-out. Plus two deploy units, two health checks, two log streams per VPS. |
 | Nitro routes only | Loses Hono's middleware and validation ergonomics, and locks the API to Nitro permanently. |
 | **Hono inside Nitro** | **Chosen.** One process, one deploy, no cookie plumbing. |
 
@@ -129,7 +129,7 @@ What keeps this healthy: the Hono app in `shared/http/app.ts` **imports nothing 
 **`PORT` is deliberately not in that schema.** Nitro owns the listening socket and reads `PORT` itself, defaulting to 3000. Mirroring it in application config would create a second source of truth that can silently disagree with the port actually bound. This was observed during the initial build: the server came up on 3000 while application config claimed 5555.
 
 - Development: 5555, via `devServer.port` in `nuxt.config.ts`.
-- Production: whatever `PORT` says in the environment file. If it disagrees with the reverse proxy upstream, the site 502s — so keep both in one place.
+- Production: whatever `PORT` says in the environment file. If it disagrees with the reverse proxy upstream, the site 502s, so keep both in one place.
 
 ## Database
 
@@ -155,7 +155,7 @@ Three rules:
 
 1. Never edit a migration that may already have been applied anywhere.
 2. Never drop a column in the same release that stops writing to it.
-3. Migrations are **not** part of app boot. They are a separate deploy step. If they ran on boot, rolled-back code would meet a migration that already advanced — unrecoverable by restart.
+3. Migrations are **not** part of app boot. They are a separate deploy step. If they ran on boot, rolled-back code would meet a migration that already advanced, unrecoverable by restart.
 
 To undo something, write a new migration that reverses it. There are no down migrations.
 
@@ -169,11 +169,11 @@ A detail that frustrates people once: the `-wal` and `-shm` files are part of th
 
 WAL gives concurrent readers plus **one writer**. The practical ceiling: when write transactions are long enough that `busy_timeout` starts producing `SQLITE_BUSY` under normal load, or when you need multiple application servers writing to the same file. For client sites, that ceiling is rarely reached.
 
-That is why `ecosystem.config.cjs` uses `exec_mode: 'fork'` with `instances: 1`. Cluster mode means N processes = N connections = N writers contending on one file lock. Because SQLite serialises writes at the file level, extra writers add no throughput at all — only `SQLITE_BUSY` variance.
+That is why `ecosystem.config.cjs` uses `exec_mode: 'fork'` with `instances: 1`. Cluster mode means N processes = N connections = N writers contending on one file lock. Because SQLite serialises writes at the file level, extra writers add no throughput at all, only `SQLITE_BUSY` variance.
 
 The database file, its WAL sidecars, and backups **must** live on storage local to the application host. Never on a shared network filesystem.
 
-## Distribution model — why there is no monorepo
+## Distribution model: why there is no monorepo
 
 This is the decision that shapes the repository, so the reasoning is recorded in full.
 
@@ -184,20 +184,20 @@ What is impossible: **two-way sync.** What is possible: **one-way, deliberate, v
 | Strategy | Sync mechanism | Why |
 |---|---|---|
 | Copy once, forget | none | Aika rots; client #2 starts from a worse baseline than client #5. Rejected. |
-| Monorepo + versioned packages | `npm up @aika/base` | Works, but trades the merge problem for semver discipline and a private registry. Rejected — disliked, and it forces pnpm for a protection that only matters inside a monorepo. |
+| Monorepo + versioned packages | `npm up @aika/base` | Works, but trades the merge problem for semver discipline and a private registry. Rejected: it is disliked, and it forces pnpm for a protection that only matters inside a monorepo. |
 | **Repo copy + `git pull upstream`** | `git merge upstream/main` | **Chosen.** |
 
 Why the third one works here when it usually rots: **because the boundary is enforced, not because git is magic.**
 
-`git pull upstream` rots when there is no boundary — when client code and framework code are mixed in the same files. In Aika the boundary is real and checkable:
+`git pull upstream` rots when there is no boundary, when client code and framework code are mixed in the same files. In Aika the boundary is real and checkable:
 
-- Aika updates touch `shared/`, `server/`, `modules/` — files a client never changes.
+- Aika updates touch `shared/`, `server/`, `modules/`, files a client never changes.
 - Client work lives in `features/<client-specific>/`.
 - What may differ per client is a closed list, and the list is short.
 
 Two nearly disjoint file sets → a trivial merge.
 
-**`npm run arch:check` is the price of this decision.** It is what keeps the boundary real. If the boundary leaks, the distribution model breaks — this is not a tidiness issue.
+**`npm run arch:check` is the price of this decision.** It is what keeps the boundary real. If the boundary leaks, the distribution model breaks. This is not a tidiness issue.
 
 ### Files that legitimately differ per client
 
@@ -241,4 +241,4 @@ Before adding anything to Aika, pass it through these three questions:
 
 1. **Does this strengthen the boundary between Aika and the client?** If not, it is probably client code.
 2. **Can an ecosystem tool solve it?** If yes, use that tool directly rather than wrapping it.
-3. **Can it be inferred from code and convention?** If yes, infer it — do not add metadata that can drift out of sync.
+3. **Can it be inferred from code and convention?** If yes, infer it, do not add metadata that can drift out of sync.

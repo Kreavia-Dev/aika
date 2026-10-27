@@ -7,7 +7,7 @@ import { AppError, ValidationError } from '../errors'
  *
  * This is one of the few files upstream and downstream are allowed to
  * disagree about. Everything a client project adds should be a line here
- * mounting that client's own feature — nothing more.
+ * mounting that client's own feature. Nothing more.
  *
  * Nitro owns the HTTP server; Hono owns every `/api` route.
  * See `server/api/[...path].ts` for the adapter.

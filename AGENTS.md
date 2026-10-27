@@ -1,8 +1,8 @@
-# AGENTS.md — instructions for AI coding agents working in Aika
+# AGENTS.md: instructions for AI coding agents working in Aika
 
 **English** · [Bahasa Indonesia](./AGENTS.id.md)
 
-Read this before writing code. `ARCHITECTURE.md` is the authority. If this file and `ARCHITECTURE.md` disagree, `ARCHITECTURE.md` wins — say so instead of guessing.
+Read this before writing code. `ARCHITECTURE.md` is the authority. If this file and `ARCHITECTURE.md` disagree, `ARCHITECTURE.md` wins. Say so instead of guessing.
 
 ## What Aika is
 
@@ -17,6 +17,7 @@ npm run check              # THE canonical gate. Must be green before you say yo
 npm run typecheck          # Nuxt/Vue side
 npm run typecheck:scripts  # scripts/, shared/, features/
 npm run arch:check         # feature boundary rules R1-R6
+npm run prose:check        # refuses em and en dashes anywhere
 npm run dev                # dev server on :5555
 npm run db:migrate         # apply migrations (snapshots first)
 npm run db:backup          # online SQLite backup
@@ -58,14 +59,14 @@ Do not create `controllers/`, `services/`, `models/`, `repositories/` directorie
 Both of these are refused by `arch:check`:
 
 ```ts
-// refused — deep cross-feature import (R2)
+// refused: deep cross-feature import (R2)
 import { getCurrentUser } from '~~/features/auth/server/repository'
 
-// refused — imports server boundary from browser code (R6)
+// refused: imports server boundary from browser code (R6)
 import type { Post } from '~~/features/blog'
 ```
 
-Do not import another feature's `contract.ts` directly either — it is re-exported through both doors. One door per consumer type.
+Do not import another feature's `contract.ts` directly either. It is re-exported through both doors. One door per consumer type.
 
 ### 3. Features never import from `app/`
 
@@ -81,7 +82,7 @@ Every `/api` path belongs to Hono, mounted in `shared/http/app.ts`, reached thro
 
 ### 6. Errors
 
-Throw `AppError` subclasses from `shared/errors` (`ValidationError`, `NotFoundError`, `UnauthorizedError`, `ForbiddenError`, `ConflictError`). Never build an error response by hand — `api.onError` in `shared/http/app.ts` maps them, and it is the only place that does.
+Throw `AppError` subclasses from `shared/errors` (`ValidationError`, `NotFoundError`, `UnauthorizedError`, `ForbiddenError`, `ConflictError`). Never build an error response by hand, `api.onError` in `shared/http/app.ts` maps them, and it is the only place that does.
 
 ### 7. Every response uses the envelope
 
@@ -94,7 +95,7 @@ Error messages are in English; they are API surface, not UI copy.
 
 ### 8. Validate at the boundary with Zod, always
 
-Request bodies and query strings are validated before the handler runs. Types come from the schema via `z.infer` — never write the type twice.
+Request bodies and query strings are validated before the handler runs. Types come from the schema via `z.infer`. Never write the type twice.
 
 ## TypeScript rules
 
@@ -102,14 +103,14 @@ You are writing TypeScript for a team that is still learning it. Optimise for re
 
 - **`strict: true` is on. Never disable it. Never add `// @ts-ignore`.** If something genuinely cannot be typed, use `// @ts-expect-error` **with a comment explaining why**.
 - **Never use `any`.** Use `unknown` and narrow it.
-- **Prefer inference over annotation.** `const x = { a: 1 }` — do not annotate what TypeScript already knows. Annotate function parameters, return types of public functions, and API/database shapes.
+- **Prefer inference over annotation.** `const x = { a: 1 }`. Do not annotate what TypeScript already knows. Annotate function parameters, return types of public functions, and API/database shapes.
 - **No type gymnastics.** No custom mapped types, conditional types, or hand-written generics unless there is no alternative. Anonymous object types are better than named generic machinery here.
 - **Derive types, don't duplicate them.** `z.infer<typeof schema>` for validation shapes.
 - `.js` files are permitted and will continue to be. Do not propose a big-bang conversion of anything.
 
 ## Environment and configuration
 
-- **`PORT` is not in the env schema, on purpose.** Nitro owns the listening socket and reads `PORT` itself (default 3000). Do not add it to `shared/config/env.ts` — a second source of truth for the port is exactly the bug we removed.
+- **`PORT` is not in the env schema, on purpose.** Nitro owns the listening socket and reads `PORT` itself (default 3000). Do not add it to `shared/config/env.ts`. A second source of truth for the port is exactly the bug we removed.
 - **Do not read `process.env` anywhere except `shared/config/env.ts`.** Add a field to the Zod schema there instead.
 - **`allowScripts` in `package.json` pins install-script approval to exact versions.** When you upgrade `better-sqlite3`, npm will warn and you must run `npm install-scripts approve better-sqlite3`. Never set `dangerously-allow-all-scripts`.
 
@@ -133,6 +134,15 @@ Before adding a dependency, check `ARCHITECTURE.md` → "What Aika does not buil
 - **Indonesian is secondary.** Same filename plus `.id.md`.
 - **Both files are updated in the same change.** A change that updates only one language is incomplete.
 - Code, identifiers, comments, commit messages, and this file: **English**.
+
+## Writing style
+
+Applies to every document in this repository, in both languages.
+
+- **Never use an em dash or an en dash.** Use a comma, a colon, a full stop, or parentheses instead. A plain hyphen is fine inside words and ranges such as `R1-R6`. `npm run prose:check` refuses the two banned characters and runs as part of `npm run check`.
+- **Keep sentences short.** If a sentence needs three commas to stay together, split it.
+- **Prefer the active voice.** "The script refuses deep imports" reads better than "deep imports are refused".
+- **If a rule matters, make it a script.** A rule that only lives in a document decays. `arch:check` and `prose:check` exist for exactly that reason.
 
 ## Definition of done
 
