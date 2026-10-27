@@ -32,9 +32,17 @@ Versioning rule: a change that forces a client project to edit code or configura
 
 - **`docs/aika/BUILDING.md`**: how to add a feature, end to end, using the `health` feature as the worked example. Every snippet is real code, and it is now the document to read first.
 
+- **`auth` feature.** Sign in, sign out, and sessions. Passwords are hashed with scrypt from `node:crypto`, so no new dependency was added. Sessions live in SQLite and only the token's SHA-256 is stored, so a leaked database does not hand over live sessions. Cookies are `httpOnly` and `sameSite=Lax`. 24 new tests.
+- **`app/middleware/auth.ts`**, so any page can require a session with `definePageMeta({ middleware: 'auth' })`.
+- **`npm run user:create`**, which creates the first user. There is no sign up screen, on purpose: a client site has a handful of staff accounts, not open registration.
+- **`shared/database/migrate.ts`**: the migration logic, extracted out of the script so the test setup applies exactly the code the deploy applies.
+
 ### Changed
 
-- **Documentation moved into `docs/aika/`.** The root `README.md` now belongs to the client project, so a client can describe their own site without ever conflicting with an upstream change. This was a real defect: `README.md` was not on the list of files a client may edit, which left a client repository whose front page described Aika instead of the client. `AGENTS.md` stays at the root because agent tooling looks for it there, and `LICENSE` stays by legal convention. Every relative link was rewritten and checked.
+- **The `/health` page now requires a session.** The endpoint at `/api/health` stays public, because uptime monitoring cannot sign in. This split is deliberate: one surface is for machines, the other is for people.
+- `scripts/migrate.ts` is now a thin CLI wrapper around `shared/database/migrate.ts`, keeping the snapshot-first deploy ceremony in one place.
+- **Session TTL is 30 days**, absolute rather than sliding.
+- **Test count is now 47**, up from 23. The root `README.md` now belongs to the client project, so a client can describe their own site without ever conflicting with an upstream change. This was a real defect: `README.md` was not on the list of files a client may edit, which left a client repository whose front page described Aika instead of the client. `AGENTS.md` stays at the root because agent tooling looks for it there, and `LICENSE` stays by legal convention. Every relative link was rewritten and checked.
 - The root `README.md` is a short signpost here, and the client's own front page in a client project. It is now on the list of files that legitimately differ per client. `modules/features.ts` loaded without error from the very first commit but had never been exercised, because no feature had a `web/pages/` directory. It was the last unverified architectural claim in the project. It is now covered by unit tests and confirmed in a production build: `GET /health` renders the feature page, and `useHead` applies the title.
 - `npm run check` now also runs the test suite.
 - **New writing rule for every document and comment: no em dashes, no en dashes.** The characters are invisible in review, so nobody notices one being added. That is why this is enforced by a script rather than written down and trusted.

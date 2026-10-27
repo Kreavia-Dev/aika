@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { authRoutes } from '../../features/auth'
 import { healthRoutes } from '../../features/health'
 import { AppError, ValidationError } from '../errors'
 import type { FailureEnvelope } from './envelope'
@@ -62,5 +63,6 @@ api.notFound((c) => {
   return c.json(payload, 404)
 })
 
-// Feature mounts.
+// Feature mounts. Add one line per feature, in any order.
+api.route('/', authRoutes)
 api.route('/', healthRoutes)

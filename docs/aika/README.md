@@ -83,6 +83,7 @@ The pin is per exact version, deliberately. When `better-sqlite3` is upgraded, a
 | `npm run test:watch` | Watch mode while you work |
 | `npm run db:migrate` | Apply migrations (snapshots first) |
 | `npm run db:backup` | Online SQLite snapshot, keeps the newest 14 |
+| `npm run user:create` | Create a user. There is no sign up screen, on purpose |
 
 `npm run check` must be green before a PR is merged. That is the Definition of Done in this repository.
 

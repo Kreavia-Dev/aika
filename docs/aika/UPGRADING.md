@@ -38,6 +38,30 @@ npm run build
 
 If step 2 shows changes to a file on the "legitimately differs per client" list, stop and inspect manually before merging.
 
+## Releases requiring action
+
+### to 0.2.0 (unreleased): authentication
+
+**What changed.** A new `auth` feature adds sign in, sign out, and session handling. Every `/api/auth` route is additive, so nothing existing changes behaviour.
+
+**Two things are required of you:**
+
+1. Apply the migration. `0002_auth.sql` adds the `users` and `sessions` tables. It only creates tables, so it cannot collide with existing data.
+
+   ```bash
+   npm run db:migrate
+   ```
+
+2. Create the first user. There is no sign up screen, on purpose.
+
+   ```bash
+   npm run user:create -- --email=you@example.com
+   ```
+
+   A password is generated and printed once. Save it, because there is no change password flow yet.
+
+**Also affected:** the page at `/health` now requires a session. The endpoint at `/api/health` stays public, because uptime monitoring cannot sign in. If anything in your deployment polls `/health` as a page rather than `/api/health`, point it at the API.
+
 ## Entry format in this document
 
 Every Aika release that requires action gets a section like this:

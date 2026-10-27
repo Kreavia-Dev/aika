@@ -16,7 +16,7 @@ Sengaja bukan tiga hal ini:
 
 ## Posisi Aika sekarang
 
-Satu fitur (`health`). Fondasinya sudah kokoh dan terbukti: batas ditegakkan, migrasi menulis snapshot lebih dulu, backup diambil saat aplikasi jalan, satu proses, 23 test dalam waktu kurang dari satu detik, dan routing milik fitur sudah terbukti di build produksi.
+Dua fitur (`auth`, `health`). Fondasinya sudah kokoh dan terbukti: batas ditegakkan, migrasi menulis snapshot lebih dulu, backup diambil saat aplikasi jalan, satu proses, 47 test, dan routing milik fitur maupun alur login sudah terbukti di build produksi.
 
 **Belum ada satu pun hal yang mau dibayar klien.** Itu wajar di tahap ini, tapi jangan disebut sebagai apa pun selain itu.
 
@@ -36,12 +36,12 @@ sebagai contoh nyata. Dokumentasi Aika dipindah ke `docs/aika/` supaya
 
 ## Fase 1: kebutuhan minimum satu situs klien
 
-- [ ] `auth`: sesi, login, peran. Sekaligus menguji kedua batas pada skala nyata.
+- [ ] **Ganti password, dan nonaktifkan akun.** Sekarang password tidak bisa diganti, dan akun tidak bisa dicabut, tanpa mengedit database secara manual.
+- [ ] **Tegakkan `role`.** `users.role` ada tapi tidak ada yang membacanya, jadi setiap user yang login sekarang efektif sebagai administrator.
 - [ ] Layout dan navigasi sungguhan. `app/pages/index.vue` itu halaman contoh, bukan situs.
 - [ ] **SEO**: meta tag, canonical URL, `sitemap.xml`, `robots.txt`, Open Graph. Aika menjual situs, jadi ini bukan opsional, dan sekarang belum ada sama sekali.
 - [ ] Halaman error 404 dan 500 yang bukan bawaan Nuxt.
 - [ ] `media`: upload, kontrak storage dengan adapter lokal, dan resize gambar.
-- [ ] **Batasi akses halaman `/health`.** Sekarang halaman itu membuka versi dan uptime ke siapa pun yang meminta.
 
 ## Fase 2: bagian yang mirip WordPress
 

@@ -26,6 +26,21 @@ Laporkan lewat jalur internal (grup tim, atau DM ke pemilik repo). Sertakan: rep
 - Backup itu **data klien**. Perlakukan setara database produksi: aksesnya terbatas, jangan disalin ke laptop pribadi, jangan dikirim lewat chat.
 - Setiap project klien punya file database sendiri di VPS-nya sendiri. Tidak ada database yang dipakai bersama antar klien.
 
+## Autentikasi
+
+- **Password** di-hash dengan scrypt pada `N=2^15, r=8, p=1`, dengan salt per password. Faktor kerjanya disimpan di dalam tiap hash, jadi bisa dinaikkan nanti tanpa membatalkan password yang sudah ada.
+- **Sesi** disimpan di sisi server. Database cuma menyimpan SHA-256 dari tokennya, jadi database yang bocor tidak menyerahkan sesi yang masih hidup.
+- **Cookie**-nya `httpOnly`, `sameSite=Lax`, dan `secure` di produksi.
+- **Proses masuk tidak membocorkan email mana yang terdaftar.** Email tidak dikenal dan password salah menghasilkan pesan yang sama, status yang sama, dan waktu respons yang sebanding.
+
+### Celah yang kita sadari: proses masuk tidak dibatasi
+
+**Login tidak punya rate limiting.** Penyerang bisa mencoba password secepat server menjawab. scrypt membuat tiap percobaan berbiaya puluhan milidetik, dan itu polisi tidur, bukan pertahanan.
+
+Ini disengaja, dan ini bukan hal kecil. Lockout per akun gampang disalahgunakan untuk mengunci user yang sah, dan mengerjakannya dengan benar butuh komponen per IP yang tempatnya bersama pekerjaan rate limiting lain di Fase 3 roadmap.
+
+Sampai itu ada: pakai password hasil generate, jangan biarkan halaman masuk terindeks publik, dan jangan pernah memakai ulang password staf di tempat lain.
+
 ## Dependency
 
 Yang perlu diperiksa sebelum menambah:
@@ -50,4 +65,4 @@ Aika menyediakan fondasi, bukan jaminan. Sebelum situs klien naik ke produksi, p
 - File `.env` di VPS izin bacanya terbatas.
 - Backup terjadwal **dan pernah di-restore minimal sekali**. Backup yang belum pernah diuji restore belum bisa disebut backup.
 - Reverse proxy tidak men-buffer `text/event-stream`.
-- Akun admin bawaan pengembangan sudah diganti, kalau fitur `auth` dipakai.
+- Akun admin bawaan pengembangan sudah diganti. Belum ada perintah hapus user, jadi buat akun sungguhannya dengan `npm run user:create -- --email=<alamat>` dan jangan bikin akun sekali pakai di database produksi sejak awal.

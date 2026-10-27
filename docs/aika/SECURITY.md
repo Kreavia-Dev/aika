@@ -24,6 +24,21 @@ Report through an internal channel (team group or a DM to the repository owner).
 - Backups are **client data**. Treat them with the same care as the production database: restricted access, never copied to a personal laptop, never sent over chat.
 - Each client project uses its own database file on its own VPS. There is no shared database between clients.
 
+## Authentication
+
+- **Passwords** are hashed with scrypt at `N=2^15, r=8, p=1`, with a per password salt. The work factor is stored inside each hash, so it can be raised later without invalidating existing passwords.
+- **Sessions** live server side. The database stores only the SHA-256 of the token, so a leaked database does not hand over live sessions.
+- **Cookies** are `httpOnly`, `sameSite=Lax`, and `secure` in production.
+- **Sign in does not reveal which emails are registered.** An unknown email and a wrong password produce the same message, the same status, and comparable response times.
+
+### Known gap: sign in is not throttled
+
+**Login has no rate limiting.** An attacker can try passwords as fast as the server answers. scrypt makes each attempt cost tens of milliseconds, which is a speed bump and not a defence.
+
+This is deliberate, and it is not a small thing. A per account lockout is trivially abused to lock a legitimate user out, and doing this properly needs a per IP component that belongs with the rest of the rate limiting work in Phase 3 of the roadmap.
+
+Until then: use the generated passwords, keep the sign in page out of public indexes, and never reuse a staff password anywhere else.
+
 ## Dependencies
 
 Check before adding:
@@ -48,4 +63,4 @@ Aika provides a foundation, not a guarantee. Before any client site goes to prod
 - The `.env` file on the VPS has restricted read permissions.
 - Backups are scheduled **and have been restored at least once**. A backup that has never been test-restored is not a backup.
 - The reverse proxy does not buffer `text/event-stream`.
-- Any default development admin account has been replaced, if the `auth` feature is in use.
+- Any development admin account has been replaced. There is no delete-user command yet, so create the real account with `npm run user:create -- --email=<address>` and do not create a throwaway account on a production database in the first place.

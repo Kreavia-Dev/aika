@@ -52,3 +52,15 @@ export class ConflictError extends AppError {
     super(message, { code: 'CONFLICT', status: 409 })
   }
 }
+
+/**
+ * The server is refusing work it cannot do right now.
+ *
+ * Distinct from a 500 on purpose: nothing is broken, the process is simply at
+ * capacity. A client should retry rather than report a bug.
+ */
+export class ServiceUnavailableError extends AppError {
+  constructor(message = 'Temporarily unavailable. Please try again shortly.') {
+    super(message, { code: 'SERVICE_UNAVAILABLE', status: 503 })
+  }
+}

@@ -40,6 +40,30 @@ npm run build
 
 Kalau langkah 2 menunjukkan ada perubahan di file yang masuk daftar "wajar berbeda di tiap klien", berhenti dulu dan periksa manual sebelum merge.
 
+## Rilis yang butuh tindakan
+
+### ke 0.2.0 (belum dirilis): autentikasi
+
+**Apa yang berubah.** Fitur `auth` yang baru menambahkan masuk, keluar, dan pengelolaan sesi. Semua route `/api/auth` bersifat tambahan, jadi tidak ada perilaku lama yang berubah.
+
+**Ada dua hal yang wajib kamu kerjakan:**
+
+1. Jalankan migrasinya. `0002_auth.sql` menambah tabel `users` dan `sessions`. Isinya cuma membuat tabel, jadi tidak mungkin bentrok dengan data yang sudah ada.
+
+   ```bash
+   npm run db:migrate
+   ```
+
+2. Buat user pertama. Tidak ada halaman pendaftaran, dan itu disengaja.
+
+   ```bash
+   npm run user:create -- --email=you@example.com
+   ```
+
+   Password-nya di-generate dan dicetak sekali. Simpan, karena belum ada alur ganti password.
+
+**Yang juga terpengaruh:** halaman `/health` sekarang butuh sesi. Endpoint `/api/health` tetap publik, karena pemantauan uptime tidak bisa login. Kalau ada yang memantau `/health` sebagai halaman, bukan `/api/health`, ubah ke API-nya.
+
 ## Format entri di dokumen ini
 
 Setiap versi Aika yang butuh tindakan mendapat satu bagian seperti ini:

@@ -118,6 +118,17 @@ Kamu menulis TypeScript untuk tim yang masih belajar. Utamakan yang mudah dibaca
 - **Jangan membaca `process.env` di tempat lain, selain `shared/config/env.ts`.** Tambahkan field ke schema Zod di sana.
 - **`allowScripts` di `package.json` mem-pin persetujuan install script ke versi yang persis.** Saat meng-upgrade `better-sqlite3`, npm akan memperingatkan dan kamu harus menjalankan `npm install-scripts approve better-sqlite3`. Jangan pernah pakai `dangerously-allow-all-scripts`.
 
+## Autentikasi
+
+Pemilik autentikasi adalah `features/auth/`, dan itu rujukan untuk fitur yang memakai kedua batas sekaligus.
+
+- **Handler yang tidak boleh jalan tanpa identitas memanggil `requireUser(c)` di baris pertama.** Untuk satu grup route, pakai `api.use('/admin/*', authGuard)`.
+- **Jangan membaca cookie sesinya sendiri.** `currentUser(c)` mengembalikan user atau null, dan sudah menangani kedaluwarsanya.
+- **Jangan meng-hash password di luar `features/auth/server/password.ts`.** Dari tempat lain, pakai `createUser`.
+- **Halaman yang tidak boleh dilihat tanpa identitas memakai `definePageMeta({ middleware: 'auth' })`.** Middleware-nya wajib memakai `useRequestFetch`, bukan `useFetch`, kalau tidak server rendering akan menganggap pengunjung yang sudah login sebagai belum login.
+- **`users.role` ada dan tidak ditegakkan di mana pun.** Setiap user yang login sekarang efektif sebagai administrator. Jangan membangun fitur yang mengasumsikan sebaliknya.
+- **Proses masuk tidak dibatasi.** Lihat `docs/aika/SECURITY.id.md` untuk artinya dalam praktik.
+
 ## Testing
 
 ```bash
@@ -132,6 +143,7 @@ Test berjalan di environment `node`, tanpa build Nuxt dan tanpa server HTTP. `np
 - **Jalankan Hono app yang sebenarnya.** `import { api } from '../../../shared/http/app'`, lalu `await api.request('/api/...')`. Jangan di-mock.
 - **Parse body-nya, jangan periksa field satu per satu.** `response.json()` bertipe `unknown`. Lewatkan ke schema Zod milik fitur dari `contract.ts`. Itu memvalidasi sekaligus menyempitkan tipe dalam satu langkah, dan yang diperiksa adalah kontraknya, bukan salinannya.
 - **Untuk respons error**, parse dengan `failureEnvelopeSchema` dari `shared/http/envelope.ts`.
+- **Skrip sekali pakai dan probe wajib mengarahkan `DATABASE_PATH` ke file sementara.** Default-nya adalah database pengembangan, dan skrip yang menulis baris akan menghancurkannya tanpa suara. `npm run test` sudah terisolasi lewat `vitest.config.ts`. Apa pun yang kamu jalankan manual tidak, dan tidak ada penjaga mekanis untuk itu, jadi aturannya ada di sini bukan di skrip.
 - **Semua respons `/api` memakai envelope.** Bentuk respons baru yang tidak memakainya itu bug, bukan variasi.
 
 ## SQLite dan migrasi

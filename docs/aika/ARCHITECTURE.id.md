@@ -178,6 +178,48 @@ Itu sebabnya `ecosystem.config.cjs` memakai `exec_mode: 'fork'` dengan `instance
 
 File database, sidecar WAL-nya, dan semua backup **harus** ada di storage lokal host aplikasi. Jangan pernah di network filesystem bersama.
 
+## Autentikasi
+
+Ditulis sendiri, bukan diadopsi, dan sengaja yang paling kecil yang bisa jalan.
+Pemiliknya `features/auth/`, dan ini rujukan untuk fitur yang memakai kedua
+batas sekaligus.
+
+| Keputusan | Kenapa |
+|---|---|
+| scrypt dari `node:crypto`, bukan argon2 atau bcrypt | Keduanya modul native, yang berarti satu entri `allowScripts` lagi dan satu hal lagi yang bisa gagal build saat clone baru. scrypt bersifat memory-hard dan sudah ada di Node |
+| Sesi di SQLite, bukan JWT | Pencabutan. Baris bisa dihapus. Token yang sudah ditandatangani tidak bisa dibatalkan, dan "keluar dari semua perangkat" berubah jadi masalah rotasi kunci |
+| Hanya SHA-256 dari token sesi yang disimpan | Database yang bocor tidak menyerahkan sesi yang masih hidup. Tokennya 32 byte acak, jadi hash yang lambat tidak membeli apa pun dan justru membebani setiap permintaan |
+| Cookie `httpOnly` biasa | Tidak bisa dibaca JavaScript, jadi bug XSS tidak bisa mengangkat sesinya. `sameSite=Lax` tetap mengirimnya saat navigasi top level dan memblokir form lintas situs |
+| Masa hidup 30 hari mutlak, bukan bergeser | Masa hidup bergeser berarti sesi yang dicuri tidak pernah mati selama terus dipakai. Masa hidup mutlak membatasi kerusakannya |
+
+Faktor kerjanya disimpan di dalam tiap hash, jadi bisa dinaikkan nanti tanpa
+membatalkan password yang sudah ada. `verifyPassword` membaca parameternya dari
+hash yang diberikan, bukan mengasumsikan nilai yang berlaku sekarang.
+
+### Menjaga sebuah halaman
+
+Halaman mana pun bisa mewajibkan sesi:
+
+```ts
+definePageMeta({ middleware: 'auth' })
+```
+
+Middleware-nya memanggil `/api/auth/me` lewat HTTP, bukan mengimpor fiturnya.
+Aplikasi boleh mengimpor fitur, tapi lewat HTTP berarti penjaganya tetap bekerja
+bagaimanapun fitur auth memutuskan menyimpan sesinya nanti.
+
+**Detail SSR yang penting:** ia memakai `useRequestFetch`, bukan `useFetch`. Di
+server, fetch biasa tidak membawa cookie dari request yang masuk, jadi pengunjung
+yang sudah login akan dilempar ke halaman login di setiap navigasi keras,
+sementara setelah navigasi sisi klien semuanya tampak normal. Bug seperti ini
+cuma muncul di server rendering, justru saat tidak ada yang memperhatikan.
+
+### Pembagian `/health`
+
+Halaman `/health` butuh sesi. Endpoint `/api/health` tidak. Itu bukan kelalaian.
+Pemantauan tidak bisa login, dan health endpoint yang butuh kredensial akan gagal
+tepat saat dibutuhkan. Satu permukaan untuk mesin, satu untuk manusia.
+
 ## Testing
 
 Test berjalan di environment `node`, tanpa build Nuxt dan tanpa server HTTP. Itu bisa karena `shared/http/app.ts` tidak mengimpor apa pun dari Nitro: Hono app bisa langsung didorong dengan `Request` standar Web.

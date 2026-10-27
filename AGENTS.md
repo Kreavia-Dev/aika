@@ -116,6 +116,17 @@ You are writing TypeScript for a team that is still learning it. Optimise for re
 - **Do not read `process.env` anywhere except `shared/config/env.ts`.** Add a field to the Zod schema there instead.
 - **`allowScripts` in `package.json` pins install-script approval to exact versions.** When you upgrade `better-sqlite3`, npm will warn and you must run `npm install-scripts approve better-sqlite3`. Never set `dangerously-allow-all-scripts`.
 
+## Authentication
+
+`features/auth/` owns authentication, and it is the reference for a feature that uses both boundaries at once.
+
+- **A handler that must not run anonymously calls `requireUser(c)` as its first line.** For a whole route group, `api.use('/admin/*', authGuard)`.
+- **Never read the session cookie yourself.** `currentUser(c)` returns the user or null, and it already handles expiry.
+- **Never hash a password outside `features/auth/server/password.ts`.** From anywhere else, use `createUser`.
+- **A page that must not be shown anonymously uses `definePageMeta({ middleware: 'auth' })`.** The middleware must use `useRequestFetch`, not `useFetch`, or server rendering will treat a signed-in visitor as signed out.
+- **`users.role` exists and nothing enforces it.** Every signed-in user is currently an administrator. Do not build a feature that assumes otherwise.
+- **Sign in is not rate limited.** See `docs/aika/SECURITY.md` for what that means in practice.
+
 ## Testing
 
 ```bash
@@ -130,6 +141,7 @@ Tests run in the `node` environment, with no Nuxt build and no HTTP server. `npm
 - **Drive the real Hono app.** `import { api } from '../../../shared/http/app'`, then `await api.request('/api/...')`. Do not mock it.
 - **Parse the body, do not assert fields one at a time.** `response.json()` is typed `unknown`. Pass it through the feature's Zod schema from `contract.ts`. That validates and narrows in one step, and it checks the contract rather than a copy of it.
 - **For error responses**, parse with `failureEnvelopeSchema` from `shared/http/envelope.ts`.
+- **Scratch scripts and probes must point `DATABASE_PATH` at a throwaway file.** The default is the development database, and a one-off script that writes rows will quietly destroy it. `npm run test` is already isolated by `vitest.config.ts`. Anything you run by hand is not, and there is no mechanical guard for it, so it belongs here as a rule rather than in a script.
 - **Every `/api` response uses the envelope.** A new response shape that does not use it is a bug, not a variation.
 
 ## SQLite and migrations

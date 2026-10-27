@@ -34,8 +34,17 @@ Aturan versinya: perubahan yang memaksa project klien mengedit kode atau konfigu
 
 - **`docs/aika/BUILDING.id.md`**: cara menambah fitur dari awal sampai jalan, memakai fitur `health` sebagai contoh nyata. Semua potongan kodenya kode asli, dan sekarang ini dokumen yang dibaca pertama.
 
+- **Fitur `auth`.** Masuk, keluar, dan sesi. Password di-hash dengan scrypt dari `node:crypto`, jadi tidak ada dependency baru. Sesi disimpan di SQLite dan hanya SHA-256 dari tokennya yang ditulis, jadi database yang bocor tidak menyerahkan sesi yang masih hidup. Cookie-nya `httpOnly` dan `sameSite=Lax`. 24 test baru.
+- **`app/middleware/auth.ts`**, jadi halaman mana pun bisa mewajibkan sesi dengan `definePageMeta({ middleware: 'auth' })`.
+- **`npm run user:create`**, untuk membuat user pertama. Tidak ada halaman pendaftaran, dan itu disengaja: situs klien punya beberapa akun staf, bukan pendaftaran terbuka.
+- **`shared/database/migrate.ts`**: logika migrasinya, dipindah keluar dari skrip supaya setup test menjalankan kode yang persis sama dengan yang dijalankan saat deploy.
+
 ### Diubah
 
+- **Halaman `/health` sekarang butuh sesi.** Endpoint `/api/health` tetap publik, karena pemantauan uptime tidak bisa login. Pembagian ini disengaja: satu permukaan untuk mesin, satu untuk manusia.
+- `scripts/migrate.ts` sekarang cuma pembungkus CLI tipis di atas `shared/database/migrate.ts`, supaya urutan snapshot-dulu tetap di satu tempat.
+- **Masa hidup sesi 30 hari**, mutlak bukan bergeser.
+- **Jumlah test sekarang 47**, dari sebelumnya 23.
 - **Dokumentasi dipindah ke `docs/aika/`.** `README.md` di root sekarang milik project klien, jadi klien bisa menjelaskan situsnya sendiri tanpa pernah berkonflik dengan perubahan dari upstream. Ini bug nyata: `README.md` tidak ada di daftar file yang boleh diedit klien, sehingga yang terjadi adalah repo klien yang halaman depannya menjelaskan Aika, bukan kliennya. `AGENTS.md` tetap di root karena tool agent mencarinya di situ, dan `LICENSE` tetap karena konvensi hukum. Semua tautan relatifnya ditulis ulang dan diperiksa.
 - `README.md` di root sekarang jadi penunjuk singkat di repo Aika, dan jadi halaman depan milik klien di project klien. Ia sekarang masuk daftar file yang wajar berbeda di tiap klien.
 - **Mekanisme halaman fitur sudah terbukti.** `modules/features.ts` termuat tanpa error sejak commit pertama tapi belum pernah dijalankan, karena belum ada fitur yang punya direktori `web/pages/`. Itu klaim arsitektur terakhir yang belum terbukti di proyek ini. Sekarang sudah dicakup test unit dan dikonfirmasi di build produksi: `GET /health` merender halaman fiturnya, dan `useHead` memasang judulnya.

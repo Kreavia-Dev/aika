@@ -176,6 +176,49 @@ That is why `ecosystem.config.cjs` uses `exec_mode: 'fork'` with `instances: 1`.
 
 The database file, its WAL sidecars, and backups **must** live on storage local to the application host. Never on a shared network filesystem.
 
+## Authentication
+
+Written in house rather than adopted, and deliberately the smallest thing that
+works. `features/auth/` owns it, and it is the reference for a feature that
+uses both boundaries at once.
+
+| Decision | Why |
+|---|---|
+| scrypt from `node:crypto`, not argon2 or bcrypt | Both alternatives are native modules, which means another `allowScripts` entry and another thing that can fail to build on a fresh clone. scrypt is memory-hard and ships with Node |
+| Sessions in SQLite, not JWT | Revocation. A row can be deleted. A signed token cannot be unsigned, and "sign out everywhere" turns into a key rotation problem |
+| Only the SHA-256 of the session token is stored | A leaked database does not hand over live sessions. The token is 32 bytes of randomness, so a slow hash would buy nothing and cost time on every request |
+| A plain `httpOnly` cookie | Not readable from JavaScript, so an XSS bug cannot lift a session. `sameSite=Lax` still sends it on top level navigation and blocks cross-site form posts |
+| 30 day absolute expiry, not sliding | Sliding expiry means a stolen session never dies as long as it keeps being used. Absolute expiry bounds the damage |
+
+The work factor is stored inside each hash, so it can be raised later without
+invalidating existing passwords. `verifyPassword` reads the parameters from the
+hash it is given rather than assuming the current ones.
+
+### Guarding a page
+
+Any page can require a session:
+
+```ts
+definePageMeta({ middleware: 'auth' })
+```
+
+The middleware calls `/api/auth/me` over HTTP rather than importing the feature.
+The application is allowed to import a feature, but going through HTTP means the
+guard keeps working however the auth feature decides to store sessions later.
+
+**The SSR detail that matters:** it uses `useRequestFetch`, not `useFetch`. On
+the server a plain fetch does not carry the incoming request's cookies, so a
+signed-in visitor would be redirected to the login page on every hard
+navigation while working perfectly after client side navigation. That bug only
+appears in server rendering, which is exactly when nobody is looking.
+
+### The `/health` split
+
+The page at `/health` requires a session. The endpoint at `/api/health` does not.
+That is not an oversight. Monitoring cannot sign in, and a health endpoint that
+requires credentials fails exactly when it is needed. One surface is for
+machines, the other is for people.
+
 ## Testing
 
 Tests run in the `node` environment, with no Nuxt build and no HTTP server. That is possible because `shared/http/app.ts` imports nothing from Nitro: a Hono app can be driven directly with a Web `Request`.

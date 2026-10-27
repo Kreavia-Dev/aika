@@ -85,6 +85,7 @@ Persetujuannya di-pin ke versi yang persis, dan itu memang disengaja. Setiap kal
 | `npm run prose:check` | Tolak em dash dan en dash di dokumen mana pun |
 | `npm run test` | Jalankan seluruh test sekali |
 | `npm run test:watch` | Mode watch sambil kerja |
+| `npm run user:create` | Buat user. Tidak ada halaman pendaftaran, dan itu disengaja |
 | `npm run db:migrate` | Jalankan migrasi (snapshot dulu) |
 | `npm run db:backup` | Snapshot online, menyimpan 14 file terbaru |
 

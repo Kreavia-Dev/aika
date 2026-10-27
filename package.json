@@ -23,6 +23,7 @@
     "test:watch": "vitest",
     "db:migrate": "tsx scripts/migrate.ts",
     "db:backup": "tsx scripts/db-backup.ts",
+    "user:create": "tsx scripts/create-user.ts",
     "setup": "npm run db:migrate",
     "check": "npm run typecheck && npm run typecheck:scripts && npm run arch:check && npm run prose:check && npm run test"
   },

@@ -16,7 +16,7 @@ It is deliberately not three other things:
 
 ## Where Aika stands
 
-One feature (`health`). The foundation is solid and verified: boundaries enforced, migrations snapshot first, backups taken online, one process, 23 tests in under a second, and feature owned routing proven in a production build.
+Two features (`auth`, `health`). The foundation is solid and verified: boundaries enforced, migrations snapshot first, backups taken online, one process, 47 tests, and both feature owned routing and the sign in flow proven against a production build.
 
 **Nothing a client would pay for exists yet.** That is expected at this stage, but it should not be described as anything else.
 
@@ -36,12 +36,12 @@ example. Aika's own documentation moved into `docs/aika/` so that a client's
 
 ## Phase 1: the minimum a client site needs
 
-- [ ] `auth`: sessions, login, roles. It also exercises both boundaries at real scale.
+- [ ] **Password change, and account deactivation.** Today a password cannot be changed, and an account cannot be revoked, without editing the database by hand.
+- [ ] **Enforce `role`.** `users.role` exists and nothing reads it, so every signed-in user is currently an administrator.
 - [ ] Real layouts and navigation. `app/pages/index.vue` is a reference page, not a site.
 - [ ] **SEO**: meta tags, canonical URLs, `sitemap.xml`, `robots.txt`, Open Graph. Aika sells websites, so this is not optional, and today it is completely absent.
 - [ ] Error pages for 404 and 500 that are not Nuxt defaults.
 - [ ] `media`: upload, a storage contract with a local adapter, and image resizing.
-- [ ] **Restrict the `/health` page.** It currently exposes the version and the uptime to anyone who asks.
 
 ## Phase 2: the WordPress-like part
 

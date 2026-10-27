@@ -15,6 +15,13 @@ import type { HealthResponse } from '../index'
 
 useHead({ title: 'System status' })
 
+/*
+ * Staff only. Without a session the middleware sends the visitor to
+ * /auth/login. The API at /api/health stays public, because monitoring needs
+ * it and a machine cannot sign in.
+ */
+definePageMeta({ middleware: 'auth' })
+
 const { data, error, refresh, status } = await useFetch<HealthResponse>('/api/health')
 </script>
 
@@ -87,8 +94,9 @@ const { data, error, refresh, status } = await useFetch<HealthResponse>('/api/he
     </section>
 
     <p class="mt-8 rounded-md border-l-2 border-line-strong bg-muted px-4 py-3 text-sm text-muted-foreground">
-      Note: this page is not access restricted yet. Restrict it before the first
-      client goes to production. See docs/aika/ROADMAP.md, Phase 3.
+      Note: this page requires a session. The machine readable endpoint at
+      <code class="font-mono text-xs">/api/health</code> stays public so uptime
+      monitoring keeps working.
     </p>
   </main>
 </template>

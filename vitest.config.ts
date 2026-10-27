@@ -19,6 +19,15 @@ export default defineConfig({
       'tests/**/*.test.ts',
       'features/**/tests/**/*.test.ts',
     ],
+    setupFiles: ['tests/setup/database.ts'],
+    /**
+     * Files run one at a time.
+     *
+     * They share one SQLite file, and two workers migrating and clearing the
+     * same tables at once is a recipe for a test that fails once a week. The
+     * whole suite runs in well under a second, so parallelism buys nothing here.
+     */
+    fileParallelism: false,
     env: {
       NODE_ENV: 'test',
       APP_URL: 'http://localhost:5555',
