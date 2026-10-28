@@ -1,0 +1,91 @@
+name: deploy
+
+# Manual, and only manual.
+#
+# A deploy replaces what a client's visitors are looking at. It should happen
+# when somebody decides it happens, not because a commit landed. When there are
+# several clients this becomes one deploy per client, and by then the trigger
+# will need to say which one.
+on:
+  workflow_dispatch:
+
+# The default token has more reach than this job needs. It checks out code,
+# builds it, and sends it over ssh. Nothing here writes to the repository.
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      # Without this, the runner installs with whatever npm it happens to ship,
+      # and the lockfile starts behaving differently in CI than it does locally.
+      - run: corepack enable
+
+      # The whole point of building here rather than on a developer's machine is
+      # that this runs on Linux, which is what the server runs. `sharp` and
+      # `better-sqlite3` are both native, so a build produced on Windows cannot
+      # be loaded on the other side, and the failure is a module refusing to load
+      # rather than anything a reader can act on.
+      - run: npm ci
+
+      # The gate runs again. A deploy is the last place to discover that a test
+      # was failing, and this job is cheap compared to a broken client site.
+      - run: npm run check
+
+      - run: npm run build
+
+      - name: Install the deploy key
+        env:
+          SSH_KEY: ${{ secrets.AIKA_VPS_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/aika_vps
+          chmod 600 ~/.ssh/aika_vps
+
+      # The build goes into `.output/` alone.
+      #
+      # `--delete` is correct HERE and catastrophic one directory up. Pointed at
+      # the application root it would remove everything not present in the build:
+      # the database, the environment file, the migration runner. It was written
+      # that way in the deployment notes once, and this is the version that does
+      # not do it.
+      - name: Ship the build
+        run: |
+          set -euo pipefail
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/aika_vps -o StrictHostKeyChecking=accept-new -p 43762" \
+            .output/ "root@49.12.82.34:/srv/aika/app/.output/"
+
+      # Migrate BEFORE reloading, always. A running process against an unmigrated
+      # schema is the failure this order exists to prevent.
+      #
+      # `pm2 reload aika`, by name, never `all`. This server also runs other
+      # sites, and `pm2 restart all` would take them down too.
+      #
+      # `set -a` exports the environment file for this shell, because the
+      # migration and backup scripts read DATABASE_PATH from the shell rather
+      # than through PM2. Without it they would open a different database and
+      # report success.
+      - name: Migrate, then reload
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/aika_vps -o StrictHostKeyChecking=accept-new -p 43762 root@49.12.82.34 \
+            'set -euo pipefail; cd /srv/aika/app; set -a; . /etc/aika/env; set +a; npm run db:backup; npm run db:migrate; pm2 reload aika'
+
+      # Asking the site a question after deploying it, for the same reason the
+      # CI gate does: the build succeeding is not the same as the site working.
+      - name: Ask the site whether it is up
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/aika_vps -o StrictHostKeyChecking=accept-new -p 43762 root@49.12.82.34 \
+            'curl -sf http://127.0.0.1:5555/api/health | grep -q "\"database\":\"up\""'
