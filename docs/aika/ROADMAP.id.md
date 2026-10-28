@@ -40,7 +40,13 @@ sebagai contoh nyata. Dokumentasi Aika dipindah ke `docs/aika/` supaya
 
 ## Fase 1: kebutuhan minimum satu situs klien
 
-- [ ] **Tegakkan `role`.** `users.role` ada tapi tidak ada yang membacanya, jadi setiap user yang login sekarang efektif sebagai administrator.
+Tidak ada sisa. Penegakan `role` adalah butir terakhirnya, dan sudah rilis, jadi fase ini
+sekarang tinggal di changelog, bukan di sini.
+
+Satu bagian yang sengaja masih terbuka adalah separuh lain penegakan: memagari layar staf
+supaya `editor` tidak menjangkau yang seharusnya hanya untuk administrator. Mekanismenya
+sudah ada dan satu route memakainya. Memindahkan layar yang sudah ada itu perubahan
+terpisah per permukaan, dan belum mendesak selama semua akun masih administrator.
 
 ## Fase 2: bagian yang mirip WordPress
 

@@ -31,6 +31,15 @@ Report through an internal channel (team group or a DM to the repository owner).
 - **Cookies** are `httpOnly`, `sameSite=Lax`, and `secure` in production.
 - **Sign in does not reveal which emails are registered.** An unknown email and a wrong password produce the same message, the same status, and comparable response times.
 
+### Roles
+
+Two roles exist, `admin` and `editor`, and `users.role` decides access:
+
+- **A route that is administrator only answers 403 to a signed-in editor**, with the same message for every role pair, so the refusal does not describe what the caller is missing.
+- **Authorisation is by role, not per resource.** Every account belongs to the same studio, so there is no owner on any row.
+- **The last active administrator cannot be disabled or demoted.** Without one, nobody can reach an administrator only route and the only way back is a shell. A refused change says so and names the command that recovers it.
+- **Every account created before role enforcement is an administrator**, so nobody loses access when this ships. Create an editor deliberately with `npm run user:create -- --role=editor`, or change one with `npm run user:role`.
+
 ### Known gap: sign in is not throttled
 
 **Login has no rate limiting.** An attacker can try passwords as fast as the server answers. scrypt makes each attempt cost tens of milliseconds, which is a speed bump and not a defence.

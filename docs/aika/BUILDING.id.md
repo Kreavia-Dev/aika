@@ -98,6 +98,38 @@ Tiga aturan berlaku untuk semua route:
    penyimpangan kontrak jadi kegagalan berisik saat development, bukan perubahan
    bentuk yang senyap di produksi.
 
+Tidak satu pun route di atas memanggil penjaga, artinya route itu publik. Itu
+keputusan, bukan kelalaian: `/api/health` harus menjawab pemantau uptime yang
+tidak bisa login. Route yang tidak boleh publik butuh penjaga, di bawah ini.
+
+Aturan keempat berlaku begitu sebuah route tidak publik. `features/health` adalah
+contoh di atas dan memang publik, jadi ini bentuknya, bukan kode fitur itu:
+
+```ts
+import { requireUser, requireRole } from '../../auth'
+
+invoiceRoutes.get('/invoices', (c) => {
+  // Cukup login, dan semua staf boleh melihat invoice.
+  requireUser(c)
+  // ...
+})
+
+invoiceRoutes.get('/invoices/export', (c) => {
+  // Khusus administrator. `editor` mendapat 403 dengan kode FORBIDDEN.
+  requireRole(c, 'admin')
+  // ...
+})
+```
+
+Panggil penjaganya di baris pertama, sebelum membaca body, jadi request anonim
+hanya berbiaya satu select terindeks tanpa parsing. Untuk satu grup, pakai
+`invoiceRoutes.use('/invoices/admin/*', roleGuard('admin'))`.
+
+Menentukan route butuh penjaga yang mana adalah pertanyaan bisnis, bukan kode:
+apakah semua staf perlu ini, atau hanya orang yang mengurus situsnya? Tulis
+jawabannya di komentar di atas route itu, karena orang berikutnya harus menjawab
+pertanyaan yang sama saat menambah route di sebelahnya.
+
 ## Langkah 3: dua pintu
 
 Ini bagian yang paling mudah salah, jadi baca dengan serius.

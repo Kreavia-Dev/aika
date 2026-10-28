@@ -126,7 +126,9 @@ Pemilik autentikasi adalah `features/auth/`, dan itu rujukan untuk fitur yang me
 - **Jangan membaca cookie sesinya sendiri.** `currentUser(c)` mengembalikan user atau null, dan sudah menangani kedaluwarsanya.
 - **Jangan meng-hash password di luar `features/auth/server/password.ts`.** Dari tempat lain, pakai `createUser`.
 - **Halaman yang tidak boleh dilihat tanpa identitas memakai `definePageMeta({ middleware: 'auth' })`.** Middleware-nya wajib memakai `useRequestFetch`, bukan `useFetch`, kalau tidak server rendering akan menganggap pengunjung yang sudah login sebagai belum login.
-- **`users.role` ada dan tidak ditegakkan di mana pun.** Setiap user yang login sekarang efektif sebagai administrator. Jangan membangun fitur yang mengasumsikan sebaliknya.
+- **`users.role` sekarang ditegakkan, dan ada dua peran.** `admin` dan `editor`. Handler yang hanya boleh dijalankan administrator memanggil `requireRole(c, 'admin')` di baris pertama, dan untuk satu grup route pakai `api.use('/admin/*', roleGuard('admin'))`. Penolakannya berupa 403 dengan kode `FORBIDDEN`, dilempar sebagai `ForbiddenError`, jangan dibuat manual.
+- **Otorisasi hanya berdasarkan peran, bukan per resource.** Semua akun milik studio yang sama, jadi tidak ada baris yang punya pemilik dan tidak ada aturan "user ini boleh mengubah yang ini". Jangan mengarang aturan seperti itu: pengecekan per resource butuh kolom yang menyebut pemiliknya, dan belum ada tabel yang punya kolom itu.
+- **Administrator aktif terakhir tidak bisa dinonaktifkan atau diturunkan perannya.** Tanpa dia, tidak ada yang bisa membuka route khusus administrator, dan satu-satunya jalan balik adalah shell di server. `disableAccount` dan `changeRole` menolaknya dengan `ConflictError` yang menyebut perintah perbaikannya: naikkan peran atau aktifkan lagi akun lain dengan `npm run user:role -- --email=<alamat> --role=admin`, atau buat administrator baru dengan `npm run user:create -- --email=<alamat>`, yang menolak alamat yang sudah ada dan karena itu tidak menyentuh akun yang tadi ditolak. Jangan mencabut penjaga itu hanya supaya sebuah layar lebih mudah dibuat.
 - **Proses masuk tidak dibatasi.** Lihat `docs/aika/SECURITY.id.md` untuk artinya dalam praktik.
 
 ## Di mana sebuah layar tinggal
@@ -139,7 +141,7 @@ Pemilik autentikasi adalah `features/auth/`, dan itu rujukan untuk fitur yang me
 
 ## Daur hidup akun
 
-- **Mencabut akses sebuah akun itu perintah shell, bukan rute.** `npm run user:disable -- --email=<alamat>` menulis `disabled_at` dan menghapus semua sesi dalam satu operasi. Jangan tambahkan rute web untuk itu selama semua akun administrator: user mana pun yang login lalu bisa mengunci user lain.
+- **Mencabut akses sebuah akun itu perintah shell, bukan rute.** `npm run user:disable -- --email=<alamat>` menulis `disabled_at` dan menghapus semua sesi dalam satu operasi. Tetap perintah shell walaupun peran sudah ditegakkan, karena layar administrasi akun itu pekerjaan yang berbeda dari menegakkan peran, dan layar itu belum ada. Siapa pun yang membangunnya harus menjawab dulu siapa boleh mencabut akses siapa, dan hanya `admin` yang boleh.
 - **Mengganti password mengakhiri semua sesi lain.** Kalau nanti kamu menambah cara lain untuk menulis password, akhiri sesinya juga, kalau tidak perubahannya tidak berarti apa-apa bagi yang sudah punya sesi.
 - **Akun yang dinonaktifkan ditolak di dua tempat.** `signIn` menolaknya setelah password diverifikasi, supaya waktunya sama dengan password salah, dan `resolveSessionDetail` menolaknya di setiap request supaya sesi yang muncul kembali tidak bisa memakai akun itu.
 

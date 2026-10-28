@@ -64,6 +64,47 @@ Kalau langkah 2 menunjukkan ada perubahan di file yang masuk daftar "wajar berbe
 
 **Yang juga terpengaruh:** halaman `/health` sekarang butuh sesi. Endpoint `/api/health` tetap publik, karena pemantauan uptime tidak bisa login. Kalau ada yang memantau `/health` sebagai halaman, bukan `/api/health`, ubah ke API-nya.
 
+### ke 0.2.0 (belum dirilis): penegakan peran
+
+**Apa yang berubah.** `users.role` sekarang ditegakkan. Perannya `admin` dan `editor`. Baru
+satu route yang khusus administrator, `GET /api/auth/users`, dan semua layar serta route
+staf lainnya masih sebatas login, jadi tidak ada yang berubah di layar Anda hari ini.
+
+Dua hal yang sekarang sengaja ditolak: menonaktifkan administrator aktif terakhir, dan
+menurunkan peran administrator aktif terakhir. Salah satu saja akan meninggalkan
+deployment yang tidak bisa dijangkau route khusus administrator.
+
+**Dua hal yang sebaiknya dilakukan:**
+
+1. Lihat siapa saja akun Anda.
+
+   ```bash
+   npm run user:list
+   ```
+
+   Setiap akun yang dibuat sebelum rilis ini adalah `admin`, jadi tidak ada yang
+   kehilangan akses. Justru itu alasannya perlu dilihat: kalau ada orang yang Anda maksud
+   sebagai staf biasa, bukan administrator, mereka sekarang administrator, dan memang
+   sejak awal begitu. Tentukan dengan sadar sekarang setelah pilihannya ada.
+
+2. Ubah perannya kalau langkah 1 menemukan yang keliru.
+
+   ```bash
+   npm run user:role -- --email=someone@example.com --role=editor
+   ```
+
+   Perubahannya berlaku pada request berikutnya orang itu. Sesinya tidak diakhiri, jadi
+   tidak ter-logout; ia hanya berhenti menjangkau route khusus administrator.
+
+**Kenapa penting.** Tidak ada yang rusak kalau dilewati. Alasan tetap melakukannya adalah
+`editor` sekarang benar-benar membatasi, bukan sekadar label, dan proyek klien yang semua
+stafnya administrator adalah proyek klien tempat satu password staf yang bocor sama dengan
+satu administrator yang bocor. Perubahan ini tidak memaksa Anda bertindak, dan perubahan
+berikutnya, yang memagari layar staf yang sudah ada, akan memaksa.
+
+**Kalau dilewati.** Tidak ada yang gagal. Semua akun tetap administrator dan fiturnya tidak
+punya efek yang terlihat, dan itulah bentuk yang memang dimaksudkan untuk rilis ini.
+
 ### ke 0.2.0 (belum dirilis): unggahan media
 
 **Apa yang berubah.** Fitur `media` yang baru menambahkan endpoint unggah yang butuh login di `POST /api/media`, halaman pustaka di `/media`, dan rute publik yang menyajikan hasil unggahan di `/media/<nama-berkas>`. Tidak ada perilaku lama yang berubah.

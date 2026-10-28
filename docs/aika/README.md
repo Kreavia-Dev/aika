@@ -37,7 +37,7 @@ app/                  the client's site: pages, layouts, components, site.ts
   error.vue           the 404 and 500 page, which keeps the site chrome
   middleware/auth.ts  sends a signed out visitor to the sign in page
 features/             vertical slices, one business capability each
-  auth/               sign in, sessions, the page guard
+  auth/               sign in, sessions, password change, roles, the page guard
   contact/            the contact form, and the staff inbox at /contact/messages
   health/             status, and the reference for a minimal feature
   media/              uploads, the storage contract, and the files they serve
@@ -106,6 +106,7 @@ The pin is per exact version, deliberately. When `better-sqlite3` is upgraded, a
 | `npm run user:list` | Every account, and whether it is active |
 | `npm run user:disable` | End an account's access, and every session it holds, immediately |
 | `npm run user:enable` | Let a disabled account sign in again |
+| `npm run user:role` | Move an account between `admin` and `editor` |
 
 `npm run check` must be green before a PR is merged. That is the Definition of Done in this repository.
 

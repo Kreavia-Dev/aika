@@ -94,6 +94,39 @@ Three rules apply to every route:
    where contract drift becomes a loud failure in development instead of a
    silent shape change in production.
 
+None of the routes above calls a guard, which means they are public. That is a
+decision, not an omission: `/api/health` has to answer an uptime monitor that
+cannot sign in. Any route that should not be public needs one, below.
+
+A fourth applies as soon as a route is not public. `features/health` is the worked
+example above and it is public on purpose, so this is the shape rather than that
+feature's code:
+
+```ts
+import { requireUser, requireRole } from '../../auth'
+
+invoiceRoutes.get('/invoices', (c) => {
+  // Signed in is enough, and any staff member may see an invoice.
+  requireUser(c)
+  // ...
+})
+
+invoiceRoutes.get('/invoices/export', (c) => {
+  // Administrator only. An editor gets a 403 with code FORBIDDEN.
+  requireRole(c, 'admin')
+  // ...
+})
+```
+
+Call the guard as the first line, before reading the body, so an anonymous
+request costs one indexed select and no parsing. For a whole group, use
+`invoiceRoutes.use('/invoices/admin/*', roleGuard('admin'))` instead.
+
+Deciding which one a route needs is a question about the business, not about the
+code: does every staff member need this, or only the person who administers the
+site? Write the answer in a comment above the route, because the next person will
+have to answer it again when they add a route beside yours.
+
 ## Step 3: the two doors
 
 This is the part that is easiest to get wrong, so read it properly.

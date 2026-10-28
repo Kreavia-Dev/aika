@@ -257,9 +257,35 @@ the row it finds, so the next request starts from nothing.
 There is no web route for this. `POST /api/auth/password` is the only account route,
 and it changes your own password, which is the one account action the account holder
 has to be able to take themselves. Revocation belongs to somebody else. Whoever runs
-the deployment already has a shell, so it lives there, and a web route would have to
-answer "who may revoke whom" while every account is an administrator. That question
-belongs with role enforcement, which is still on the roadmap.
+the deployment already has a shell, so it lives there. Role enforcement has since
+shipped, so "who may revoke whom" can now be answered with `admin`; what is missing is
+a screen, not a permission model, and an account administration screen is a different
+job from enforcing a role.
+
+## Authorisation
+
+Two roles, `admin` and `editor`, and `users.role` is the only thing that decides access.
+
+The guard is `requireRole(c, 'admin')`, or `roleGuard('admin')` for a whole route group.
+It calls `requireUser` first, so the two refusals are distinct: no session is a 401, a
+session with the wrong role is a 403 with code `FORBIDDEN`. Only one route uses it so far,
+`GET /api/auth/users`. Every other staff route is still signed-in only, and moving them
+over is a separate change per surface rather than one switch, because each one has to
+answer whether an editor should hold it.
+
+The role is read from the user row on every request, because `sessions` stores no role.
+A promotion or a demotion therefore takes effect on the next request, through the same
+code path in both directions, and there is no stale privilege to invalidate.
+
+**Authorisation is by role only, not per resource.** Every account belongs to the same
+studio, so no table has an owner column and there is no "this user may edit this row"
+rule. Adding one is a schema change and a different feature, not a guard.
+
+**The last active administrator is protected.** `disableAccount` and `changeRole` refuse
+a change that would leave none, with a `ConflictError` that says how to recover. Without
+one, no route behind `roleGuard('admin')` is reachable and the only way back is a shell,
+which is the same reasoning as the last active account guard next to it. The guard is
+advisory rather than a database constraint: the CLI is one process, driven by hand.
 
 ## Testing
 

@@ -40,7 +40,13 @@ example. Aika's own documentation moved into `docs/aika/` so that a client's
 
 ## Phase 1: the minimum a client site needs
 
-- [ ] **Enforce `role`.** `users.role` exists and nothing reads it, so every signed-in user is currently an administrator.
+Nothing left. Role enforcement was the last item, and it has shipped, so this phase now
+lives in the changelog instead of here.
+
+The one part of it that is deliberately still open is the other half of enforcement:
+gating the staff screens so an editor cannot reach what an administrator should. The
+mechanism is in place and one route uses it. Moving the existing screens over is a
+separate change per surface, and it is not urgent while every account is an administrator.
 
 ## Phase 2: the WordPress-like part
 

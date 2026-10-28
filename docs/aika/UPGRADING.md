@@ -62,6 +62,47 @@ If step 2 shows changes to a file on the "legitimately differs per client" list,
 
 **Also affected:** the page at `/health` now requires a session. The endpoint at `/api/health` stays public, because uptime monitoring cannot sign in. If anything in your deployment polls `/health` as a page rather than `/api/health`, point it at the API.
 
+### to 0.2.0 (unreleased): role enforcement
+
+**What changed.** `users.role` is now enforced. The roles are `admin` and `editor`. One
+route is administrator only so far, `GET /api/auth/users`, and every other staff screen
+and route is still signed-in only, so nothing you can see changes today.
+
+Two things you cannot do any more, on purpose: disable the last active administrator, and
+demote the last active administrator. Either would leave a deployment where no
+administrator only route can be reached.
+
+**Two things are worth doing:**
+
+1. Look at who your accounts are.
+
+   ```bash
+   npm run user:list
+   ```
+
+   Every account created before this release is an `admin`, so nobody loses access. That
+   is exactly why it is worth a look: if you meant somebody to be staff rather than an
+   administrator, they are currently an administrator, and they always were. Decide
+   deliberately now that the choice exists.
+
+2. Change a role if step 1 found one that is wrong.
+
+   ```bash
+   npm run user:role -- --email=someone@example.com --role=editor
+   ```
+
+   The change takes effect on that person's next request. Their session is not ended, so
+   they are not signed out; they simply stop reaching administrator only routes.
+
+**Why it matters.** Nothing breaks if you skip this. The reason to do it anyway is that
+`editor` is now a real restriction rather than a label, and a client project whose staff
+are all administrators is a client project where one compromised staff password is one
+compromised administrator. This change does not force you to act, and the next one, which
+gates the existing staff screens, will.
+
+**If you skip it.** Nothing fails. Every account stays an administrator and the feature
+has no visible effect, which is the intended shape of this release.
+
 ### to 0.2.0 (unreleased): media uploads
 
 **What changed.** A new `media` feature adds an authenticated upload endpoint at `POST /api/media`, a library screen at `/media`, and a public route that serves what was uploaded at `/media/<filename>`. Nothing existing changes behaviour.

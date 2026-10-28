@@ -33,6 +33,15 @@ Laporkan lewat jalur internal (grup tim, atau DM ke pemilik repo). Sertakan: rep
 - **Cookie**-nya `httpOnly`, `sameSite=Lax`, dan `secure` di produksi.
 - **Proses masuk tidak membocorkan email mana yang terdaftar.** Email tidak dikenal dan password salah menghasilkan pesan yang sama, status yang sama, dan waktu respons yang sebanding.
 
+### Peran
+
+Ada dua peran, `admin` dan `editor`, dan `users.role` yang menentukan akses:
+
+- **Route khusus administrator menjawab 403 untuk `editor` yang sudah login**, dengan pesan yang sama untuk semua pasangan peran, jadi penolakannya tidak menjelaskan apa yang kurang dari pemanggilnya.
+- **Otorisasi berdasarkan peran, bukan per resource.** Semua akun milik studio yang sama, jadi tidak ada pemilik di baris mana pun.
+- **Administrator aktif terakhir tidak bisa dinonaktifkan atau diturunkan perannya.** Tanpa dia, tidak ada yang bisa menjangkau route khusus administrator dan satu-satunya jalan balik adalah shell. Perubahan yang ditolak menyebut hal itu dan menyebut perintah yang memulihkannya.
+- **Setiap akun yang dibuat sebelum penegakan peran adalah administrator**, jadi tidak ada yang kehilangan akses saat ini rilis. Buat `editor` dengan sengaja lewat `npm run user:create -- --role=editor`, atau ubah lewat `npm run user:role`.
+
 ### Celah yang kita sadari: proses masuk tidak dibatasi
 
 **Login tidak punya rate limiting.** Penyerang bisa mencoba password secepat server menjawab. scrypt membuat tiap percobaan berbiaya puluhan milidetik, dan itu polisi tidur, bukan pertahanan.

@@ -41,7 +41,7 @@ app/                  situs klien: pages, layouts, components, site.ts
   error.vue           halaman 404 dan 500, yang mempertahankan kerangka situs
   middleware/auth.ts  mengarahkan pengunjung yang belum masuk ke halaman masuk
 features/             vertical slices, one feature per business capability
-  auth/               masuk, sesi, penjaga halaman
+  auth/               masuk, sesi, ganti password, peran, penjaga halaman
   contact/            form kontak, dan inbox staf di /contact/messages
   health/             status, dan rujukan untuk fitur paling minimal
   media/              unggahan, kontrak storage, dan berkas yang disajikan
@@ -108,6 +108,7 @@ Persetujuannya di-pin ke versi yang persis, dan itu memang disengaja. Setiap kal
 | `npm run user:list` | Semua akun, dan apakah aktif |
 | `npm run user:disable` | Akhiri akses sebuah akun, beserta semua sesinya, seketika |
 | `npm run user:enable` | Izinkan akun yang dinonaktifkan login lagi |
+| `npm run user:role` | Pindahkan akun antara `admin` dan `editor` |
 | `npm run db:migrate` | Jalankan migrasi (snapshot dulu) |
 | `npm run db:backup` | Snapshot online, menyimpan 14 file terbaru |
 

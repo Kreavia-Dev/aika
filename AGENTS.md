@@ -124,7 +124,9 @@ You are writing TypeScript for a team that is still learning it. Optimise for re
 - **Never read the session cookie yourself.** `currentUser(c)` returns the user or null, and it already handles expiry.
 - **Never hash a password outside `features/auth/server/password.ts`.** From anywhere else, use `createUser`.
 - **A page that must not be shown anonymously uses `definePageMeta({ middleware: 'auth' })`.** The middleware must use `useRequestFetch`, not `useFetch`, or server rendering will treat a signed-in visitor as signed out.
-- **`users.role` exists and nothing enforces it.** Every signed-in user is currently an administrator. Do not build a feature that assumes otherwise.
+- **`users.role` is enforced, and there are two roles.** `admin` and `editor`. A handler that is administrator only calls `requireRole(c, 'admin')` as its first line, and a whole route group uses `api.use('/admin/*', roleGuard('admin'))`. The refusal is a 403 with code `FORBIDDEN`, thrown as `ForbiddenError`, never built by hand.
+- **Authorisation is by role only, not per resource.** Every account belongs to the same studio, so no row has an owner and there is no "this user may edit this one" rule. Do not invent one: a per-resource check needs a column saying who owns the row, and no table has one.
+- **The last active administrator cannot be disabled or demoted.** Without one, nobody can reach an administrator only route, and the only way back is a shell on the server. `disableAccount` and `changeRole` refuse it with a `ConflictError` that names the command which fixes it: promote or re-enable another account with `npm run user:role -- --email=<address> --role=admin`, or create a new administrator with `npm run user:create -- --email=<address>`, which refuses an address that already exists and therefore cannot touch the account you were refused. Do not remove that guard to make a screen easier to build.
 - **Sign in is not rate limited.** See `docs/aika/SECURITY.md` for what that means in practice.
 
 ## Where a screen lives
@@ -137,7 +139,7 @@ You are writing TypeScript for a team that is still learning it. Optimise for re
 
 ## Account lifecycle
 
-- **Revoking an account is a shell command, not a route.** `npm run user:disable -- --email=<address>` sets `disabled_at` and deletes every session in one operation. Do not add a web route for it while every account is an administrator: any signed-in user could then lock out any other.
+- **Revoking an account is a shell command, not a route.** `npm run user:disable -- --email=<address>` sets `disabled_at` and deletes every session in one operation. It is still a shell command now that roles are enforced, because an account administration screen is a different job from enforcing a role, and it is not built yet. Whoever builds one has to answer who may revoke whom before they build it, and `admin` is the only role that can.
 - **Changing a password ends every other session.** If you ever add another way to set a password, end the sessions too, or the change means nothing to whoever already holds one.
 - **A disabled account is refused in two places.** `signIn` refuses it after verifying the password, so the timing matches a wrong password, and `resolveSessionDetail` refuses it on every request so a session that reappears cannot authenticate.
 

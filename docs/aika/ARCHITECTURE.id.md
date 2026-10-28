@@ -260,9 +260,36 @@ menghapus baris yang ditemukannya, supaya request berikutnya mulai dari nol.
 Tidak ada rute web untuk ini. `POST /api/auth/password` adalah satu-satunya rute akun,
 dan itu mengganti password sendiri, satu-satunya tindakan akun yang memang harus bisa
 dilakukan pemiliknya sendiri. Pencabutan milik orang lain. Yang menjalankan deployment
-sudah punya shell, jadi ia tinggal di sana, dan rute web harus menjawab "siapa boleh
-mencabut siapa" sementara semua akun sekarang administrator. Pertanyaan itu tempatnya
-bersama penegakan `role`, yang masih ada di roadmap.
+sudah punya shell, jadi ia tinggal di sana. Penegakan `role` sudah rilis, jadi "siapa
+boleh mencabut siapa" sekarang bisa dijawab dengan `admin`. Yang belum ada layarnya, bukan
+model izinnya, dan layar administrasi akun itu pekerjaan yang berbeda dari menegakkan peran.
+
+## Otorisasi
+
+Dua peran, `admin` dan `editor`, dan `users.role` satu-satunya yang menentukan akses.
+
+Penjaganya `requireRole(c, 'admin')`, atau `roleGuard('admin')` untuk satu grup route.
+Ia memanggil `requireUser` lebih dulu, sehingga dua penolakannya jelas beda: tanpa sesi
+itu 401, sesi dengan peran yang salah itu 403 dengan kode `FORBIDDEN`. Baru satu route
+yang memakainya, `GET /api/auth/users`. Route staf lainnya masih sebatas login, dan
+memindahkannya satu per satu, bukan satu saklar, karena tiap permukaan harus menjawab
+dulu apakah `editor` boleh memegangnya.
+
+Peran dibaca dari baris user pada setiap request, karena `sessions` tidak menyimpan peran.
+Promosi dan demosi karena itu berlaku di request berikutnya, lewat jalur kode yang sama di
+kedua arah, dan tidak ada hak istimewa basi yang perlu dicabut.
+
+**Otorisasi hanya berdasarkan peran, bukan per resource.** Semua akun milik studio yang
+sama, jadi tidak ada tabel yang punya kolom pemilik dan tidak ada aturan "user ini boleh
+mengubah baris ini". Menambahkannya berarti mengubah skema dan membangun fitur lain,
+bukan menulis penjaga.
+
+**Administrator aktif terakhir dilindungi.** `disableAccount` dan `changeRole` menolak
+perubahan yang akan menghabiskan semuanya, dengan `ConflictError` yang menyebut cara
+pemulihannya. Tanpa administrator, tidak ada route di balik `roleGuard('admin')` yang
+bisa dijangkau dan satu-satunya jalan balik adalah shell, alasan yang sama dengan penjaga
+akun aktif terakhir di sebelahnya. Penjaga ini sifatnya nasihat, bukan constraint database:
+CLI-nya satu proses dan dijalankan tangan.
 
 ## Testing
 
