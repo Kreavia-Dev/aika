@@ -53,14 +53,40 @@ export function listFeatures(featuresDir: string): string[] {
 }
 
 function toRouteName(feature: string, relativePath: string): string {
-  return `${feature}-${relativePath.replace(/\//g, '-')}`
+  /*
+   * Bracket markers are dropped from the NAME only. `[slug]` becomes `slug`, so
+   * the name is `blog-slug` rather than `blog-[slug]`, because a route name is a
+   * string that appears in devtools and error messages and the markers make it
+   * harder to read there. Names have no routing meaning.
+   */
+  const name = relativePath.replace(/\[\.{0,3}([^\]]+)\]/g, '$1')
+  return `${feature}-${name.replace(/\//g, '-')}`
+}
+
+/**
+ * Filesystem `[slug]` syntax to the `:slug` syntax vue-router actually matches.
+ *
+ * WHY THIS CONVERSION IS NECESSARY, MEASURED RATHER THAN ASSUMED. Nuxt normally
+ * builds route records by scanning files on disk, and that scanning is what turns
+ * `[slug].vue` into a parameter. A record pushed into `pages:extend` skips that
+ * step entirely: vue-router receives the literal string `/blog/[slug]` and
+ * compiles a regex that matches the text "[slug]" and nothing else. The route
+ * looks registered, appears in the generated route list, and quietly 404s for
+ * every real address. That cost an afternoon, so the conversion is done here
+ * where the path is built rather than trusted to happen later.
+ *
+ * The empty parentheses `:slug()` are vue-router's own print of an unconstrained
+ * parameter, which is what `unrouting` produces for a bare `[slug]` file.
+ */
+function toVueRouterPath(path: string): string {
+  return path.replace(/\[\.{0,3}([^\]]+)\]/g, ':$1()')
 }
 
 function toRoutePath(feature: string, relativePath: string): string {
   if (relativePath === 'index') return `/${feature}`
 
   const withoutTrailingIndex = relativePath.replace(/\/index$/, '')
-  return `/${feature}/${withoutTrailingIndex}`
+  return `/${feature}/${toVueRouterPath(withoutTrailingIndex)}`
 }
 
 /**

@@ -60,3 +60,80 @@
     color: var(--color-foreground);
   }
 }
+
+/*
+ * Rendered Markdown.
+ *
+ * WHY THIS IS HERE AND NOT A TAILWIND UTILITY. The blog body arrives as HTML from
+ * the server (`v-html`), so there is no template to hang classes on: the elements
+ * are `h2`, `p`, `ul` and `a`, produced by `features/blog/server/markdown.ts`.
+ * Styling them means styling descendants, which utilities cannot express.
+ *
+ * This is the documented exception rather than a new habit: AGENTS.md says a
+ * component should not carry a `<style>` block, and this is not a component. It is
+ * the one place the design decisions for generated content live, and every value
+ * below is a token, so a rebrand still happens in `palette.css`.
+ */
+.blog-body {
+  font-size: 1rem;
+  line-height: 1.75;
+  color: var(--color-foreground);
+}
+
+.blog-body > * + * {
+  margin-top: 1.25em;
+}
+
+.blog-body h2,
+.blog-body h3,
+.blog-body h4 {
+  margin-top: 2em;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.blog-body h2 { font-size: 1.5rem; }
+.blog-body h3 { font-size: 1.25rem; }
+.blog-body h4 { font-size: 1.0625rem; }
+
+.blog-body a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.blog-body strong { font-weight: 600; }
+
+.blog-body code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  padding: 0.125em 0.375em;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-muted);
+}
+
+.blog-body ul,
+.blog-body ol {
+  padding-left: 1.5em;
+}
+
+.blog-body ul { list-style: disc; }
+.blog-body ol { list-style: decimal; }
+
+.blog-body li + li { margin-top: 0.375em; }
+
+.blog-body blockquote {
+  border-left: 2px solid var(--color-border);
+  padding-left: 1em;
+  color: var(--color-muted-foreground);
+}
+
+.blog-body hr {
+  border-color: var(--color-border);
+}
+
+.blog-body img {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+}

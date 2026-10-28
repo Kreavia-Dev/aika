@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import { authRoutes } from '../../features/auth'
+import { blogRoutes } from '../../features/blog'
 import { contactRoutes } from '../../features/contact'
 import { healthRoutes } from '../../features/health'
 import { mediaRoutes } from '../../features/media'
@@ -67,6 +68,7 @@ api.notFound((c) => {
 
 // Feature mounts. Add one line per feature, in any order.
 api.route('/', authRoutes)
+api.route('/', blogRoutes)
 api.route('/', contactRoutes)
 api.route('/', healthRoutes)
 api.route('/', mediaRoutes)

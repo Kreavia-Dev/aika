@@ -62,6 +62,7 @@ export const site = {
   nav: [
     { label: 'Home', path: '/' },
     { label: 'About', path: '/about' },
+    { label: 'Blog', path: '/blog' },
     { label: 'Contact', path: '/contact' },
   ] satisfies NavItem[],
 

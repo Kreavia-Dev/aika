@@ -58,10 +58,31 @@ describe('collectFeaturePages', () => {
     expect(page?.name).toBe('blog-posts-create')
   })
 
-  it('keeps dynamic segments intact', () => {
+  it('turns a filesystem dynamic segment into the syntax vue-router matches', () => {
+    /*
+     * THIS ASSERTION USED TO EXPECT `/blog/posts/[slug]`, AND THAT WAS THE BUG.
+     * A record pushed into `pages:extend` skips Nuxt's own filename scanning, so
+     * the bracket form reaches vue-router as a literal string, compiles to a regex
+     * that matches the text "[slug]", and 404s for every real address. The route
+     * looks registered and silently never matches.
+     *
+     * The test agreed with the broken code, which is how it survived: a test that
+     * pins an implementation detail confirms whatever that detail happens to be.
+     * It now pins the only form vue-router can route on.
+     */
     writePage('blog/web/pages/posts/[slug].vue')
 
-    expect(collectFeaturePages(root)[0]?.path).toBe('/blog/posts/[slug]')
+    const page = collectFeaturePages(root)[0]
+
+    expect(page?.path).toBe('/blog/posts/:slug()')
+    expect(page?.name).toBe('blog-posts-slug')
+  })
+
+  it('leaves a static segment alone', () => {
+    // The conversion must not touch anything without brackets.
+    writePage('blog/web/pages/posts/index.vue')
+
+    expect(collectFeaturePages(root)[0]?.path).toBe('/blog/posts')
   })
 
   it('collects pages from several features at once', () => {
@@ -133,7 +154,8 @@ describe('collectFeaturePages', () => {
   it('always produces a path starting with a slash', () => {
     writePage('blog/web/pages/posts/[slug]/comments.vue')
 
-    expect(collectFeaturePages(root)[0]?.path).toBe('/blog/posts/[slug]/comments')
+    // The nested case, where a segment is dynamic and the path continues past it.
+    expect(collectFeaturePages(root)[0]?.path).toBe('/blog/posts/:slug()/comments')
   })
 })
 
