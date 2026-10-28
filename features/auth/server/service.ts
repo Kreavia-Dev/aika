@@ -273,6 +273,53 @@ export async function changePassword(input: {
  * the response cannot drift apart: a field removed from the schema stops being
  * something the service can return.
  */
+/**
+ * Replaces an account's password, for the case where nobody knows it.
+ *
+ * WHY THIS EXISTS AT ALL, GIVEN THAT CHANGING A PASSWORD IS A WEB SCREEN. The
+ * screen requires the current password, which is correct and is exactly useless
+ * when the password is the thing that was lost. Without this, the only way back
+ * into a deployment whose administrator has forgotten theirs is to create another
+ * administrator and abandon the first account, and there is no delete-user
+ * command, so the old one stays forever.
+ *
+ * WHY IT TAKES A PASSWORD RATHER THAN MINTING ONE. The caller decides, because
+ * the randomness belongs where it can be printed and forgotten, and a service
+ * that returns a password is a service that could one day log one. The CLI
+ * generates it and prints it once, the same way `user:create` does.
+ *
+ * WHY EVERY SESSION ENDS. A reset that leaves a session alive does not reset
+ * anything: whoever was already signed in as that account keeps working, and the
+ * reset was probably performed because somebody noticed exactly that. This
+ * differs from `changePassword`, which spares the asking tab, because here the
+ * person asking is not the account holder and there is no tab to spare.
+ *
+ * Returns how many sessions were ended, because a number above zero is the
+ * interesting part: it means somebody was signed in as that account just now.
+ */
+export async function resetPassword(input: {
+  email: string
+  password: string
+}): Promise<{ account: AccountRow, sessionsEnded: number }> {
+  const email = input.email.trim().toLowerCase()
+
+  /*
+   * The same floor the web form and `createUser` enforce. A reset is a way to set
+   * a password, so it is a way to set a weak one unless it is refused here too.
+   */
+  if (input.password.length < MIN_PASSWORD_LENGTH) {
+    throw new ValidationError(`A password must be at least ${MIN_PASSWORD_LENGTH} characters.`)
+  }
+
+  const row = findUserByEmail(email)
+  if (!row) throw new NotFoundError(`No account exists for ${email}.`)
+
+  updateUserPassword(row.id, await hashPassword(input.password))
+  const sessionsEnded = deleteUserSessions(row.id)
+
+  return { account: toAccountRow(row), sessionsEnded }
+}
+
 export type AccountRow = Account
 
 function toAccountRow(row: UserRow): AccountRow {

@@ -78,8 +78,31 @@ const MAX_P = 4
  */
 const MIN_HASH_BYTES = 32
 
-export async function hashPassword(password: string): Promise<string> {
-  const salt = randomBytes(SALT_BYTES)
+/**
+ * How much entropy the generated passwords carry.
+ *
+ * 18 bytes is 144 bits, rendered as 24 URL safe characters. Far beyond what brute
+ * force reaches, and short enough that somebody will actually copy it from a
+ * terminal instead of deciding it is a nuisance and making up their own.
+ */
+const GENERATED_PASSWORD_BYTES = 18
+
+/**
+ * A password strong enough that nobody has to judge it.
+ *
+ * WHY THIS LIVES HERE AND NOT IN A SCRIPT. `user:create` and `user:password` both
+ * generate one, and a second copy would be a second strength decision that only
+ * one of them gets fixed later.
+ *
+ * Base64url, so it survives being pasted into a shell, a `.env` file, or a chat
+ * message without quoting. It contains no `$`, which is the character that breaks
+ * a double quoted shell string, and no character that needs escaping in JSON.
+ */
+export function generatePassword(): string {
+  return randomBytes(GENERATED_PASSWORD_BYTES).toString('base64url')
+}
+
+export async function hashPassword(password: string): Promise<string> {  const salt = randomBytes(SALT_BYTES)
   const derived = await deriveKey(password, salt, PARAMS.keylen, {
     N: PARAMS.N,
     r: PARAMS.r,

@@ -25,6 +25,8 @@ export {
   disableAccount,
   enableAccount,
   listAccounts,
+  resetPassword,
 } from './server/service'
+export { generatePassword } from './server/password'
 export type { AccountRow, ChangePasswordResult, SessionDetail } from './server/service'
 export type { Account, PublicUser, Role } from './contract'

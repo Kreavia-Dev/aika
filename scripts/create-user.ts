@@ -1,5 +1,4 @@
-import { randomBytes } from 'node:crypto'
-import { createUser } from '../features/auth'
+import { createUser, generatePassword } from '../features/auth'
 import { closeDb, getDb } from '../shared/database/client'
 
 /**
@@ -13,18 +12,13 @@ import { closeDb, getDb } from '../shared/database/client'
  *
  * A password is generated and printed once. `--password` is accepted for
  * scripted setup, and it ends up in your shell history, so prefer the generated
- * one. There is no change-password flow yet, so write it down.
+ * one. To replace a password later, use `npm run user:password`, which does not
+ * accept `--password` at all for that reason.
  */
-const GENERATED_PASSWORD_BYTES = 18
-
 function readFlag(name: string): string | undefined {
   const prefix = `--${name}=`
   const match = process.argv.find(argument => argument.startsWith(prefix))
   return match?.slice(prefix.length)
-}
-
-function generatePassword(): string {
-  return randomBytes(GENERATED_PASSWORD_BYTES).toString('base64url')
 }
 
 /**
@@ -83,7 +77,7 @@ async function main(): Promise<void> {
     console.log('')
     console.log(`  Password: ${password}`)
     console.log('')
-    console.log('Shown once. There is no change-password flow yet, so save it now.')
+    console.log('Shown once. Save it now: it can be changed at /auth/password after signing in.')
   }
 }
 

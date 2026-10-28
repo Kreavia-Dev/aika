@@ -138,9 +138,10 @@ async function submit(): Promise<void> {
     </form>
 
     <p class="mt-10 border-t border-border pt-6 text-sm text-muted-foreground">
-      Forgotten rather than changing it? There is no reset by email. Whoever runs
-      the deployment re-enables or recreates the account from the shell, because
-      there is no mail server and no account recovery flow.
+      Forgotten rather than changing it? There is no reset by email, because there
+      is no mail server. Whoever runs the deployment replaces the password from the
+      shell with <code class="font-mono text-xs">npm run user:password</code>, and that
+      ends every session this account has open, including one you are using now.
     </p>
   </div>
 </template>
