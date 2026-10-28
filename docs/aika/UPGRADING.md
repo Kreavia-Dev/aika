@@ -62,6 +62,33 @@ If step 2 shows changes to a file on the "legitimately differs per client" list,
 
 **Also affected:** the page at `/health` now requires a session. The endpoint at `/api/health` stays public, because uptime monitoring cannot sign in. If anything in your deployment polls `/health` as a page rather than `/api/health`, point it at the API.
 
+### to 0.2.0 (unreleased): the staff screens are gated
+
+**What changed.** The media library and the staff inbox now check the role, not just
+whether somebody is signed in. An `editor` keeps the media library and loses the inbox.
+An `admin` keeps both.
+
+**One thing is worth checking:**
+
+```bash
+npm run user:list
+```
+
+Any account that shows `editor` now sees a smaller site than it did yesterday. If that
+surprises you, the account was probably meant to be an administrator, and the fix is:
+
+```bash
+npm run user:role -- --email=someone@example.com --role=admin
+```
+
+**Why it matters.** `editor` used to be a label. It is now a restriction, so an account
+you created as an editor to satisfy a naming convention is a reduction in access that
+nobody asked for. The inbox is the one screen where the difference is a privacy question
+as well as a practical one, because it holds messages from people who never had an account.
+
+**If you skip it.** Nothing fails. An editor simply cannot read the inbox, and sees the
+media library as before.
+
 ### to 0.2.0 (unreleased): role enforcement
 
 **What changed.** `users.role` is now enforced. The roles are `admin` and `editor`. One

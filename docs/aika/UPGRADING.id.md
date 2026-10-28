@@ -64,6 +64,34 @@ Kalau langkah 2 menunjukkan ada perubahan di file yang masuk daftar "wajar berbe
 
 **Yang juga terpengaruh:** halaman `/health` sekarang butuh sesi. Endpoint `/api/health` tetap publik, karena pemantauan uptime tidak bisa login. Kalau ada yang memantau `/health` sebagai halaman, bukan `/api/health`, ubah ke API-nya.
 
+### ke 0.2.0 (belum dirilis): layar staf dipagari peran
+
+**Apa yang berubah.** Pustaka media dan inbox staf sekarang memeriksa peran, bukan hanya
+apakah seseorang sudah login. `editor` tetap memegang pustaka media dan kehilangan inbox.
+`admin` memegang keduanya.
+
+**Satu hal yang sebaiknya diperiksa:**
+
+```bash
+npm run user:list
+```
+
+Akun yang tertulis `editor` sekarang melihat situs yang lebih sempit daripada kemarin.
+Kalau itu mengejutkan, kemungkinan akun itu memang dimaksudkan sebagai administrator, dan
+perbaikannya:
+
+```bash
+npm run user:role -- --email=someone@example.com --role=admin
+```
+
+**Kenapa penting.** `editor` dulu hanya label. Sekarang ia batasan, jadi akun yang Anda
+buat sebagai editor sekadar untuk mengikuti konvensi penamaan adalah pengurangan akses
+yang tidak diminta siapa pun. Inbox adalah satu-satunya layar yang bedanya soal privasi,
+bukan cuma soal praktis, karena isinya pesan dari orang yang tidak pernah punya akun.
+
+**Kalau dilewati.** Tidak ada yang gagal. `editor` sekadar tidak bisa membaca inbox, dan
+melihat pustaka media seperti sebelumnya.
+
 ### ke 0.2.0 (belum dirilis): penegakan peran
 
 **Apa yang berubah.** `users.role` sekarang ditegakkan. Perannya `admin` dan `editor`. Baru

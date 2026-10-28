@@ -268,12 +268,35 @@ model izinnya, dan layar administrasi akun itu pekerjaan yang berbeda dari meneg
 
 Dua peran, `admin` dan `editor`, dan `users.role` satu-satunya yang menentukan akses.
 
-Penjaganya `requireRole(c, 'admin')`, atau `roleGuard('admin')` untuk satu grup route.
-Ia memanggil `requireUser` lebih dulu, sehingga dua penolakannya jelas beda: tanpa sesi
-itu 401, sesi dengan peran yang salah itu 403 dengan kode `FORBIDDEN`. Baru satu route
-yang memakainya, `GET /api/auth/users`. Route staf lainnya masih sebatas login, dan
-memindahkannya satu per satu, bukan satu saklar, karena tiap permukaan harus menjawab
-dulu apakah `editor` boleh memegangnya.
+Ada dua penjaga, dan memilih di antara keduanya adalah keputusan sebuah route:
+
+- **`requireAtLeast(c, 'editor')`** meloloskan kedua peran. Ini penjaga untuk kerja konten,
+  karena administrator bisa melakukan semua yang editor bisa.
+- **`requireRole(c, 'admin')`** hanya meloloskan satu peran. Ini penjaga untuk hal yang
+  bukan kerja konten: mengurus akun, membaca pesan yang masuk.
+
+Pembedaan ini ada karena satu penjaga yang "jelas" itu ternyata salah. Pencocokan persis
+untuk `editor` akan menolak administrator, terbalik dari yang diharapkan operator, dan itu
+jenis bug yang rilis diam-diam. `atLeast('editor')` dan `roleGuard('admin')` adalah bentuk
+middleware-nya untuk satu grup route.
+
+Yang dipakai tiap permukaan sekarang:
+
+| Permukaan | Penjaga | Alasannya |
+|---|---|---|
+| `GET /api/auth/users` | `requireRole(c, 'admin')` | Semua akun, dan itu administrasi |
+| `POST /api/media`, `GET /api/media`, `DELETE /api/media/:id` | `atLeast('editor')` | Produksi konten, dan kedua peran melakukannya |
+| `GET /api/contact/messages` | `requireRole(c, 'admin')` | Pertanyaan orang asing itu data pribadi, bukan konten |
+
+Keduanya memanggil `requireUser` lebih dulu, sehingga dua penolakannya jelas beda: tanpa
+sesi itu 401, sesi dengan peran yang salah itu 403 dengan kode `FORBIDDEN`. Route lain di
+aplikasi ini publik atau sebatas login, dan setiap route baru harus menjawab yang mana.
+
+Urutan peran tinggal di `carriesAtLeast` di `features/auth/contract.ts`, bukan di penjaga,
+karena browser butuh jawaban yang sama. Halaman yang khusus administrator harus memutuskan
+apakah menampilkan dirinya, dan salinan kedua "admin di atas editor" ujung-ujungnya akan
+berbeda dengan penjaga yang menegakkannya. Menambah peran ketiga meninggalkan jalur tanpa
+return dan membuat `npm run check` gagal sampai ada yang menuliskan posisinya.
 
 Peran dibaca dari baris user pada setiap request, karena `sessions` tidak menyimpan peran.
 Promosi dan demosi karena itu berlaku di request berikutnya, lewat jalur kode yang sama di

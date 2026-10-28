@@ -266,12 +266,35 @@ job from enforcing a role.
 
 Two roles, `admin` and `editor`, and `users.role` is the only thing that decides access.
 
-The guard is `requireRole(c, 'admin')`, or `roleGuard('admin')` for a whole route group.
-It calls `requireUser` first, so the two refusals are distinct: no session is a 401, a
-session with the wrong role is a 403 with code `FORBIDDEN`. Only one route uses it so far,
-`GET /api/auth/users`. Every other staff route is still signed-in only, and moving them
-over is a separate change per surface rather than one switch, because each one has to
-answer whether an editor should hold it.
+There are two guards, and choosing between them is the decision a route makes:
+
+- **`requireAtLeast(c, 'editor')`** admits both roles. It is the guard for content work,
+  because an administrator can do everything an editor can.
+- **`requireRole(c, 'admin')`** admits exactly one role. It is the guard for the things
+  that are not content work: administering accounts, reading inbound messages.
+
+The distinction exists because the obvious single guard is wrong. An exact match for
+`editor` would refuse the administrator, which is backwards from what an operator expects,
+and it is the kind of bug that ships quietly. `atLeast('editor')` and `roleGuard('admin')`
+are the middleware forms for a whole route group.
+
+What each surface uses today:
+
+| Surface | Guard | Why |
+|---|---|---|
+| `GET /api/auth/users` | `requireRole(c, 'admin')` | Every account, which is administration |
+| `POST /api/media`, `GET /api/media`, `DELETE /api/media/:id` | `atLeast('editor')` | Content production, which both roles do |
+| `GET /api/contact/messages` | `requireRole(c, 'admin')` | A stranger's enquiry is personal data, not content |
+
+Both call `requireUser` first, so the two refusals are distinct: no session is a 401, a
+session with the wrong role is a 403 with code `FORBIDDEN`. Every other route in the
+application is public or signed-in only, and each new one has to answer which it is.
+
+The ordering lives in `carriesAtLeast` in `features/auth/contract.ts`, not in the guard,
+because the browser needs the same answer. A page that is administrator only has to decide
+whether to show itself, and a second copy of "admin is above editor" would eventually
+disagree with the guard that enforces it. Adding a third role leaves a path with no return
+and fails `npm run check` until somebody writes down where it sits.
 
 The role is read from the user row on every request, because `sessions` stores no role.
 A promotion or a demotion therefore takes effect on the next request, through the same
