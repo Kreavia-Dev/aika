@@ -219,8 +219,20 @@ describe('sign in under a burst', () => {
     expect(statuses.filter(status => status === 503).length).toBeGreaterThan(0)
   })
 
+  /**
+   * Kept in this `describe` block so it runs after the burst in the same file,
+   * because the load shed it checks lives in module state (`throttle.ts` counts
+   * work in flight) and only the same file's block ordering is stable.
+   *
+   * MEASURED. Shuffling exposed two things. As its own test it could run before
+   * the burst, where it passed for the wrong reason. An earlier version also
+   * depended on the burst test having created the account, which a seed that
+   * reordered the tests broke with a 401. It creates its own account now.
+   */
   it('answers normally again after the burst', async () => {
-    const response = await loginRequest('burst@example.com', PASSWORD)
+    await makeUser('after-burst@example.com')
+
+    const response = await loginRequest('after-burst@example.com', PASSWORD)
 
     expect(response.status).toBe(200)
   })

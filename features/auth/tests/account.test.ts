@@ -250,19 +250,36 @@ describe('account revocation', () => {
      * depend on where it sits in the file. Locking everybody out of a client's
      * deployment is bad enough to be worth a guard, and the guard is only worth
      * having if it is tested.
+     *
+     * TWO GUARDS NOW SHARE THIS TERRAIN. Since roles are enforced, a second guard
+     * refuses to disable the last active administrator. That message contains the
+     * words "only active", so a loose match here would pass on either guard.
+     * The assertion below pins the account guard's own wording, and the explicit
+     * editor keeps the administrator guard from firing first, so this test cannot
+     * quietly stop testing the guard it names.
      */
+    await createUser({
+      email: `sole-account-editor-${randomUUID()}@example.com`,
+      password: 'a password long enough to satisfy the rule',
+      role: 'editor',
+    })
+
     const active = listAccounts().filter(account => account.disabledAt === null)
+    // Captured, not re-read inside the body: disabling an entry invalidates the
+    // list this was filtered from.
+    const others = active.slice(1)
     const survivor = active[0]
 
-    for (const account of active.slice(1)) disableAccount(account.email)
+    for (const account of others) disableAccount(account.email)
 
     try {
       expect(active.length).toBeGreaterThan(0)
       expect(survivor).toBeDefined()
-      expect(() => disableAccount(survivor?.email ?? '')).toThrow(/only active account/i)
+      expect(() => disableAccount(survivor?.email ?? ''))
+        .toThrow(/that is the only active account\./i)
     }
     finally {
-      for (const account of active.slice(1)) enableAccount(account.email)
+      for (const account of others) enableAccount(account.email)
     }
   })
 })
