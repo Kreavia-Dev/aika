@@ -22,11 +22,13 @@ useHead({
 })
 
 /*
- * Staff only. The message list is everything a client's visitors have ever sent,
- * so this screen is the most sensitive page in the application after the sign in
- * form itself.
+ * Administrators only. The message list is everything a client's visitors have
+ * ever sent, so this screen is the most sensitive page in the application after
+ * the sign in form itself. An editor is not offered it at all: `admin` sends them
+ * home rather than letting them open a page whose data call answers 403. The API
+ * refuses the data on its own, so this is courtesy as well as a second lock.
  */
-definePageMeta({ middleware: 'auth' })
+definePageMeta({ middleware: ['auth', 'admin'] })
 
 const { data, error } = await useFetch<ContactMessagesResponse>('/api/contact/messages')
 
@@ -76,8 +78,8 @@ function utcTime(iso: string): string {
 
     <p class="mt-2 text-sm text-muted-foreground">
       Everything the contact form has received, newest first. This page belongs to
-      the <code class="font-mono text-xs">contact</code> feature and requires a
-      session.
+      the <code class="font-mono text-xs">contact</code> feature and is open to
+      administrators only.
     </p>
 
     <p v-if="error" class="mt-10 rounded-md border-l-2 border-destructive bg-muted px-4 py-3 text-sm">

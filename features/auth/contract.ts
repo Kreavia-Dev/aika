@@ -9,6 +9,47 @@ import { z } from 'zod'
  */
 export const roleSchema = z.enum(['admin', 'editor'])
 
+export type Role = z.infer<typeof roleSchema>
+
+/**
+ * Whether a role carries at least as much authority as another.
+ *
+ * WHY THIS IS A PLAIN `if` CHAIN AND NOT A RANK NUMBER. There are two roles, and
+ * their order is a decision a person made rather than a value a type system can
+ * derive. A numeric rank on `roleSchema`, or a column beside it, invites the next
+ * reader to assume `1 < 2` means something and to add a third role by picking a
+ * number. When a third role exists, somebody has to sit down and decide where it
+ * sits, and this function is where they will look.
+ *
+ * WHY IT LIVES IN THE CONTRACT RATHER THAN THE SERVER. The browser needs the same
+ * answer. A page that is administrator only has to decide whether to show itself,
+ * and if it asked a second copy of this question the two could disagree, which is
+ * the kind of disagreement that shows up as a screen that renders for the wrong
+ * person. There is one answer, and both boundaries import it.
+ *
+ * Two explicit branches, no default, so adding a role to `roleSchema` leaves a
+ * path with no return and `npm run check` fails until somebody writes down where
+ * the new role sits.
+ */
+export function carriesAtLeast(role: Role, required: Role): boolean {
+  if (role === 'admin') {
+    // An administrator carries every role below them.
+    return true
+  }
+
+  if (role === 'editor') {
+    // An editor carries editor authority, and nothing above it.
+    return required === 'editor'
+  }
+
+  /*
+   * Unreachable while there are two roles: the two branches above cover both, and
+   * `Role` is checked exhaustively by the compiler. This exists so the function
+   * has a return on every path if a third role is added.
+   */
+  throw new Error(`Role ${role satisfies never} has no place in the ordering yet.`)
+}
+
 export const publicUserSchema = z.object({
   id: z.string(),
   email: z.string(),
@@ -88,7 +129,6 @@ export const accountListResponseSchema = z.object({
   data: z.object({ accounts: z.array(accountSchema) }),
 })
 
-export type Role = z.infer<typeof roleSchema>
 export type PublicUser = z.infer<typeof publicUserSchema>
 export type LoginInput = z.infer<typeof loginInputSchema>
 export type ChangePasswordInput = z.infer<typeof changePasswordInputSchema>

@@ -89,10 +89,16 @@ function messageAfter(
 
 const INBOX_PASSWORD = 'a password long enough to be hashed without complaint'
 
-/** Creates a user under a unique address and returns a session cookie. */
-async function signIn(): Promise<string> {
+/**
+ * Creates a user under a unique address and returns a session cookie.
+ *
+ * The inbox is administrator only, so the default is `admin`. A test about the
+ * refusal has to ask for an editor by name, and `createUser` would otherwise
+ * quietly give it an account that passes.
+ */
+async function signIn(role: 'admin' | 'editor' = 'admin'): Promise<string> {
   const email = `inbox-${randomUUID()}@example.com`
-  await createUser({ email, password: INBOX_PASSWORD })
+  await createUser({ email, password: INBOX_PASSWORD, role })
 
   const response = await api.request('/api/auth/login', {
     method: 'POST',
@@ -257,6 +263,35 @@ describe('GET /api/contact/messages', () => {
     const response = await inbox()
 
     expect(response.status).toBe(401)
+  })
+
+  it('refuses a signed-in editor', async () => {
+    /*
+     * Prevents the inbox being left at "any signed-in account". The guard used to
+     * be `authGuard`, which this test would have passed, so it is the regression
+     * guard for the bar moving to administrators.
+     */
+    const cookie = await signIn('editor')
+
+    const response = await inbox(cookie)
+
+    expect(response.status).toBe(403)
+
+    const body = failureEnvelopeSchema.parse(await response.json())
+    expect(body.code).toBe('FORBIDDEN')
+  })
+
+  it('answers an administrator with a body the contract accepts', async () => {
+    // The other half of the previous test: a stricter guard must not have locked
+    // out the role it was tightened for.
+    const cookie = await signIn('admin')
+
+    const response = await inbox(cookie)
+
+    expect(response.status).toBe(200)
+
+    const body = contactMessagesResponseSchema.parse(await response.json())
+    expect(Array.isArray(body.data.messages)).toBe(true)
   })
 
   it('shows what came through the form, to somebody who is signed in', async () => {

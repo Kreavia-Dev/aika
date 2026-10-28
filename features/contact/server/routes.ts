@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { authGuard } from '../../auth'
+import { requireRole } from '../../auth'
 import { ValidationError } from '../../../shared/errors'
 import {
   contactInputSchema,
@@ -39,14 +39,26 @@ contactRoutes.post('/contact', async (c) => {
  * The staff inbox, behind the guard.
  *
  * This is the cross-feature dependency the architecture allows: `contact` reads
- * `authGuard` through `features/auth/index.ts`, its public door. Rule R2 refuses
+ * `requireRole` through `features/auth/index.ts`, its public door. Rule R2 refuses
  * reaching into `features/auth/server/...`, and R5 refuses it the other way
  * round, so the graph stays a tree rather than a knot.
  *
  * A guarded route is the only thing standing between a visitor and every message
  * a client has received, so the guard goes first and is deliberately obvious.
+ *
+ * WHY ADMINISTRATOR ONLY, AND NOT EVERY MEMBER OF STAFF. An inbox is everything a
+ * client's visitors have ever sent, which includes personal data about people who
+ * never agreed to be in a database. Producing content is not the same act as
+ * reading a stranger's enquiry, so the media library's bar does not apply here.
+ *
+ * WHY THE INLINE CALL AND NOT `roleGuard`. This router is shared with the public
+ * `POST /contact`, so a `use` would have to be scoped to a path that does not
+ * wrap the public route, and one handler is one line. The inline call as the first
+ * line is the convention AGENTS.md gives for a single handler.
  */
-contactRoutes.get('/contact/messages', authGuard, (c) => {
+contactRoutes.get('/contact/messages', (c) => {
+  requireRole(c, 'admin')
+
   return c.json(contactMessagesResponseSchema.parse({
     success: true,
     message: 'Recent messages.',

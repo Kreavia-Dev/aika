@@ -1,7 +1,7 @@
 import type { Context } from 'hono'
 import { getCookie } from 'hono/cookie'
 import { ForbiddenError, UnauthorizedError } from '../../../shared/errors'
-import { SESSION_COOKIE, type PublicUser, type Role } from '../contract'
+import { SESSION_COOKIE, carriesAtLeast, type PublicUser, type Role } from '../contract'
 import { resolveSession } from './service'
 
 /**
@@ -48,10 +48,38 @@ const ROLE_ERROR = 'This action needs a role your account does not have.'
  *
  * Call this as the first line of any handler that is admin only, the same way
  * `requireUser` opens a handler that is signed-in only.
+ *
+ * TWO DIFFERENT TOOLS, DO NOT SWAP THEM. This one answers "exactly this role",
+ * and is right when the answer really is one role and nobody else, such as
+ * listing every account. `requireAtLeast` below answers "at least this much
+ * authority", and is right when a more senior role should also pass, such as
+ * content work that an administrator does as well as an editor.
  */
 export function requireRole(c: Context, role: Role): PublicUser {
   const user = requireUser(c)
   if (user.role !== role) throw new ForbiddenError(ROLE_ERROR)
+  return user
+}
+
+/**
+ * The signed-in user, if their role carries at least `role`, or a 401, then a 403.
+ *
+ * `requireAtLeast(c, 'editor')` admits both roles, because an administrator can
+ * do everything an editor can. `requireAtLeast(c, 'admin')` admits only an
+ * administrator, and gives the same answer as `requireRole(c, 'admin')`.
+ *
+ * This is the guard for content work: a media library, a draft, a page. Use it
+ * rather than `requireRole` wherever the intent is "any member of staff who is
+ * allowed to produce content", because the exact match refuses the administrator
+ * and that is backwards from what every operator expects.
+ */
+export function requireAtLeast(c: Context, role: Role): PublicUser {
+  const user = requireUser(c)
+  /*
+   * The rule itself lives in `../contract`, because a browser page has to reach
+   * the same verdict and two copies would eventually disagree.
+   */
+  if (!carriesAtLeast(user.role, role)) throw new ForbiddenError(ROLE_ERROR)
   return user
 }
 
@@ -74,12 +102,30 @@ export async function authGuard(c: Context, next: () => Promise<void>): Promise<
  * api.use('/admin/*', roleGuard('admin'))
  * ```
  *
- * No route uses it yet. It exists so that the next change, which gates screens,
- * does not have to write it while also moving the gates.
+ * The exact match. For "any staff member with this much authority", use
+ * `atLeast` below instead.
  */
 export function roleGuard(role: Role) {
   return async (c: Context, next: () => Promise<void>): Promise<void> => {
     requireRole(c, role)
+    await next()
+  }
+}
+
+/**
+ * Guards a whole route group by minimum authority.
+ *
+ * ```ts
+ * api.use('/media/*', atLeast('editor'))
+ * ```
+ *
+ * The middleware form of `requireAtLeast`. Prefer the inline call for one handler
+ * on a shared router, and this for a group, the same split as `requireUser` and
+ * `authGuard`.
+ */
+export function atLeast(role: Role) {
+  return async (c: Context, next: () => Promise<void>): Promise<void> => {
+    requireAtLeast(c, role)
     await next()
   }
 }

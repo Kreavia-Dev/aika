@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { ValidationError } from '../../../shared/errors'
 import { MAX_UPLOAD_BYTES } from '../contract'
-import { authGuard, requireUser } from '../../auth'
+import { atLeast, requireUser } from '../../auth'
 import { mediaDeleteResponseSchema, mediaListResponseSchema, mediaUploadResponseSchema } from '../contract'
 import { listMedia, removeMedia, storeUpload } from './service'
 
@@ -13,6 +13,12 @@ import { listMedia, removeMedia, storeUpload } from './service'
  * should be able to enumerate them. The bytes are served by a Nitro route at
  * `/media/<filename>`, not from here, because a Hono response is an envelope and
  * an image is not.
+ *
+ * WHY THE BAR IS "ANY STAFF MEMBER" AND NOT "ADMINISTRATOR". Uploading an image
+ * is content production, and both roles produce content. Gating this by exact
+ * role would have meant an administrator could not upload either, which is the
+ * opposite of what an operator expects. `atLeast('editor')` says what is meant:
+ * everybody below administrator, plus administrator.
  */
 export const mediaRoutes = new Hono()
 
@@ -40,7 +46,7 @@ function assertDeclaredSizeWithinLimit(header: string | undefined): void {
   }
 }
 
-mediaRoutes.post('/media', authGuard, async (c) => {
+mediaRoutes.post('/media', atLeast('editor'), async (c) => {
   assertDeclaredSizeWithinLimit(c.req.header('content-length'))
 
   const body = await c.req.parseBody().catch(() => null)
@@ -50,6 +56,12 @@ mediaRoutes.post('/media', authGuard, async (c) => {
     throw new ValidationError('Choose a file to upload.', ['file: no file was attached'])
   }
 
+  /*
+   * Read again rather than threaded from the guard. Hono middleware cannot hand a
+   * value to the handler without widening the app's generic, so the guarded call
+   * only proves who the caller is. This one is here for the id, which the record
+   * needs and the middleware did not keep.
+   */
   const stored = await storeUpload({
     bytes: new Uint8Array(await file.arrayBuffer()),
     contentType: file.type || null,
@@ -64,7 +76,7 @@ mediaRoutes.post('/media', authGuard, async (c) => {
   }), 201)
 })
 
-mediaRoutes.get('/media', authGuard, (c) => {
+mediaRoutes.get('/media', atLeast('editor'), (c) => {
   return c.json(mediaListResponseSchema.parse({
     success: true,
     message: 'OK',
@@ -77,7 +89,7 @@ mediaRoutes.get('/media', authGuard, (c) => {
  * a delete that took the address would make the URL the thing that authorises
  * the removal.
  */
-mediaRoutes.delete('/media/:id', authGuard, (c) => {
+mediaRoutes.delete('/media/:id', atLeast('editor'), (c) => {
   /*
    * The router requires the segment, so this cannot be empty in practice. The
    * fallback exists because the type allows it, and an empty id finds nothing,

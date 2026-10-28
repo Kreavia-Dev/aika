@@ -9,7 +9,15 @@
  * code uses `~~/features/auth/web`.
  */
 export { authRoutes } from './server/routes'
-export { authGuard, currentUser, requireRole, requireUser, roleGuard } from './server/guard'
+export {
+  atLeast,
+  authGuard,
+  currentUser,
+  requireAtLeast,
+  requireRole,
+  requireUser,
+  roleGuard,
+} from './server/guard'
 export {
   changePassword,
   changeRole,

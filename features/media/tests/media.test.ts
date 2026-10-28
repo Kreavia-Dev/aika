@@ -1,9 +1,10 @@
 import { randomUUID } from 'node:crypto'
+import type { Context } from 'hono'
 import sharp from 'sharp'
 import { describe, expect, it } from 'vitest'
 import { api } from '../../../shared/http/app'
 import { failureEnvelopeSchema } from '../../../shared/http/envelope'
-import { createUser } from '../../auth'
+import { createUser, requireAtLeast } from '../../auth'
 import {
   MAX_IMAGE_DIMENSION,
   MAX_UPLOAD_BYTES,
@@ -29,9 +30,16 @@ import { readMediaFile } from '../server/service'
 
 const PASSWORD = 'a password long enough to be hashed without complaint'
 
-async function signIn(): Promise<string> {
+/**
+ * A session cookie for a fresh account in the given role.
+ *
+ * The role is a parameter because the media library is open to both roles, and
+ * the tests below have to prove both. `createUser` defaults to `admin`, so an
+ * editor has to be asked for by name or the difference is never exercised.
+ */
+async function signIn(role: 'admin' | 'editor' = 'admin'): Promise<string> {
   const email = `media-${randomUUID()}@example.com`
-  await createUser({ email, password: PASSWORD })
+  await createUser({ email, password: PASSWORD, role })
 
   const response = await api.request('/api/auth/login', {
     method: 'POST',
@@ -91,6 +99,50 @@ async function uploadPng(cookie: string): Promise<{ id: string, filename: string
 }
 
 describe('media', () => {
+  /**
+   * The three things this feature does, in one place, so a role test is one call.
+   *
+   * Upload, list, and delete are the whole surface, and a hierarchy that admits a
+   * role to two of them is not a hierarchy.
+   */
+  async function useAllThree(cookie: string): Promise<{ upload: number, list: number, remove: number }> {
+    const created = await upload(cookie, fileFrom(await smallPng(), 'role.png', 'image/png'))
+    const uploaded = created.status === 201
+      ? mediaUploadResponseSchema.parse(await created.json())
+      : null
+
+    const listed = await list(cookie)
+
+    const removed = uploaded
+      ? await remove(cookie, uploaded.data.file.id)
+      : await remove(cookie, '00000000-0000-0000-0000-000000000000')
+
+    return { upload: created.status, list: listed.status, remove: removed.status }
+  }
+
+  it('lets an editor upload, list and delete', async () => {
+    /*
+     * The regression guard for "we gated content work by accident". A media
+     * library is content production, and both roles produce content, so an exact
+     * role check here would lock an editor out of their own job.
+     */
+    const cookie = await signIn('editor')
+
+    expect(await useAllThree(cookie)).toEqual({ upload: 201, list: 200, remove: 200 })
+  })
+
+  it('lets an administrator upload, list and delete', async () => {
+    /*
+     * The regression guard for "the hierarchy is backwards". An administrator can
+     * do everything an editor can, so the same three calls have to work. This is
+     * the test that failed before `atLeast` existed, because `requireRole`
+     * compares for equality.
+     */
+    const cookie = await signIn('admin')
+
+    expect(await useAllThree(cookie)).toEqual({ upload: 201, list: 200, remove: 200 })
+  })
+
   it('refuses an upload from a signed out visitor', async () => {
     // This refusal is the only thing between the public internet and a client's
     // storage directory.
@@ -296,5 +348,41 @@ describe('media', () => {
   it('does not attempt to serve a name that was never uploaded', () => {
     expect(readMediaFile('../../database/aika.db')).toBeNull()
     expect(readMediaFile('00000000-0000-0000-0000-000000000000.png')).toBeNull()
+  })
+})
+
+describe('the role ordering', () => {
+  /**
+   * These call the guard with a context that carries one cookie, because the
+   * ordering lives in the guard rather than in any route. Driving them through a
+   * route would only test whichever route happened to be picked.
+   */
+  function contextWithCookie(cookie: string): Context {
+    return {
+      req: {
+        header: () => null,
+        raw: new Request('http://localhost/', { headers: { cookie } }),
+      },
+    } as unknown as Context
+  }
+
+  it('refuses an editor where an administrator is required', async () => {
+    /*
+     * The ordering cannot be flattened to "everything is allowed". `admin` is the
+     * only role that satisfies `requireAtLeast(c, 'admin')`, so an editor must get
+     * a 403 rather than a user, exactly as `requireRole` would answer.
+     */
+    const cookie = await signIn('editor')
+
+    expect(() => requireAtLeast(contextWithCookie(cookie), 'admin')).toThrow(/role your account does not have/i)
+  })
+
+  it('admits both roles where an editor is required', async () => {
+    // The other half of the same fact: "at least an editor" is not "an editor".
+    const editor = await signIn('editor')
+    const admin = await signIn('admin')
+
+    expect(requireAtLeast(contextWithCookie(editor), 'editor').role).toBe('editor')
+    expect(requireAtLeast(contextWithCookie(admin), 'editor').role).toBe('admin')
   })
 })
