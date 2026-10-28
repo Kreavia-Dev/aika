@@ -38,6 +38,7 @@ app/                  the client's site: pages, layouts, components, site.ts
   middleware/auth.ts  sends a signed out visitor to the sign in page
 features/             vertical slices, one business capability each
   auth/               sign in, sessions, password change, roles, the page guard
+  blog/               articles, categories, and the staff editor at /blog/admin
   contact/            the contact form, and the staff inbox at /contact/messages
   health/             status, and the reference for a minimal feature
   media/              uploads, the storage contract, and the files they serve

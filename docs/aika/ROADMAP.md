@@ -52,6 +52,7 @@ separate change per surface, and it is not urgent while every account is an admi
 
 Blocked by the open decisions above.
 
+- **A blog is no longer on this list.** It shipped as a feature rather than as part of a CMS: `features/blog/` has posts, categories, drafts, and a Markdown editor, and it is enough for a client site that needs to publish articles. What it deliberately does not have is a page builder, custom content types, or a WYSIWYG editor. Those are still what Phase 2 is for.
 - [ ] Content model registry: collections and fields declared as data.
 - [ ] Admin CRUD generated from that registry.
 - [ ] `blog` as the first real content type, proving the pattern.

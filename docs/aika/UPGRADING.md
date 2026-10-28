@@ -62,6 +62,23 @@ If step 2 shows changes to a file on the "legitimately differs per client" list,
 
 **Also affected:** the page at `/health` now requires a session. The endpoint at `/api/health` stays public, because uptime monitoring cannot sign in. If anything in your deployment polls `/health` as a page rather than `/api/health`, point it at the API.
 
+### to 0.2.0 (unreleased): the blog feature
+
+**What changed.** A new `blog` feature adds `/blog`, `/blog/<slug>`, and staff screens at
+`/blog/admin`. Nothing existing changes behaviour.
+
+**One thing is required.** Apply the migration. `0006_blog.sql` adds `blog_posts` and
+`blog_categories`. It only creates tables, so it cannot collide with existing data.
+
+```bash
+npm run db:migrate
+```
+
+**Worth knowing.** Any staff member can write a post at `/blog/admin`, but only an `admin`
+can publish one. A cover image comes from the existing media library, so there is no second
+upload path. Changing the slug of a published post breaks old links, because there is no
+redirect yet.
+
 ### to 0.2.0 (unreleased): a lost password is recoverable
 
 **What changed.** A new command replaces an account's password from the shell, for the case

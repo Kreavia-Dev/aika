@@ -64,6 +64,24 @@ Kalau langkah 2 menunjukkan ada perubahan di file yang masuk daftar "wajar berbe
 
 **Yang juga terpengaruh:** halaman `/health` sekarang butuh sesi. Endpoint `/api/health` tetap publik, karena pemantauan uptime tidak bisa login. Kalau ada yang memantau `/health` sebagai halaman, bukan `/api/health`, ubah ke API-nya.
 
+### ke 0.2.0 (belum dirilis): fitur blog
+
+**Apa yang berubah.** Fitur baru `blog` menambah `/blog`, `/blog/<slug>`, dan layar staf di
+`/blog/admin`. Tidak ada yang berubah perilakunya.
+
+**Satu hal yang harus dilakukan:** jalankan migrasi. `0006_blog.sql` menambah tabel
+`blog_posts` dan `blog_categories`. Ia hanya membuat tabel, jadi tidak bisa bentrok dengan
+data yang sudah ada.
+
+```bash
+npm run db:migrate
+```
+
+**Yang perlu diketahui.** Artikel ditulis di `/blog/admin` oleh staf mana pun, tapi hanya
+`admin` yang bisa menerbitkan. Gambar sampul diambil dari pustaka media yang sudah ada, jadi
+tidak ada upload terpisah. Kalau Anda mengubah slug artikel yang sudah terbit, link lama
+mati, karena belum ada redirect.
+
 ### ke 0.2.0 (belum dirilis): password yang hilang bisa dipulihkan
 
 **Apa yang berubah.** Ada perintah baru untuk mengganti password sebuah akun dari shell,

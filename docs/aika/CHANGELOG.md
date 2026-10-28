@@ -21,14 +21,21 @@ Versioning rule: a change that forces a client project to edit code or configura
 
 ### Added
 
+- **A `blog` feature, so a client site can publish articles.** `/blog` lists published posts with category filters, `/blog/<slug>` is one article, and `/blog/admin` is where staff write them. A post is a title, a URL slug generated from the title, a summary, a Markdown body, an optional cover image from the media library, and a category. Drafts are visible to staff only; publishing needs an administrator, because publishing is the step that puts words in front of the public. **Action required:** run `npm run db:migrate` for `0006_blog.sql`, which only creates tables. See [docs/UPGRADING.md](./UPGRADING.md).
+- **Markdown, rendered on the server, by a renderer that escapes its input.** Not a rich text editor, and not a third party Markdown library: a post is text, so it is stored as text, and the HTML is built on the server from escaped input. Raw HTML in a post is shown as text rather than interpreted, which means there is no sanitiser to forget and no way for an author to inject a script into a reader's page. Deliberately unsupported: tables, footnotes, embedded HTML, and syntax highlighting.
+- **`POST /api/blog/admin/categories`**, administrator only. Categories are structure rather than content, so they follow the same rule as publishing.
 - **`npm run user:password -- --email=<address>`, so a forgotten password is recoverable.** Until now the only way back into a deployment whose administrator had forgotten their password was to create another administrator and abandon the account, and there is no delete-user command, so the abandoned one stayed forever. The command generates a password, prints it once, and ends every session that account holds, because a reset that leaves a signed-in browser working has not reset anything. It refuses `--password` on purpose: a password on a command line lands in shell history and in the process list. **Action required: none**, but it is worth trying once on a throwaway account before you need it. See [docs/UPGRADING.md](./UPGRADING.md).
 - **`generatePassword`, in the auth feature rather than in a script.** `user:create` and `user:password` both need one, and a second copy would be a second strength decision that only one of them gets fixed later.
+
+### Fixed
+
+- **A dynamic segment in a feature page produced a route that never matched.** A record pushed into `pages:extend` skips Nuxt's own filename scanning, so `/blog/[slug]` reached vue-router as a literal string, compiled to a regex matching the text "[slug]", and returned 404 for every real address. The route was registered, appeared in the generated route list, and silently matched nothing. `shared/nuxt/feature-pages.ts` now converts a filesystem segment to the syntax vue-router routes on, and the unit tests pin that form rather than the broken one that agreed with it.
+
+### Changed
 
 - **The staff surfaces are gated by role, and the media library says who may touch it.** An `editor` can upload, list, and delete media, because producing content is the job. An `editor` cannot read the staff inbox, because a visitor's enquiry is personal data about somebody who never agreed to be in a database, and that is administration rather than content work. An `editor` who opens the inbox page is sent home instead of meeting a broken screen. `admin` can do everything. **Action required: none**, but an account that was created as `editor` now actually behaves like one. See [docs/UPGRADING.md](./UPGRADING.md).
 - **`requireAtLeast(c, role)` and `atLeast(role)`, beside the existing exact-match guard.** The obvious way to gate the media library was `requireRole(c, 'editor')`, and it is wrong: an exact match refuses the administrator, which is backwards from what any operator expects. `requireAtLeast` states what is meant, and adding a third role later fails the gate until somebody writes down where it sits.
 - **`carriesAtLeast`, in `features/auth/contract.ts`.** The ordering had to move out of the server guard, because the browser has to reach the same verdict when it decides whether to show a page. One function, both doors, so a page and the API cannot disagree about who is allowed in.
-
-### Changed
 
 - **A source-reading test was deleted and replaced with a real one.** The browser gate had been "proven" by asserting that a middleware file contained certain strings, and it passed with the role comparison removed. The decision is now a pure function with four tests that fail in both directions, and the redirect itself was checked against the built artefact rather than asserted. A test that cannot fail for the thing it names is worse than no test, because it reads as evidence.
 
@@ -36,8 +43,6 @@ Versioning rule: a change that forces a client project to edit code or configura
 - **`GET /api/auth/users`, administrator only.** The first route behind the new guard, and the seam that makes enforcement observable rather than assumed. It lists accounts. It is not a user management screen, and there is still no route for creating, disabling, or changing another account.
 - **`npm run user:role -- --email=<address> --role=admin|editor`.** Moves an existing account between the two roles, and reports what changed and what it means for that person.
 - **The last active administrator is protected.** `disableAccount` and `changeRole` refuse a change that would leave none, with a `ConflictError` that names the command that recovers it. An editor is not cover for this: a deployment whose only administrator is gone cannot reach any administrator only route, and the only way back is a shell. This is the same reasoning as the last active account guard beside it, one level down.
-
-### Changed
 
 - **A `role` test suite, and three existing tests made honest.** The role tests were mutation tested rather than trusted: they were checked to go red when the guard is deleted and again when it is off by one, and the first version did neither reliably. Along the way, shuffling test order found two defects that had nothing to do with roles and were shipped before this change: the sign in burst test depended on another test having created its account, and the staff inbox test compared against rows that a neighbouring test had dated in 2030. Both are fixed by making the test carry its own premise.
 - **`AGENTS.md`, `ARCHITECTURE.md` and `SECURITY.md` now describe enforced roles** rather than saying the role column is decorative. The most-read rule in this repository was the one that had gone false.

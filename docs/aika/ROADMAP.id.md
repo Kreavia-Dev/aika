@@ -52,6 +52,7 @@ terpisah per permukaan, dan belum mendesak selama semua akun masih administrator
 
 Diblokir keputusan yang masih terbuka di atas.
 
+- **Blog sudah tidak ada di daftar ini.** Ia rilis sebagai fitur, bukan sebagai bagian dari CMS: `features/blog/` punya artikel, kategori, draf, dan editor Markdown, dan itu cukup untuk situs klien yang perlu menerbitkan artikel. Yang sengaja tidak ada adalah page builder, content type kustom, dan editor WYSIWYG. Itu yang masih jadi urusan Fase 2.
 - [ ] Registry content model: collection dan field dideklarasikan sebagai data.
 - [ ] CRUD admin yang di-generate dari registry itu.
 - [ ] `blog` sebagai content type sungguhan pertama, sekaligus pembuktian polanya.

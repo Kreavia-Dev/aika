@@ -42,6 +42,7 @@ app/                  situs klien: pages, layouts, components, site.ts
   middleware/auth.ts  mengarahkan pengunjung yang belum masuk ke halaman masuk
 features/             vertical slices, one feature per business capability
   auth/               masuk, sesi, ganti password, peran, penjaga halaman
+  blog/               artikel, kategori, dan editor staf di /blog/admin
   contact/            form kontak, dan inbox staf di /contact/messages
   health/             status, dan rujukan untuk fitur paling minimal
   media/              unggahan, kontrak storage, dan berkas yang disajikan
