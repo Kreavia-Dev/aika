@@ -145,6 +145,7 @@ Pemilik autentikasi adalah `features/auth/`, dan itu rujukan untuk fitur yang me
 
 - **Mencabut akses sebuah akun itu perintah shell, bukan rute.** `npm run user:disable -- --email=<alamat>` menulis `disabled_at` dan menghapus semua sesi dalam satu operasi. Tetap perintah shell walaupun peran sudah ditegakkan, karena layar administrasi akun itu pekerjaan yang berbeda dari menegakkan peran, dan layar itu belum ada. Siapa pun yang membangunnya harus menjawab dulu siapa boleh mencabut akses siapa, dan hanya `admin` yang boleh.
 - **Mengganti password mengakhiri semua sesi lain.** Kalau nanti kamu menambah cara lain untuk menulis password, akhiri sesinya juga, kalau tidak perubahannya tidak berarti apa-apa bagi yang sudah punya sesi.
+- **Password yang hilang direset dari shell, tidak pernah lewat email.** `npm run user:password -- --email=<alamat>` membuat password, mencetaknya sekali, dan mengakhiri semua sesi akun itu. Tidak ada flag `--password` dengan sengaja: password di baris perintah tertinggal di riwayat shell dan di daftar proses. Ini satu-satunya jalan masuk ke deployment yang administrator terakhirnya lupa password, jadi jangan menambah rute web yang menulis password tanpa password lama.
 - **Akun yang dinonaktifkan ditolak di dua tempat.** `signIn` menolaknya setelah password diverifikasi, supaya waktunya sama dengan password salah, dan `resolveSessionDetail` menolaknya di setiap request supaya sesi yang muncul kembali tidak bisa memakai akun itu.
 
 ## SEO

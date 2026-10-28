@@ -107,6 +107,7 @@ The pin is per exact version, deliberately. When `better-sqlite3` is upgraded, a
 | `npm run user:disable` | End an account's access, and every session it holds, immediately |
 | `npm run user:enable` | Let a disabled account sign in again |
 | `npm run user:role` | Move an account between `admin` and `editor` |
+| `npm run user:password` | Replace a lost password from the shell, and end every session it held |
 
 `npm run check` must be green before a PR is merged. That is the Definition of Done in this repository.
 

@@ -109,6 +109,7 @@ Persetujuannya di-pin ke versi yang persis, dan itu memang disengaja. Setiap kal
 | `npm run user:disable` | Akhiri akses sebuah akun, beserta semua sesinya, seketika |
 | `npm run user:enable` | Izinkan akun yang dinonaktifkan login lagi |
 | `npm run user:role` | Pindahkan akun antara `admin` dan `editor` |
+| `npm run user:password` | Ganti password yang hilang dari shell, dan akhiri semua sesinya |
 | `npm run db:migrate` | Jalankan migrasi (snapshot dulu) |
 | `npm run db:backup` | Snapshot online, menyimpan 14 file terbaru |
 

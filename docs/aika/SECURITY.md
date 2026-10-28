@@ -85,3 +85,4 @@ Aika provides a foundation, not a guarantee. Before any client site goes to prod
 - Backups are scheduled **and have been restored at least once**. A backup that has never been test-restored is not a backup.
 - The reverse proxy does not buffer `text/event-stream`.
 - Any development admin account has been replaced. There is no delete-user command, deliberately, but there is `npm run user:disable -- --email=<address>`, which ends every session that account holds and stops it signing in again. Create the real account with `npm run user:create -- --email=<address>` rather than leaving a throwaway one on a production database.
+- **You know how to get back in if you lose the password.** `npm run user:password -- --email=<address>` replaces it from the shell and prints the new one once. It is the only recovery path, there is no reset by email, so keep shell access to the VPS as important as the password itself. Try it once on a throwaway account before you need it.

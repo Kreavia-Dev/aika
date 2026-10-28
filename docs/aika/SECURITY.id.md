@@ -87,3 +87,4 @@ Aika menyediakan fondasi, bukan jaminan. Sebelum situs klien naik ke produksi, p
 - Backup terjadwal **dan pernah di-restore minimal sekali**. Backup yang belum pernah diuji restore belum bisa disebut backup.
 - Reverse proxy tidak men-buffer `text/event-stream`.
 - Akun admin bawaan pengembangan sudah diganti. Tidak ada perintah hapus user, dan itu disengaja, tapi ada `npm run user:disable -- --email=<alamat>`, yang mengakhiri semua sesi akun itu dan menghentikannya login lagi. Buat akun sungguhannya dengan `npm run user:create -- --email=<alamat>`, jangan tinggalkan akun sekali pakai di database produksi.
+- **Anda tahu cara masuk lagi kalau password-nya hilang.** `npm run user:password -- --email=<alamat>` menggantinya dari shell dan mencetak yang baru sekali. Itu satu-satunya jalan pemulihan, tidak ada reset lewat email, jadi perlakukan akses shell ke VPS sama pentingnya dengan password itu sendiri. Coba sekali di akun percobaan sebelum benar-benar perlu.

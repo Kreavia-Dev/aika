@@ -143,6 +143,7 @@ You are writing TypeScript for a team that is still learning it. Optimise for re
 
 - **Revoking an account is a shell command, not a route.** `npm run user:disable -- --email=<address>` sets `disabled_at` and deletes every session in one operation. It is still a shell command now that roles are enforced, because an account administration screen is a different job from enforcing a role, and it is not built yet. Whoever builds one has to answer who may revoke whom before they build it, and `admin` is the only role that can.
 - **Changing a password ends every other session.** If you ever add another way to set a password, end the sessions too, or the change means nothing to whoever already holds one.
+- **A lost password is reset from the shell, never by email.** `npm run user:password -- --email=<address>` generates a password, prints it once, and ends every session that account holds. It has no `--password` flag on purpose: a password on a command line lands in shell history and in the process list. This is the only way back into a deployment whose last administrator has forgotten theirs, so do not add a web route that sets a password without the current one.
 - **A disabled account is refused in two places.** `signIn` refuses it after verifying the password, so the timing matches a wrong password, and `resolveSessionDetail` refuses it on every request so a session that reappears cannot authenticate.
 
 ## SEO

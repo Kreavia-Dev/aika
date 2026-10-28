@@ -64,6 +64,38 @@ Kalau langkah 2 menunjukkan ada perubahan di file yang masuk daftar "wajar berbe
 
 **Yang juga terpengaruh:** halaman `/health` sekarang butuh sesi. Endpoint `/api/health` tetap publik, karena pemantauan uptime tidak bisa login. Kalau ada yang memantau `/health` sebagai halaman, bukan `/api/health`, ubah ke API-nya.
 
+### ke 0.2.0 (belum dirilis): password yang hilang bisa dipulihkan
+
+**Apa yang berubah.** Ada perintah baru untuk mengganti password sebuah akun dari shell,
+untuk kasus di mana tidak ada yang tahu password-nya. Sebelum ini, satu-satunya jalan masuk
+ke deployment yang administratornya lupa password adalah membuat administrator lain, dan
+akun yang ditinggalkan itu tetap ada selamanya karena tidak ada perintah hapus user.
+
+```bash
+npm run user:password -- --email=you@example.com
+```
+
+Perintah ini mencetak password yang dibuat sekali dan mengakhiri semua sesi akun itu.
+
+**Satu hal yang sebaiknya dilakukan sebelum perlu:** coba sekarang di akun percobaan.
+
+```bash
+npm run user:create -- --email=throwaway@example.com
+npm run user:password -- --email=throwaway@example.com
+npm run user:disable -- --email=throwaway@example.com
+```
+
+Prosedur pemulihan yang belum pernah dijalankan adalah prosedur yang tidak bekerja. Yang
+paling sering mengejutkan bukan reset-nya, tapi sesinya berakhir: setelah reset, setiap
+browser yang memegang akun itu berhenti bekerja, termasuk yang terlihat baik-baik saja.
+
+**Kenapa perintah shell dan bukan rute web.** Rute reset harus bisa dijangkau tanpa password,
+dan itu artinya jalan masuk bagi siapa pun yang bisa menghubungi server. Yang menjalankan
+deployment sudah punya shell, jadi kewenangannya tetap di tempat yang sudah ada.
+
+**Kalau dilewati.** Tidak ada yang gagal. Perintahnya ada dan tidak berbiaya selama tidak
+dipakai.
+
 ### ke 0.2.0 (belum dirilis): layar staf dipagari peran
 
 **Apa yang berubah.** Pustaka media dan inbox staf sekarang memeriksa peran, bukan hanya

@@ -62,6 +62,37 @@ If step 2 shows changes to a file on the "legitimately differs per client" list,
 
 **Also affected:** the page at `/health` now requires a session. The endpoint at `/api/health` stays public, because uptime monitoring cannot sign in. If anything in your deployment polls `/health` as a page rather than `/api/health`, point it at the API.
 
+### to 0.2.0 (unreleased): a lost password is recoverable
+
+**What changed.** A new command replaces an account's password from the shell, for the case
+where nobody knows it. Before this, the only way back into a deployment whose administrator
+had forgotten their password was to create another administrator, and the abandoned account
+stayed forever because there is no delete-user command.
+
+```bash
+npm run user:password -- --email=you@example.com
+```
+
+It prints a generated password once and ends every session that account holds.
+
+**One thing worth doing before you need it:** try it on a throwaway account now.
+
+```bash
+npm run user:create -- --email=throwaway@example.com
+npm run user:password -- --email=throwaway@example.com
+npm run user:disable -- --email=throwaway@example.com
+```
+
+A recovery procedure nobody has run is a procedure that does not work. The one thing people
+get wrong is not expecting the sign out: after a reset, every browser holding that account
+stops working, including one that looks like it is fine.
+
+**Why it is a shell command and not a web route.** A reset route would have to be reachable
+without a password, which makes it a way in for anyone who can reach the server. Whoever
+runs the deployment already has a shell, so the authority stays where it already is.
+
+**If you skip it.** Nothing fails. The command exists and costs nothing when unused.
+
 ### to 0.2.0 (unreleased): the staff screens are gated
 
 **What changed.** The media library and the staff inbox now check the role, not just
