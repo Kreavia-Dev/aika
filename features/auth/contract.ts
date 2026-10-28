@@ -70,6 +70,24 @@ export const changePasswordResponseSchema = z.object({
   }),
 })
 
+/**
+ * An account as the admin list route returns it.
+ *
+ * Built on `publicUserSchema` rather than restated, so the two cannot disagree
+ * about what a user is. The extra two fields are the lifecycle, not the
+ * identity: when the row was made and whether access has been revoked.
+ */
+export const accountSchema = publicUserSchema.extend({
+  createdAt: z.string(),
+  disabledAt: z.string().nullable(),
+})
+
+export const accountListResponseSchema = z.object({
+  success: z.literal(true),
+  message: z.string(),
+  data: z.object({ accounts: z.array(accountSchema) }),
+})
+
 export type Role = z.infer<typeof roleSchema>
 export type PublicUser = z.infer<typeof publicUserSchema>
 export type LoginInput = z.infer<typeof loginInputSchema>
@@ -77,6 +95,8 @@ export type ChangePasswordInput = z.infer<typeof changePasswordInputSchema>
 export type SessionResponse = z.infer<typeof sessionResponseSchema>
 export type LogoutResponse = z.infer<typeof logoutResponseSchema>
 export type ChangePasswordResponse = z.infer<typeof changePasswordResponseSchema>
+export type Account = z.infer<typeof accountSchema>
+export type AccountListResponse = z.infer<typeof accountListResponseSchema>
 
 /** Cookie name. Shared so the server and the browser cannot disagree. */
 export const SESSION_COOKIE = 'aika_session'

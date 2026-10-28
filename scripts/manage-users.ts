@@ -1,4 +1,4 @@
-import { disableAccount, enableAccount, listAccounts } from '../features/auth'
+import { changeRole, disableAccount, enableAccount, listAccounts } from '../features/auth'
 import { closeDb, getDb } from '../shared/database/client'
 
 /**
@@ -7,13 +7,18 @@ import { closeDb, getDb } from '../shared/database/client'
  *   npm run user:list
  *   npm run user:disable -- --email=ada@example.com
  *   npm run user:enable  -- --email=ada@example.com
+ *   npm run user:role    -- --email=ada@example.com --role=editor
  *
  * WHY THIS IS A CLI AND NOT A WEB SCREEN. Revoking access is something whoever
  * runs the deployment does, and they already have a shell. A web screen would
- * have to decide who is allowed to revoke whom, and today every account is an
- * administrator, so any signed-in user could lock out any other. Rather than
- * build a permission model to answer a question nobody has asked, this stays
- * where the authority already is.
+ * have to decide who is allowed to revoke whom, and every account that could
+ * reach it would be able to revoke any other. Rather than build a permission
+ * model to answer a question nobody has asked, this stays where the authority
+ * already is.
+ *
+ * Roles live here for the same reason. Changing a role is the one action that
+ * can create a deployment nobody can administer, and the shell is also how that
+ * deployment is fixed.
  *
  * The screen for changing your OWN password does exist, at /auth/password. That
  * one has to be in the browser, because the person doing it is the account
@@ -41,6 +46,7 @@ function usage(): void {
   console.error('  npm run user:list')
   console.error('  npm run user:disable -- --email=<address>')
   console.error('  npm run user:enable  -- --email=<address>')
+  console.error('  npm run user:role    -- --email=<address> --role=admin|editor')
 }
 
 function requireEmail(): string {
@@ -53,6 +59,19 @@ function requireEmail(): string {
   }
 
   return email
+}
+
+/** Checked before the service runs, so a typo reads as a typo, not as a role. */
+function requireRole(): 'admin' | 'editor' {
+  const role = readFlag('role')
+
+  if (role !== 'admin' && role !== 'editor') {
+    console.error(role === undefined ? 'Which role? Pass --role=admin|editor.' : `Unknown role "${role}". Use admin or editor.`)
+    usage()
+    process.exit(1)
+  }
+
+  return role
 }
 
 function list(): void {
@@ -102,6 +121,20 @@ function enable(): void {
   console.log('sign in with whatever password was set before.')
 }
 
+function role(): void {
+  const account = changeRole(requireEmail(), requireRole())
+
+  console.log(`${account.email} is now ${account.role}.`)
+
+  if (account.role === 'editor') {
+    console.log('An editor can still sign in and use the site. They can no longer reach')
+    console.log('administrator only routes, starting with the next request they make.')
+  }
+  else {
+    console.log('An administrator can reach every administrator only route.')
+  }
+}
+
 const action = process.argv[2]
 
 try {
@@ -120,6 +153,9 @@ try {
         break
       case 'enable':
         enable()
+        break
+      case 'role':
+        role()
         break
       default:
         usage()

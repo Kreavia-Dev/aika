@@ -5,14 +5,15 @@ import { ValidationError } from '../../../shared/errors'
 import {
   MIN_PASSWORD_LENGTH,
   SESSION_COOKIE,
+  accountListResponseSchema,
   changePasswordInputSchema,
   changePasswordResponseSchema,
   loginInputSchema,
   logoutResponseSchema,
   sessionResponseSchema,
 } from '../contract'
-import { requireUser } from './guard'
-import { changePassword, signIn, signOut } from './service'
+import { requireRole, requireUser } from './guard'
+import { changePassword, listAccounts, signIn, signOut } from './service'
 
 export const authRoutes = new Hono()
 
@@ -71,12 +72,37 @@ authRoutes.get('/auth/me', (c) => {
 })
 
 /**
+ * The one admin only route, and the only reason role enforcement is visible.
+ *
+ * It exists to prove the seam works end to end: a route that answers 401 with no
+ * session, 403 to an editor, and the real list to an administrator. Everything
+ * the next change gates depends on this shape being right.
+ *
+ * It is not a user management screen. There is still no route for creating,
+ * disabling, changing the role of, or resetting the password of another
+ * account. Those stay in the shell, for the reason the password route explains.
+ *
+ * The path is `/auth/users`, so it sits beside `/auth/me` rather than under it,
+ * and cannot shadow or be shadowed by it.
+ */
+authRoutes.get('/auth/users', (c) => {
+  requireRole(c, 'admin')
+
+  return c.json(accountListResponseSchema.parse({
+    success: true,
+    message: 'OK',
+    data: { accounts: listAccounts() },
+  }))
+})
+
+/**
  * Changing your own password.
  *
  * There is no route for changing somebody else's, and no route for revoking an
  * account. Both are shell commands, because revocation is an action taken by
- * whoever runs the deployment, and a web route would let any signed-in user lock
- * out any other while every account is an administrator.
+ * whoever runs the deployment. Roles are enforced now, so a future route could
+ * answer "who may revoke whom" with `admin`, but an account administration screen
+ * is a different job and is not built.
  */
 authRoutes.post('/auth/password', async (c) => {
   /*

@@ -27,6 +27,7 @@
     "user:list": "tsx scripts/manage-users.ts list",
     "user:disable": "tsx scripts/manage-users.ts disable",
     "user:enable": "tsx scripts/manage-users.ts enable",
+    "user:role": "tsx scripts/manage-users.ts role",
     "setup": "npm run db:migrate",
     "check": "npm run typecheck && npm run typecheck:scripts && npm run arch:check && npm run prose:check && npm run test"
   },

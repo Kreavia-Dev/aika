@@ -60,6 +60,22 @@ export function countActiveUsers(): number {
   return row.total
 }
 
+/**
+ * Active administrators only, which is the count that actually matters.
+ *
+ * Active accounts are not enough: an editor cannot administer anything, so a
+ * deployment whose only remaining active account is an editor still needs the
+ * shell to recover. Disabling and demoting are both refused when this reaches
+ * one and the account in question is the one holding it.
+ */
+export function countActiveAdmins(): number {
+  const row = getDb()
+    .prepare(`SELECT COUNT(*) AS total FROM users WHERE disabled_at IS NULL AND role = 'admin'`)
+    .get() as { total: number }
+
+  return row.total
+}
+
 export function countUsers(): number {
   const row = getDb().prepare('SELECT COUNT(*) AS total FROM users').get() as { total: number }
   return row.total
@@ -83,6 +99,10 @@ export function updateUserPassword(id: string, passwordHash: string): void {
 
 export function setUserDisabledAt(id: string, disabledAt: string | null): void {
   getDb().prepare('UPDATE users SET disabled_at = ? WHERE id = ?').run(disabledAt, id)
+}
+
+export function setUserRole(id: string, role: Role): void {
+  getDb().prepare('UPDATE users SET role = ? WHERE id = ?').run(role, id)
 }
 
 export function insertSession(session: SessionRow): void {

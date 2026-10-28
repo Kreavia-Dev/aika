@@ -6,6 +6,7 @@ import {
   ValidationError,
 } from '../../../shared/errors'
 import {
+  type Account,
   MIN_PASSWORD_LENGTH,
   SESSION_TTL_DAYS,
   type PublicUser,
@@ -13,6 +14,7 @@ import {
 } from '../contract'
 import { hashPassword, verifyAgainstDummy, verifyPassword } from './password'
 import {
+  countActiveAdmins,
   countActiveUsers,
   countUsers,
   deleteExpiredSessions,
@@ -25,6 +27,7 @@ import {
   insertUser,
   listUsers,
   setUserDisabledAt,
+  setUserRole,
   updateUserPassword,
   type UserRow,
 } from './repository'
@@ -263,10 +266,14 @@ export async function changePassword(input: {
   return { otherSessionsRevoked }
 }
 
-export type AccountRow = PublicUser & {
-  createdAt: string
-  disabledAt: string | null
-}
+/**
+ * Derived from the contract, not written twice.
+ *
+ * `accountSchema` is what the route validates on the way out, so this type and
+ * the response cannot drift apart: a field removed from the schema stops being
+ * something the service can return.
+ */
+export type AccountRow = Account
 
 function toAccountRow(row: UserRow): AccountRow {
   return {
@@ -292,8 +299,9 @@ export function listAccounts(): AccountRow[] {
  *
  * There is no web screen for this, on purpose. Revocation is an action taken by
  * whoever runs the deployment, who already has a shell, and putting it behind a
- * session would mean any signed-in user could lock out any other, because every
- * account is currently an administrator.
+ * session would mean deciding who may revoke whom. Roles are enforced now, so
+ * that question has an answer, `admin`. What is missing is a screen, not a rule,
+ * and an account administration screen is a different job from this one.
  */
 export function disableAccount(email: string): AccountRow {
   const row = findUserByEmail(email.trim().toLowerCase())
@@ -307,6 +315,20 @@ export function disableAccount(email: string): AccountRow {
    */
   if (countActiveUsers() <= 1) {
     throw new ConflictError('That is the only active account. Disabling it would lock everybody out.')
+  }
+
+  /*
+   * The same guard one level down, and it fires even when editors remain.
+   *
+   * An editor cannot administer anything, so a deployment whose last active
+   * administrator is disabled has no staff who can reach the admin surface at
+   * all, whatever else is still signed in. Only an active administrator counts
+   * as one who can be spared.
+   */
+  if (row.role === 'admin' && countActiveAdmins() <= 1) {
+    throw new ConflictError(
+      'That is the only active administrator. Disabling it would leave nobody who can administer the site. Make another account an administrator first: npm run user:role -- --email=<address> --role=admin',
+    )
   }
 
   const disabledAt = new Date().toISOString()
@@ -324,6 +346,42 @@ export function enableAccount(email: string): AccountRow {
   setUserDisabledAt(row.id, null)
 
   return { ...toAccountRow(row), disabledAt: null }
+}
+
+/**
+ * Moves an account between the two roles.
+ *
+ * Demotion is refused rather than warned about, for the same reason disabling
+ * is: a deployment with no administrator cannot be administered through the web,
+ * and every path back in needs the shell. Promotion cannot create that state, so
+ * it is not guarded.
+ *
+ * No session is touched. The role is read from the row on every request, so the
+ * next request a demoted user makes is already treated as an editor.
+ */
+export function changeRole(email: string, role: Role): AccountRow {
+  const row = findUserByEmail(email.trim().toLowerCase())
+  if (!row) throw new NotFoundError(`No account exists for ${email}.`)
+  if (row.disabled_at !== null) {
+    throw new ConflictError(`${row.email} is disabled. Enable it before changing its role.`)
+  }
+  if (row.role === role) throw new ConflictError(`${row.email} already has the role ${role}.`)
+
+  /*
+   * Demoting the last active administrator is refused even if active editors
+   * exist, because an editor cannot administer anything. Spelled out here rather
+   * than shared with `disableAccount`: the two guards count the same thing, but
+   * they answer different questions about it.
+   */
+  if (row.role === 'admin' && countActiveAdmins() <= 1) {
+    throw new ConflictError(
+      'That is the only active administrator. Demoting it would leave nobody who can administer the site. Make another account an administrator first: npm run user:role -- --email=<address> --role=admin',
+    )
+  }
+
+  setUserRole(row.id, role)
+
+  return { ...toAccountRow(row), role }
 }
 
 export function userCount(): number {

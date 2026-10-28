@@ -9,13 +9,14 @@
  * code uses `~~/features/auth/web`.
  */
 export { authRoutes } from './server/routes'
-export { authGuard, currentUser, requireUser } from './server/guard'
+export { authGuard, currentUser, requireRole, requireUser, roleGuard } from './server/guard'
 export {
   changePassword,
+  changeRole,
   createUser,
   disableAccount,
   enableAccount,
   listAccounts,
 } from './server/service'
 export type { AccountRow, ChangePasswordResult, SessionDetail } from './server/service'
-export type { PublicUser, Role } from './contract'
+export type { Account, PublicUser, Role } from './contract'
