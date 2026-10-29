@@ -154,6 +154,19 @@ export const deletePostResponseSchema = z.object({
 })
 
 /**
+ * Where an old address moved to.
+ *
+ * `null` covers every case that is not a redirect: an address that never existed,
+ * one belonging to a draft, and one whose post is published here right now. The
+ * page cannot tell those apart and does not need to.
+ */
+export const movedResponseSchema = z.object({
+  success: z.literal(true),
+  message: z.string(),
+  data: z.object({ movedTo: z.string().nullable() }),
+})
+
+/**
  * How many posts one public page holds.
  *
  * Shared with the browser so the list page can lay out what it asked for without
@@ -173,3 +186,4 @@ export type StaffPostListResponse = z.infer<typeof staffPostListResponseSchema>
 export type StaffPostResponse = z.infer<typeof staffPostResponseSchema>
 export type CategoryListResponse = z.infer<typeof categoryListResponseSchema>
 export type DeletePostResponse = z.infer<typeof deletePostResponseSchema>
+export type MovedResponse = z.infer<typeof movedResponseSchema>

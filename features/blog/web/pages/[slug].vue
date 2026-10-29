@@ -17,11 +17,43 @@
  * through `features/blog/server/markdown.ts`, which escapes its input and only
  * emits tags it constructs itself. That is why `v-html` below is acceptable here.
  */
-import type { PostResponse } from '../index'
+import type { MovedResponse, PostResponse } from '../index'
 import { usePageSeo } from '../seo'
 
 const route = useRoute()
 const slug = computed(() => String(route.params.slug ?? ''))
+
+/*
+ * A renamed post is a redirect, not a 404.
+ *
+ * WHY THIS ASKS THE MOVED ENDPOINT FIRST, AND NOT ONLY AFTER A MISS.
+ *
+ * MEASURED, AND THIS IS THE BUG THE FIRST VERSION HAD. The page tried the post
+ * first and only asked "did this move" when that failed. But `useFetch` on the
+ * server follows redirects: the API's 301 was followed by the server to the new
+ * address, the body arrived with a different slug than the one asked for, and the
+ * page rendered the article at the OLD url with a 200. Clearing that up by
+ * comparing slugs is guesswork. Asking first is not: one request answers whether
+ * the address moved, and only if it did not does the page fetch the article.
+ *
+ * The cost is one extra tiny request per article page view. The cost of the other
+ * order was an article reachable at two addresses with two canonical URLs, which
+ * is worse for a blog than one request.
+ */
+const moved = await useFetch<MovedResponse>(
+  computed(() => `/api/blog/moved/${encodeURIComponent(slug.value)}`),
+).catch(() => null)
+
+const movedTo = moved?.data.value?.data.movedTo ?? null
+
+/*
+ * `redirectCode: 301` so the browser and a search engine both remember it. The
+ * page is never rendered at the old address, which is the point: there is one
+ * address for an article and it is the current one.
+ */
+if (movedTo !== null) {
+  await navigateTo(`/blog/${movedTo}`, { redirectCode: 301, replace: true })
+}
 
 const fetched = await useFetch<PostResponse>(
   computed(() => `/api/blog/posts/${encodeURIComponent(slug.value)}`),

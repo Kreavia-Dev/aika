@@ -382,6 +382,132 @@ describe('categories', () => {
   })
 })
 
+describe('a renamed post', () => {
+  it('keeps working at its old address, as a permanent redirect', async () => {
+    /*
+     * The reason this exists: somebody fixes a typo in an address, and a link
+     * that has been in a newsletter for a year still works. A 301 rather than a
+     * 302 because the old address is not coming back, and a search engine should
+     * move the ranking rather than keep asking.
+     */
+    const admin = await signIn('admin')
+    const oldSlug = uniqueSlug('old')
+    const newSlug = uniqueSlug('new')
+
+    const created = staffPostResponseSchema.parse(
+      await (await postAs(admin, { ...VALID_POST, slug: oldSlug, status: 'published' })).json(),
+    )
+
+    await api.request(`/api/blog/admin/posts/${created.data.post.id}`, {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json', cookie: admin },
+      body: JSON.stringify({ ...VALID_POST, slug: newSlug, status: 'published' }),
+    })
+
+    const response = await api.request(`/api/blog/posts/${oldSlug}`)
+    expect(response.status).toBe(301)
+    expect(response.headers.get('location')).toContain(newSlug)
+
+    // And the new address is simply the post.
+    const atNew = await api.request(`/api/blog/posts/${newSlug}`)
+    expect(atNew.status).toBe(200)
+  })
+
+  it('never takes an address from a live post', async () => {
+    /*
+     * THE CASE THAT MAKES A HISTORY TABLE DANGEROUS. Post A used an address and
+     * moved away from it. Post B now owns that address. A redirect from the old
+     * value would have to steal traffic from a post that exists, which is worse
+     * than the dead link it was trying to fix.
+     */
+    const admin = await signIn('admin')
+    const contested = uniqueSlug('contested')
+
+    const first = staffPostResponseSchema.parse(
+      await (await postAs(admin, { ...VALID_POST, slug: contested, status: 'published' })).json(),
+    )
+
+    // Rename it away, so `contested` becomes its previous slug.
+    await api.request(`/api/blog/admin/posts/${first.data.post.id}`, {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json', cookie: admin },
+      body: JSON.stringify({ ...VALID_POST, slug: uniqueSlug('moved'), status: 'published' }),
+    })
+
+    // Somebody else now publishes at the freed address.
+    await postAs(admin, { ...VALID_POST, slug: contested, status: 'published' })
+
+    const response = await api.request(`/api/blog/posts/${contested}`)
+
+    // The live post wins. No redirect.
+    expect(response.status).toBe(200)
+    const body = postResponseSchema.parse(await response.json())
+    expect(body.data.post.slug).toBe(contested)
+  })
+
+  it('does not redirect to a post that was unpublished after being renamed', async () => {
+    /*
+     * A renamed post that is then unpublished should be a 404 at both addresses.
+     * Redirecting to a draft address would turn a dead link into a dead link plus
+     * a wrong expectation.
+     */
+    const admin = await signIn('admin')
+    const oldSlug = uniqueSlug('been')
+    const newSlug = uniqueSlug('hid')
+
+    const created = staffPostResponseSchema.parse(
+      await (await postAs(admin, { ...VALID_POST, slug: oldSlug, status: 'published' })).json(),
+    )
+
+    const id = created.data.post.id
+
+    // Rename, staying published.
+    await api.request(`/api/blog/admin/posts/${id}`, {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json', cookie: admin },
+      body: JSON.stringify({ ...VALID_POST, slug: newSlug, status: 'published' }),
+    })
+
+    // Then unpublish.
+    await api.request(`/api/blog/admin/posts/${id}`, {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json', cookie: admin },
+      body: JSON.stringify({ ...VALID_POST, slug: newSlug, status: 'draft' }),
+    })
+
+    expect((await api.request(`/api/blog/posts/${oldSlug}`)).status).toBe(404)
+    expect((await api.request(`/api/blog/posts/${newSlug}`)).status).toBe(404)
+  })
+
+  it('does not record an address for a post that was never published', async () => {
+    /*
+     * A draft's address is not a link anybody holds, so remembering it reserves an
+     * address against a future post for no reason at all.
+     */
+    const admin = await signIn('admin')
+    const draftSlug = uniqueSlug('dr')
+    const movedSlug = uniqueSlug('mv')
+
+    const created = staffPostResponseSchema.parse(
+      await (await postAs(admin, { ...VALID_POST, slug: draftSlug })).json(),
+    )
+
+    await api.request(`/api/blog/admin/posts/${created.data.post.id}`, {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json', cookie: admin },
+      body: JSON.stringify({ ...VALID_POST, slug: movedSlug }),
+    })
+
+    // The old draft address is simply free, not a redirect.
+    expect((await api.request(`/api/blog/posts/${draftSlug}`)).status).toBe(404)
+
+    const moved = await (await api.request(`/api/blog/moved/${draftSlug}`)).json() as {
+      data: { movedTo: string | null }
+    }
+    expect(moved.data.movedTo).toBeNull()
+  })
+})
+
 describe('the cover image', () => {
   it('reaches the public page as a URL, and goes null when the image is deleted', async () => {
     /*

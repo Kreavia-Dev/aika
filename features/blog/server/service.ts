@@ -9,6 +9,7 @@ import {
   findCategoryById,
   findCategoryBySlug,
   findPostById,
+  findPostByPreviousSlug,
   findPostBySlug,
   findPublishedPostBySlug,
   findPublishedPosts,
@@ -105,6 +106,44 @@ export function getPublishedPost(slug: string): PublishedPost {
   const row = findPublishedPostBySlug(slug)
   if (!row) throw new NotFoundError('That post does not exist, or is not published yet.')
   return toPublishedPost(row)
+}
+
+/**
+ * Where an address used to point, if it moved.
+ *
+ * The three conditions, and why each one is there:
+ *
+ *   1. No post is published at this address right now. A live post always wins,
+ *      so a redirect can never take traffic from an article that exists.
+ *   2. Some post's `previous_slug` matches it.
+ *   3. That post is published now. A post that was renamed and then unpublished
+ *      should be a 404 at both addresses, not a redirect to a draft.
+ *
+ * Returns the current address, or null. Null is the ordinary answer and the caller
+ * turns it into the 404 it would have produced anyway, so a missing redirect costs
+ * one indexed lookup on a path that is already a miss.
+ */
+export function findRedirectTarget(slug: string): string | null {
+  if (findPublishedPostBySlug(slug)) return null
+
+  const renamed = findPostByPreviousSlug(slug)
+  if (!renamed || renamed.status !== 'published') return null
+
+  return renamed.slug
+}
+
+/**
+ * The same redirect, for the page rather than the API.
+ *
+ * WHY THIS IS NOT DONE IN THE PAGE COMPONENT. The page fetches the API, and Nitro
+ * follows nothing: an API that answers 301 is a 301 the browser never sees,
+ * because the request went from the server to itself. So the page has to ask this
+ * question directly and throw its own redirect, or a reader following an old link
+ * gets a 404 from a page that could have sent them somewhere useful.
+ */
+export function redirectTargetForPage(slug: string): string | null {
+  const target = findRedirectTarget(slug)
+  return target === null ? null : `/blog/${target}`
 }
 
 export function listStaffPosts(): StaffPost[] {
@@ -207,6 +246,20 @@ export function updatePostById(id: string, input: PostInput): StaffPost {
     ? existing.published_at ?? new Date().toISOString()
     : null
 
+  /*
+   * The previous address is recorded only when the post is published, and only
+   * from the slug it actually had.
+   *
+   * WHY NOT FOR A DRAFT: a draft's address is not a link anybody can hold, so
+   * remembering one would reserve an address against a future post for no reason.
+   * WHY ONLY THE IMMEDIATELY PREVIOUS SLUG: see `0007_blog_previous_slug.sql`. One
+   * column is the case that happens, and a history table makes an old redirect
+   * fight a new post for the same address.
+   */
+  const previousSlug = input.slug !== existing.slug && existing.status === 'published'
+    ? existing.slug
+    : existing.previous_slug
+
   updatePost({
     id,
     slug: input.slug,
@@ -217,6 +270,7 @@ export function updatePostById(id: string, input: PostInput): StaffPost {
     categoryId: assertCategoryExists(input.categoryId),
     status: input.status,
     publishedAt,
+    previousSlug,
     updatedAt: new Date().toISOString(),
   })
 

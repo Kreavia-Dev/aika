@@ -5,6 +5,7 @@ import {
   categoryInputSchema,
   categoryListResponseSchema,
   deletePostResponseSchema,
+  movedResponseSchema,
   postInputSchema,
   postListResponseSchema,
   postResponseSchema,
@@ -15,6 +16,7 @@ import {
   createCategory,
   createPost,
   deletePost,
+  findRedirectTarget,
   getPublishedPost,
   getStaffPost,
   listCategories,
@@ -64,12 +66,43 @@ blogRoutes.get('/blog/posts', (c) => {
 })
 
 blogRoutes.get('/blog/posts/:slug', (c) => {
-  const post = getPublishedPost(c.req.param('slug') ?? '')
+  const slug = c.req.param('slug') ?? ''
+
+  /*
+   * A 301, not a 302, because the old address is not coming back. A permanent
+   * redirect is what tells a search engine to move the ranking rather than keep
+   * asking the old URL, which is the entire point of renaming carefully.
+   *
+   * The page does not see this redirect: it fetches the API from the server, so
+   * the 301 is answered to the server itself. `GET /blog/moved/:slug` exists for
+   * that reason, so the page can ask the same question and answer it properly.
+   */
+  const movedTo = findRedirectTarget(slug)
+  if (movedTo !== null) {
+    return c.redirect(`/api/blog/posts/${encodeURIComponent(movedTo)}`, 301)
+  }
+
+  const post = getPublishedPost(slug)
 
   return c.json(postResponseSchema.parse({
     success: true,
     message: 'OK',
     data: { post },
+  }))
+})
+
+/**
+ * Where an old address moved to, for a page that has to answer with a redirect.
+ *
+ * Public, and deliberately tiny: it answers `{ movedTo: string | null }` and has
+ * nothing else to leak. A slug that never existed and a slug belonging to a draft
+ * both get `null`, so this cannot be used to find drafts by guessing addresses.
+ */
+blogRoutes.get('/blog/moved/:slug', (c) => {
+  return c.json(movedResponseSchema.parse({
+    success: true,
+    message: 'OK',
+    data: { movedTo: findRedirectTarget(c.req.param('slug') ?? '') },
   }))
 })
 

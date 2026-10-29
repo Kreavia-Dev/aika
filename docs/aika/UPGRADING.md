@@ -67,8 +67,10 @@ If step 2 shows changes to a file on the "legitimately differs per client" list,
 **What changed.** A new `blog` feature adds `/blog`, `/blog/<slug>`, and staff screens at
 `/blog/admin`. Nothing existing changes behaviour.
 
-**One thing is required.** Apply the migration. `0006_blog.sql` adds `blog_posts` and
-`blog_categories`. It only creates tables, so it cannot collide with existing data.
+**One thing is required.** Apply two migrations. `0006_blog.sql` adds `blog_posts` and
+`blog_categories`, and `0007_blog_previous_slug.sql` adds the column that keeps a renamed
+post reachable at its old address. Both only create or add, so neither can collide with
+existing data.
 
 ```bash
 npm run db:migrate
@@ -77,8 +79,9 @@ npm run db:migrate
 **Worth knowing.** Any staff member can write a post at `/blog/admin`, but only an `admin`
 can publish one or manage categories. A cover image comes from the existing media library,
 picked in the editor, so there is no second upload path. Deleting an image in the library
-leaves a post published without a picture rather than deleting it. Changing the slug of a
-published post breaks old links, because there is no redirect yet.
+leaves a post published without a picture rather than deleting it. Renaming a published post
+now redirects its old address permanently, but only the most recent one: rename a post twice
+and the first old address is gone.
 
 ### to 0.2.0 (unreleased): a lost password is recoverable
 

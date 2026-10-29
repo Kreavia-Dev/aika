@@ -69,9 +69,10 @@ Kalau langkah 2 menunjukkan ada perubahan di file yang masuk daftar "wajar berbe
 **Apa yang berubah.** Fitur baru `blog` menambah `/blog`, `/blog/<slug>`, dan layar staf di
 `/blog/admin`. Tidak ada yang berubah perilakunya.
 
-**Satu hal yang harus dilakukan:** jalankan migrasi. `0006_blog.sql` menambah tabel
-`blog_posts` dan `blog_categories`. Ia hanya membuat tabel, jadi tidak bisa bentrok dengan
-data yang sudah ada.
+**Satu hal yang harus dilakukan:** jalankan dua migrasi. `0006_blog.sql` menambah tabel
+`blog_posts` dan `blog_categories`, dan `0007_blog_previous_slug.sql` menambah kolom yang
+membuat artikel yang diganti alamatnya tetap terjangkau di alamat lama. Keduanya hanya
+membuat atau menambah, jadi tidak bisa bentrok dengan data yang sudah ada.
 
 ```bash
 npm run db:migrate
@@ -80,8 +81,9 @@ npm run db:migrate
 **Yang perlu diketahui.** Artikel ditulis di `/blog/admin` oleh staf mana pun, tapi hanya
 `admin` yang bisa menerbitkan atau mengurus kategori. Gambar sampul diambil dari pustaka
 media yang sudah ada lewat editor, jadi tidak ada jalur unggahan kedua. Menghapus gambar di
-pustaka membuat artikel tetap terbit tanpa gambar, bukan terhapus. Kalau Anda mengubah slug
-artikel yang sudah terbit, link lama mati, karena belum ada redirect.
+pustaka membuat artikel tetap terbit tanpa gambar, bukan terhapus. Mengganti alamat artikel
+yang sudah terbit sekarang mengalihkan alamat lamanya secara permanen, tapi hanya yang
+terakhir: ganti dua kali dan alamat lama yang pertama hilang.
 
 ### ke 0.2.0 (belum dirilis): password yang hilang bisa dipulihkan
 

@@ -18,6 +18,8 @@ export type PostRow = {
   category_id: string | null
   status: 'draft' | 'published'
   published_at: string | null
+  /** The address this post used to live at, if it has been renamed once. */
+  previous_slug: string | null
   created_at: string
   updated_at: string
 }
@@ -41,7 +43,7 @@ const PUBLISHED_SELECT = `
   SELECT
     p.id, p.slug, p.title, p.summary, p.body,
     p.cover_media_id, p.category_id, p.status,
-    p.published_at, p.created_at, p.updated_at,
+    p.published_at, p.previous_slug, p.created_at, p.updated_at,
     m.filename AS cover_filename,
     c.slug AS category_slug,
     c.name AS category_name
@@ -135,7 +137,7 @@ export function findAllPosts(): PostRow[] {
   return getDb()
     .prepare(`
       SELECT id, slug, title, summary, body, cover_media_id, category_id,
-             status, published_at, created_at, updated_at
+             status, published_at, previous_slug, created_at, updated_at
       FROM blog_posts
       ORDER BY created_at DESC, rowid DESC
     `)
@@ -146,7 +148,7 @@ export function findPostById(id: string): PostRow | undefined {
   return getDb()
     .prepare(`
       SELECT id, slug, title, summary, body, cover_media_id, category_id,
-             status, published_at, created_at, updated_at
+             status, published_at, previous_slug, created_at, updated_at
       FROM blog_posts
       WHERE id = ?
     `)
@@ -161,7 +163,7 @@ export function findPostBySlug(slug: string): PostRow | undefined {
   return getDb()
     .prepare(`
       SELECT id, slug, title, summary, body, cover_media_id, category_id,
-             status, published_at, created_at, updated_at
+             status, published_at, previous_slug, created_at, updated_at
       FROM blog_posts
       WHERE slug = ?
     `)
@@ -185,8 +187,8 @@ export function insertPost(post: {
     .prepare(`
       INSERT INTO blog_posts
         (id, slug, title, summary, body, cover_media_id, category_id,
-         status, published_at, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         status, published_at, previous_slug, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
     .run(
       post.id,
@@ -198,6 +200,8 @@ export function insertPost(post: {
       post.categoryId,
       post.status,
       post.publishedAt,
+      // A new post has no previous address. Only a rename sets one.
+      null,
       post.createdAt,
       post.updatedAt,
     )
@@ -213,13 +217,16 @@ export function updatePost(post: {
   categoryId: string | null
   status: 'draft' | 'published'
   publishedAt: string | null
+  /** Null keeps whatever was there; a string replaces it. See `updatePostById`. */
+  previousSlug: string | null
   updatedAt: string
 }): void {
   getDb()
     .prepare(`
       UPDATE blog_posts
       SET slug = ?, title = ?, summary = ?, body = ?, cover_media_id = ?,
-          category_id = ?, status = ?, published_at = ?, updated_at = ?
+          category_id = ?, status = ?, published_at = ?, previous_slug = ?,
+          updated_at = ?
       WHERE id = ?
     `)
     .run(
@@ -231,9 +238,28 @@ export function updatePost(post: {
       post.categoryId,
       post.status,
       post.publishedAt,
+      post.previousSlug,
       post.updatedAt,
       post.id,
     )
+}
+
+/**
+ * The current post that used to live at this address, if any.
+ *
+ * WHY THE STATUS IS CHECKED BY THE CALLER AND NOT HERE. This returns a draft as
+ * well, because the service has to distinguish "no such post" from "a draft that
+ * was renamed", and only the service knows which of those may be redirected.
+ */
+export function findPostByPreviousSlug(slug: string): PostRow | undefined {
+  return getDb()
+    .prepare(`
+      SELECT id, slug, title, summary, body, cover_media_id, category_id,
+             status, published_at, previous_slug, created_at, updated_at
+      FROM blog_posts
+      WHERE previous_slug = ?
+    `)
+    .get(slug) as PostRow | undefined
 }
 
 export function deletePostById(id: string): number {
