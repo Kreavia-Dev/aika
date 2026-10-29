@@ -232,6 +232,18 @@ project klien dan gerbang yang rusak akan ikut terbawa.
 Tambah file baru di `database/migrations/`. Migrasi itu SQL mentah, dijalankan
 urut nama file, forward-only.
 
+**Migrasi yang sudah dijalankan berarti sudah dijalankan, dan mengedit filenya
+tidak mengubah apa pun.** Ini paling sering menggigit saat development: kamu tulis
+`0006_blog.sql`, jalankan test, putuskan sebuah foreign key harus `SET NULL`, bukan
+`CASCADE`, edit filenya, dan test berikutnya tetap memakai skema lama, karena
+database mencatat file mana yang sudah dijalankan dan tidak membacanya ulang.
+Gejalanya test yang gagal karena alasan yang sudah kamu perbaiki.
+
+Solusinya hapus database lokal dan biarkan test suite membuatnya ulang:
+`database/test.db` untuk database test, atau `database/aika.db` untuk yang
+development. Jangan lakukan itu di deployment, dan jangan edit migrasi yang mungkin
+sudah dijalankan di mana pun kecuali di mesin tempat kamu masih membangunnya. Begitu
+sebuah proyek klien bisa menariknya, aturannya yang ketat: tambah file baru.
 ```sql
 -- database/migrations/0002_invoices.sql
 CREATE TABLE invoices (

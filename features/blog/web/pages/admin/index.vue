@@ -54,12 +54,21 @@ function formatDate(iso: string | null): string {
         </p>
       </div>
 
-      <NuxtLink
-        to="/blog/admin/new"
-        class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
-      >
-        New post
-      </NuxtLink>
+      <div class="flex flex-wrap items-center gap-3">
+        <NuxtLink
+          to="/blog/admin/categories"
+          class="rounded-md border border-line-strong px-4 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          Categories
+        </NuxtLink>
+
+        <NuxtLink
+          to="/blog/admin/new"
+          class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+        >
+          New post
+        </NuxtLink>
+      </div>
     </div>
 
     <p v-if="error" class="mt-8 rounded-md border-l-2 border-destructive bg-muted px-4 py-3 text-sm">

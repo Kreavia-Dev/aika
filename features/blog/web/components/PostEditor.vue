@@ -21,6 +21,7 @@ import type {
   StaffPostResponse,
 } from '../index'
 import { messageFromApiError } from '~~/shared/http/error-message'
+import CoverPicker from './CoverPicker.vue'
 
 const props = defineProps<{
   /** Absent when creating. Present when editing, which is what chooses PUT. */
@@ -49,6 +50,7 @@ const form = reactive({
   title: props.post?.title ?? '',
   summary: props.post?.summary ?? '',
   body: props.post?.body ?? '',
+  coverMediaId: props.post?.coverMediaId ?? null,
   categoryId: props.post?.categoryId ?? '',
   status: (props.post?.status ?? 'draft') as PostStatus,
 })
@@ -93,6 +95,7 @@ async function submit(): Promise<void> {
     title: form.title,
     summary: form.summary,
     body: form.body,
+    coverMediaId: form.coverMediaId,
     categoryId: form.categoryId === '' ? null : form.categoryId,
     status: form.status,
   }
@@ -197,6 +200,8 @@ async function submit(): Promise<void> {
           Raw HTML is shown as text rather than interpreted.
         </p>
       </div>
+
+      <CoverPicker v-model="form.coverMediaId" />
 
       <div class="grid gap-6 sm:grid-cols-2">
         <div>

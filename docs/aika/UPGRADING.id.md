@@ -78,9 +78,10 @@ npm run db:migrate
 ```
 
 **Yang perlu diketahui.** Artikel ditulis di `/blog/admin` oleh staf mana pun, tapi hanya
-`admin` yang bisa menerbitkan. Gambar sampul diambil dari pustaka media yang sudah ada, jadi
-tidak ada upload terpisah. Kalau Anda mengubah slug artikel yang sudah terbit, link lama
-mati, karena belum ada redirect.
+`admin` yang bisa menerbitkan atau mengurus kategori. Gambar sampul diambil dari pustaka
+media yang sudah ada lewat editor, jadi tidak ada jalur unggahan kedua. Menghapus gambar di
+pustaka membuat artikel tetap terbit tanpa gambar, bukan terhapus. Kalau Anda mengubah slug
+artikel yang sudah terbit, link lama mati, karena belum ada redirect.
 
 ### ke 0.2.0 (belum dirilis): password yang hilang bisa dipulihkan
 

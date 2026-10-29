@@ -75,9 +75,10 @@ npm run db:migrate
 ```
 
 **Worth knowing.** Any staff member can write a post at `/blog/admin`, but only an `admin`
-can publish one. A cover image comes from the existing media library, so there is no second
-upload path. Changing the slug of a published post breaks old links, because there is no
-redirect yet.
+can publish one or manage categories. A cover image comes from the existing media library,
+picked in the editor, so there is no second upload path. Deleting an image in the library
+leaves a post published without a picture rather than deleting it. Changing the slug of a
+published post breaks old links, because there is no redirect yet.
 
 ### to 0.2.0 (unreleased): a lost password is recoverable
 

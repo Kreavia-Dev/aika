@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto'
+import sharp from 'sharp'
 import { describe, expect, it } from 'vitest'
 import { api } from '../../../shared/http/app'
 import { failureEnvelopeSchema } from '../../../shared/http/envelope'
@@ -37,6 +38,17 @@ async function signIn(role: 'admin' | 'editor'): Promise<string> {
 
 function uniqueSlug(prefix = 'post'): string {
   return `${prefix}-${randomUUID().slice(0, 8)}`
+}
+
+/**
+ * A real PNG, because the media feature reads the bytes and refuses anything that
+ * is not actually an image. A hand written buffer with a PNG content type is
+ * exactly what its validation exists to reject.
+ */
+async function smallPng(): Promise<Buffer> {
+  return sharp({
+    create: { width: 40, height: 30, channels: 3, background: { r: 5, g: 6, b: 7 } },
+  }).png().toBuffer()
 }
 
 const VALID_POST = {
@@ -347,5 +359,77 @@ describe('categories', () => {
     })
 
     expect(response.status).toBe(403)
+  })
+
+  it('refuses a duplicate slug with a conflict', async () => {
+    // The staff screen will offer this to somebody twice by accident one day.
+    const admin = await signIn('admin')
+    const slug = uniqueSlug('dupe')
+
+    await api.request('/api/blog/admin/categories', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', cookie: admin },
+      body: JSON.stringify({ slug, name: 'First' }),
+    })
+
+    const response = await api.request('/api/blog/admin/categories', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', cookie: admin },
+      body: JSON.stringify({ slug, name: 'Second' }),
+    })
+
+    expect(response.status).toBe(409)
+  })
+})
+
+describe('the cover image', () => {
+  it('reaches the public page as a URL, and goes null when the image is deleted', async () => {
+    /*
+     * The two halves that matter, in one test because the second only means
+     * anything after the first.
+     *
+     * The deletion half is the interesting one: `cover_media_id` is
+     * ON DELETE SET NULL, so removing an image must leave the post alive without
+     * a picture. A CASCADE there would have deleted a published article because
+     * somebody tidied the media library, and that is not a thing a client
+     * recovers from.
+     */
+    const admin = await signIn('admin')
+    const slug = uniqueSlug('cover')
+
+    const png = await smallPng()
+    const uploadBody = new FormData()
+    uploadBody.append('file', new File([png], 'cover.png', { type: 'image/png' }))
+
+    const uploaded = await api.request('/api/media', {
+      method: 'POST',
+      headers: { cookie: admin },
+      body: uploadBody,
+    })
+    const mediaId = (await uploaded.json() as { data: { file: { id: string, url: string } } }).data.file.id
+
+    const created = staffPostResponseSchema.parse(
+      await (await postAs(admin, {
+        ...VALID_POST,
+        slug,
+        status: 'published',
+        coverMediaId: mediaId,
+      })).json(),
+    )
+
+    const withCover = postResponseSchema.parse(
+      await (await api.request(`/api/blog/posts/${slug}`)).json(),
+    )
+    expect(withCover.data.post.coverUrl).toContain(mediaId)
+
+    await api.request(`/api/media/${mediaId}`, { method: 'DELETE', headers: { cookie: admin } })
+
+    const withoutCover = postResponseSchema.parse(
+      await (await api.request(`/api/blog/posts/${slug}`)).json(),
+    )
+    expect(withoutCover.data.post.coverUrl).toBeNull()
+
+    // And the post itself is still there, which is the part that matters.
+    expect(withoutCover.data.post.slug).toBe(created.data.post.slug)
   })
 })

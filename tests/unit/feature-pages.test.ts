@@ -14,6 +14,35 @@ import { collectFeaturePages, listFeatures, listVueFiles } from '../../shared/nu
  */
 let root: string
 
+/**
+ * A route path as vue-router would compare it: static segments outrank dynamic
+ * ones, regardless of the order the records were registered in.
+ *
+ * THIS MIRRORS vue-router VERSION 5, WHERE IT WAS ALSO VERIFIED BY HAND. It exists
+ * because `features/blog` has `/blog/admin/categories` beside `/blog/admin/[id]`,
+ * and the collector sorts `/blog/admin/[id]` first. That is fine today because
+ * vue-router prefers the static match, but "fine because the router is clever" is
+ * exactly the kind of fact that changes silently in a major upgrade. A test that
+ * states the rule makes the assumption visible when it breaks.
+ */
+function routeRank(path: string): number {
+  const dynamic = path.split('/').filter(segment => segment.includes(':')).length
+  return dynamic * 1000 + path.split('/').length
+}
+
+function wouldMatchStaticFirst(staticPath: string, dynamicPath: string): boolean {
+  const staticSegments = staticPath.split('/')
+  const dynamicSegments = dynamicPath.split('/')
+
+  if (staticSegments.length !== dynamicSegments.length) return false
+
+  const sameShape = dynamicSegments.every(
+    (segment, index) => segment.includes(':') || segment === staticSegments[index],
+  )
+
+  return sameShape && routeRank(staticPath) < routeRank(dynamicPath)
+}
+
 function writePage(relativePath: string, content = '<template><div /></template>'): void {
   const full = join(root, relativePath)
   mkdirSync(dirname(full), { recursive: true })
@@ -156,6 +185,27 @@ describe('collectFeaturePages', () => {
 
     // The nested case, where a segment is dynamic and the path continues past it.
     expect(collectFeaturePages(root)[0]?.path).toBe('/blog/posts/:slug()/comments')
+  })
+
+  it('puts a static sibling ahead of a dynamic one, whatever order it is registered in', () => {
+    /*
+     * THE CASE THAT ACTUALLY EXISTS: `features/blog` has `/blog/admin/categories`
+     * next to `/blog/admin/[id]`, and the collector sorts the dynamic one first
+     * because "[i" sorts before "ca". vue-router prefers the static match, so the
+     * categories page is reachable, and this test states why that is true rather
+     * than leaving it to look like luck.
+     *
+     * If a future router stops preferring static segments, this assertion fails
+     * here instead of a staff member finding a page that opens the wrong screen.
+     */
+    writePage('blog/web/pages/admin/categories.vue')
+    writePage('blog/web/pages/admin/[id].vue')
+
+    const paths = collectFeaturePages(root).map(page => page.path)
+
+    expect(paths).toContain('/blog/admin/:id()')
+    expect(paths).toContain('/blog/admin/categories')
+    expect(wouldMatchStaticFirst('/blog/admin/categories', '/blog/admin/:id()')).toBe(true)
   })
 })
 

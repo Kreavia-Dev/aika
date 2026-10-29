@@ -227,6 +227,20 @@ into every client project and a broken gate multiplies.
 Add a new file to `database/migrations/`. Migrations are plain SQL, applied in
 filename order, forward-only.
 
+**A migration you have already applied is applied, and editing the file changes
+nothing.** This bites during development more than anywhere else: you write
+`0006_blog.sql`, run the tests, decide a foreign key should be `SET NULL` rather
+than `CASCADE`, edit the file, and the next test run still uses the old schema,
+because the database remembers which files it ran and does not re-read them. The
+symptom is a test that fails for a reason you have already fixed.
+
+The fix is to delete the local database and let the suite rebuild it:
+`database/test.db` for the test database, or `database/aika.db` for the
+development one. Never do that on a deployment, and never edit a migration that
+may have been applied anywhere except the one machine where you are still
+building it. Once a client project can pull it, the rule is the strict one: add a
+new file.
+
 ```sql
 -- database/migrations/0002_invoices.sql
 CREATE TABLE invoices (
